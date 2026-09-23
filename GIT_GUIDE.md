@@ -30,6 +30,31 @@ git diff            # 바뀐 내용을 줄 단위로 보기 (q 로 나가기)
 git log --oneline   # 지금까지의 커밋 기록 (q 로 나가기)
 ```
 
+### 커밋 기록 자세히 보기 (`git log`)
+
+```bash
+git log                     # 전체 기록: 커밋 번호, 작성자, 날짜, 메시지
+git log --oneline           # 한 줄씩 짧게 (가장 많이 씀)
+git log --oneline -5        # 최근 5개만
+git log --stat              # 커밋마다 어떤 파일이 몇 줄 바뀌었는지
+git log -p 파일명            # 특정 파일이 커밋마다 어떻게 바뀌었는지 내용까지
+git log --oneline -- web/   # 특정 폴더(web)를 건드린 커밋만
+git log --oneline --graph --all   # 브랜치 흐름을 그림처럼 보기
+git show 6629ec1            # 커밋 하나의 변경 내용 보기 (번호는 git log 에서 복사)
+```
+
+`git log --oneline` 결과 읽는 법:
+
+```
+6629ec1 (HEAD -> main, origin/main) Spring/STS 빌드 및 설정 파일 git 제외 추가
+96503e2 분석 결과 조회 API 추가 및 프론트엔드 업로드 연동
+```
+
+- 앞의 `6629ec1` 은 커밋 번호입니다. `git show` 같은 명령어에 이 번호를 넣어서 씁니다.
+- `HEAD -> main` 은 내 PC 에서 지금 보고 있는 위치입니다.
+- `origin/main` 은 GitHub 에 올라간 위치입니다.
+- **둘이 같은 줄에 있으면 push 가 다 된 상태**입니다. `HEAD` 가 더 위에 있으면 아직 push 안 한 커밋이 있다는 뜻입니다.
+
 ## 3. 다른 컴퓨터에서 작업할 때
 
 ```bash
@@ -64,6 +89,7 @@ git commit --amend -m "새 메시지"   # 방금 한 커밋의 메시지 수정 
 | `Baseball_Sample/`, `baseball_dataset/`, `*.zip` | AIHUB 원본 데이터: 용량이 크고 외부 공개 불가. 학습은 Colab + 구글 드라이브에서 |
 | `.venv/`, `__pycache__/` | 각 PC 에서 새로 만드는 파일 |
 | `runs/`, `AI-Server/models/*.pt` | 학습 결과와 모델 파일. 구글 드라이브에 보관하고 PC 에 직접 넣어 사용 |
+| `.metadata/`, `.settings/`, `.project`, `.classpath`, `target/`, `build/`, `.gradle/` 등 | STS 설정 파일과 Spring 빌드 결과물. 각 PC 에서 새로 생김 |
 | `.env` | 비밀번호, API 키 같은 비밀값 |
 | `AI-Server/storage/uploads, tmp, results` 안의 파일 | 업로드된 영상과 분석 결과 |
 
