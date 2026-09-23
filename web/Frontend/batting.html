@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 타격폼 분석 | BROS</title>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("bros-theme") === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playball&family=Black+Han+Sans&family=Gaegu:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body data-page="batting">
+  <div class="app">
+    <div class="overlay" id="overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__top">
+        <button class="icon-btn sidebar__close" id="sidebarClose" aria-label="메뉴 닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <a href="./index.html" class="logo">
+          <span class="logo__text">Bros</span>
+        </a>
+      </div>
+
+      <nav class="sidebar__nav" id="sidebarNav"></nav>
+
+      <div class="sidebar__footer">
+        <div class="stitch" aria-hidden="true">
+          <svg viewBox="0 0 160 160" fill="none">
+            <path d="M0 40 C 60 40, 100 80, 160 80" stroke="#E7E3C9" stroke-width="26" stroke-linecap="round"/>
+            <g stroke="#C9A227" stroke-width="2.5" stroke-linecap="round">
+              <path d="M20 28 l10 10 M30 24 l10 10 M42 22 l10 10 M55 22 l10 10 M68 24 l10 10 M80 28 l10 10 M92 34 l10 10 M104 42 l10 10 M116 52 l10 10 M128 62 l10 10 M140 72 l10 8"/>
+            </g>
+          </svg>
+        </div>
+        <p class="sidebar__tagline">BASEBALL MAKES<br />US STRONGER</p>
+        <div class="sidebar__brand">
+          <span class="sidebar__brand-logo">BROS</span>
+          <span class="sidebar__brand-sub">ONE TEAM, HIGHER TOGETHER</span>
+        </div>
+        <ul class="sidebar__links">
+          <li>이용약관</li>
+          <li>개인정보처리방침</li>
+          <li>고객센터</li>
+        </ul>
+        <p class="sidebar__copy">© 2024 BROS. All rights reserved.</p>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar topbar--solid" id="topbar">
+        <div class="topbar__left">
+          <button class="icon-btn topbar__menu" id="menuToggle" aria-label="메뉴 열기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <a href="./index.html" class="logo logo--mobile">
+            <span class="logo__text">Bros</span>
+          </a>
+        </div>
+        <div class="topbar__title" id="topbarTitle">
+          <span class="topbar__title-mark">B</span>
+          <span class="topbar__title-text">AI 타격폼 분석</span>
+        </div>
+        <div class="topbar__right">
+          <button class="icon-btn icon-btn--ghost" id="themeToggle" type="button" aria-label="다크모드 전환"></button>
+          <button class="login-btn" id="loginBtn" type="button">로그인</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-header">
+          <p class="page-header__eyebrow">AI가 분석하는 나의 스윙</p>
+          <h1 class="page-header__title">AI 타격폼 분석</h1>
+          <p class="page-header__desc">타격 영상을 업로드하거나 바로 촬영하면, 스윙 타이밍·하체 밸런스 등을 AI가 분석해드립니다.</p>
+        </div>
+
+        <div class="page-card">
+          <div class="quick-action">
+            <div class="quick-action__text">
+              <p class="quick-action__title">지금 바로 분석 시작하기</p>
+              <p class="quick-action__desc">갤러리에서 타격 영상을 선택하거나, 카메라로 바로 촬영할 수 있어요.</p>
+            </div>
+            <div class="quick-action__buttons">
+              <button type="button" class="quick-action__btn quick-action__btn--primary" id="quickUploadBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
+                동영상 업로드
+              </button>
+              <button type="button" class="quick-action__btn quick-action__btn--ghost" id="quickRecordBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+                바로 촬영
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 업로드/촬영한 영상을 분석 결과와는 별개로 바로 재생해볼 수 있는 미리보기 카드 -->
+        <div class="page-card" id="uploadedVideoCard" hidden>
+          <h2 class="page-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>
+            업로드한 영상
+          </h2>
+          <div id="uploadedVideoSlot"></div>
+        </div>
+
+        <div class="page-card">
+          <h2 class="page-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="10.6" y="2" width="3" height="14" rx="1.5" transform="rotate(35 12 9)"/><circle cx="6" cy="18" r="2.4"/></svg>
+            최근 분석 결과
+          </h2>
+          <div class="empty-state">
+            <span class="empty-state__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>
+            </span>
+            <p class="empty-state__title">아직 분석한 타격 영상이 없어요</p>
+            <p class="empty-state__desc">위 버튼으로 첫 영상을 올리면, 분석이 끝나는 대로 여기에 결과가 쌓입니다.</p>
+          </div>
+        </div>
+
+        <footer class="page-footer">
+          <span>BROS</span>
+          <nav>
+            <a href="#terms">이용약관</a>
+            <a href="#privacy">개인정보처리방침</a>
+            <a href="#support">고객센터</a>
+          </nav>
+          <span>© 2024 BROS. All rights reserved.</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- 오른쪽 하단 플로팅 버튼: 클릭하면 "동영상 업로드" / "바로 촬영" 두 메뉴가 위로 펼쳐짐 -->
+  <div class="fab-wrap" id="fabWrap">
+    <button class="fab" id="fabToggle" type="button" aria-haspopup="true" aria-expanded="false" aria-label="영상 추가">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>
+    </button>
+    <div class="fab-menu" id="fabMenu">
+      <button class="fab-menu__item" id="fabUpload" type="button">
+        <span class="fab-menu__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span>
+        <span>동영상 업로드</span>
+      </button>
+      <button class="fab-menu__item" id="fabRecord" type="button">
+        <span class="fab-menu__icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg></span>
+        <span>바로 촬영</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 분석 종류 선택 모달 (업로드/촬영 공용) -->
+  <div class="modal-overlay" id="typeModalOverlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="typeModalTitle">
+      <div class="modal__head">
+        <h3 class="modal__title" id="typeModalTitle">분석 종류를 선택하세요</h3>
+        <button class="modal__close" id="typeModalClose" type="button" aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="modal__options" id="typeModalOptions"></div>
+    </div>
+  </div>
+
+  <!-- 갤러리에서 영상을 선택하기 위한 숨김 파일 입력 -->
+  <input type="file" id="videoFileInput" accept="video/mp4,video/quicktime,video/webm,video/*" hidden />
+
+  <!-- 카메라 촬영 모달 -->
+  <div class="modal-overlay" id="cameraModalOverlay" hidden>
+    <div class="modal modal--camera" role="dialog" aria-modal="true" aria-labelledby="cameraModalTitle">
+      <div class="modal__head">
+        <h3 class="modal__title" id="cameraModalTitle">영상 촬영</h3>
+        <button class="modal__close" id="cameraModalClose" type="button" aria-label="닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="camera">
+        <video class="camera__preview" id="cameraPreview" autoplay playsinline muted></video>
+        <video class="camera__preview" id="cameraPlayback" playsinline hidden controls></video>
+        <p class="camera__status" id="cameraStatus"></p>
+        <div class="camera__controls" id="cameraControlsIdle">
+          <button class="btn btn--ghost" id="cameraCancelBtn" type="button">촬영 취소</button>
+          <button class="btn btn--primary" id="cameraStartBtn" type="button">촬영 시작</button>
+        </div>
+        <div class="camera__controls" id="cameraControlsRecording" hidden>
+          <button class="btn btn--primary" id="cameraStopBtn" type="button">촬영 중지</button>
+        </div>
+        <div class="camera__controls" id="cameraControlsPreview" hidden>
+          <button class="btn btn--ghost" id="cameraRetakeBtn" type="button">다시 촬영</button>
+          <button class="btn btn--primary" id="cameraUseBtn" type="button">이 영상 사용</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 업로드/촬영 검증 실패 등 짧은 안내 메시지 -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="./js/types.js"></script>
+  <script src="./js/data.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/capture.js"></script>
+  <script src="./js/shell.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      window.BROS.shell.init("batting");
+
+      const uploadBtn = document.getElementById("quickUploadBtn");
+      const recordBtn = document.getElementById("quickRecordBtn");
+      if (uploadBtn) uploadBtn.addEventListener("click", () => window.BROS.capture.startUploadFor("batting"));
+      if (recordBtn) recordBtn.addEventListener("click", () => window.BROS.capture.startRecordFor("batting"));
+    });
+  </script>
+</body>
+</html>

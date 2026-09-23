@@ -1,0 +1,1853 @@
+/* ===== BROS - 기본 토큰 =====
+   팀 컬러: 형광 노랑/연두(neon) + 짙은 녹색/검정(navy) + 골드(gold, 포인트로만 소량 사용).
+   컴포넌트들은 모두 이 변수를 통해서만 색을 쓰므로, 값만 바꾸면 전체 화면에 반영됩니다.
+   다크모드는 아래 :root[data-theme="dark"] 블록에서 같은 변수를 재정의해서 처리합니다. */
+:root {
+  --navy: #0f241a;
+  --navy-light: #1b3a28;
+  /* 라이트모드에서는 노란/올리브 톤이 아니라 짙은 녹색으로 통일 (FAB/로그인 버튼의 네온 포인트만 남기기 위함).
+     다크모드는 아래 [data-theme="dark"] 블록에서 형광 연두를 그대로 유지합니다. */
+  --red: var(--navy);
+  --red-soft: #eef7d2;
+  --blue-soft: #eefac2;
+  --green-soft: #e3f5e8;
+  --green: #1e7a46;
+  --neon: #cbff3d;
+  --neon-ink: #17330d;
+  --gold: #c9a227;
+  --gold-soft: #fbf1d6;
+  /* 은은하게 연두빛이 돌던 배경/테두리를 중립 회색 톤으로 변경 */
+  --bg: #f4f5f6;
+  --border: #e3e5e7;
+  --muted: #66766a;
+  --white: #ffffff;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+  --shadow-card: 0 2px 10px rgba(15, 36, 26, 0.08);
+  /* rgb 트리플릿 버전: js/main.js 의 스크롤 상단바 효과가 rgba(var(--bg-rgb), alpha) 형태로
+     매 프레임 투명도를 직접 계산하는데, 테마가 바뀌어도 같이 반응하도록 여기서도 따로 관리합니다. */
+  --bg-rgb: 244, 245, 246;
+  --border-rgb: 227, 229, 231;
+  --shadow-rgb: 15, 36, 26;
+  /* 로그인 버튼처럼 "항상 눈에 띄는 CTA" 용 채움색. --navy 는 다크모드에서 밝은 텍스트색으로
+     뒤집히므로 CTA 배경에는 쓸 수 없어서 별도로 관리 */
+  --cta-bg: #0f241a;
+  --cta-ink: #ffffff;
+  /* 로고 전용 색: 라이트모드는 짙은 색, 다크모드는 형광 연두로 (본문 텍스트와는 반대로 움직임) */
+  --logo: #0f241a;
+}
+
+/* 다크모드: --white 를 "카드/서페이스" 색으로, --navy 를 "본문 텍스트" 색으로 재정의하면
+   대부분의 컴포넌트가 이미 var(--white)/var(--navy)/var(--border) 등을 쓰고 있어서
+   추가 규칙 없이도 전체가 자동으로 다크 톤을 따라갑니다. */
+:root[data-theme="dark"] {
+  --navy: #eaf3e7;
+  --navy-light: #c7dcc2;
+  --red: #d6ff4d;
+  --red-soft: #1d2a0e;
+  --blue-soft: #1b2a10;
+  --green-soft: #123321;
+  --green: #6fe38c;
+  --neon: #d6ff4d;
+  --neon-ink: #10200a;
+  --gold: #e8c34a;
+  --gold-soft: #2e2510;
+  --bg: #0a100b;
+  --border: #24352a;
+  --muted: #93a896;
+  --white: #12201a;
+  --shadow-card: 0 4px 18px rgba(0, 0, 0, 0.55);
+  --bg-rgb: 10, 16, 11;
+  --border-rgb: 36, 53, 42;
+  --shadow-rgb: 0, 0, 0;
+  --cta-bg: #d6ff4d;
+  --cta-ink: #10200a;
+  --logo: #d6ff4d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Malgun Gothic", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--navy);
+}
+
+.icon-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 원형 배경/테두리 없이 아이콘만 보이는 버전 (상단 다크모드 토글 등) */
+.icon-btn--ghost {
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* ===== 레이아웃 ===== */
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 20, 35, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 40;
+}
+
+.overlay--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== 사이드바 ===== */
+.sidebar {
+  width: 248px;
+  flex-shrink: 0;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 24px 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.sidebar__close {
+  display: none;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 유니폼에 쓰인 것과 같은 야구 저지 스크립트체. --logo 는 --navy 와 반대로 움직여서 다크모드에서 형광 연두가 됨 */
+.logo__text {
+  font-family: "Playball", cursive;
+  font-weight: 400;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--logo);
+}
+
+.logo--mobile {
+  display: none;
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.nav-item__icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: var(--muted);
+}
+
+.nav-item:hover {
+  background: var(--bg);
+}
+
+.nav-item--active {
+  background: var(--blue-soft);
+  color: var(--navy);
+}
+
+.nav-item--active .nav-item__icon {
+  color: var(--navy);
+}
+
+.sidebar__footer {
+  margin-top: auto;
+  padding-top: 28px;
+  text-align: center;
+}
+
+.stitch {
+  width: 100px;
+  margin: 0 auto 10px;
+  opacity: 0.9;
+}
+
+.sidebar__tagline {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--gold);
+  letter-spacing: 0.3px;
+  margin: 0 0 18px;
+}
+
+.sidebar__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.sidebar__brand-logo {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--navy);
+}
+
+.sidebar__brand-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.sidebar__links {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.sidebar__copy {
+  font-size: 10px;
+  color: #b7bdc9;
+  margin: 0;
+}
+
+/* ===== 상단바 (스크롤 시 떠오르는 GNB) =====
+   배경/그림자/타이틀의 실제 값은 CSS가 아니라 js/main.js 의 updateTopbarOnScroll() 이
+   스크롤 진행도(progress 0~1)를 매 프레임 계산해 inline style 로 직접 적용합니다.
+   여기 있는 값들은 JS 실행 전 초기 상태(progress=0)일 뿐입니다. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 14px 32px;
+  background-color: rgba(245, 247, 250, 0);
+  border-bottom: 1px solid rgba(231, 234, 240, 0);
+  box-shadow: 0 6px 18px rgba(20, 33, 61, 0);
+}
+
+.topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar__menu {
+  display: none;
+}
+
+.topbar__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--navy);
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+.topbar__title-mark {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  background: var(--navy);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.topbar__right {
+  display: flex;
+  gap: 10px;
+}
+
+/* 히어로 배너처럼 스크롤에 따라 나타날 큰 이미지가 없는 서브 페이지용:
+   스크롤 반응 없이 처음부터 고정된 배경을 보여줌 */
+.topbar--solid {
+  background-color: var(--bg);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(15, 36, 26, 0.04);
+}
+
+.topbar--solid .topbar__title {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* ===== 콘텐츠 ===== */
+.content {
+  padding: 16px 32px 60px;
+  max-width: 1180px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ===== 팀 슬로건 문구 (사진 밖, 일반 페이지 흐름) =====
+   더 이상 사진 위 오버레이가 아니라서, 라이트/다크모드에 따라 자동으로 반전되는
+   사이트 공통 토큰(var(--navy)/var(--muted)/var(--red)/var(--neon))을 그대로 사용합니다. */
+.hero-text {
+  margin-bottom: 16px;
+}
+
+.hero-text__headline {
+  /* 딱딱한 임팩트체 대신, 부드러운 손글씨 느낌의 필기체로 변경 */
+  font-family: "Gaegu", cursive;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--navy);
+  margin: 0 0 6px;
+}
+
+.hero-text__desc {
+  font-size: 14px;
+  line-height: 1.6;
+  /* 라이트모드=검정에 가까운 색, 다크모드=형광 연두로 자동 전환 (var(--red) 재사용) */
+  color: var(--red);
+  margin: 0 0 10px;
+}
+
+.hero-text__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--red);
+}
+
+.hero-text__tag-line {
+  width: 22px;
+  height: 2px;
+  background: var(--neon);
+  display: inline-block;
+}
+
+/* ===== 히어로 사진 배너 (실제 팀 사진) ===== */
+.hero-banner {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-card);
+  /* 원본 사진 가로폭(960px)보다 배너를 더 넓게 늘리면 화질이 뭉개지므로,
+     원본 폭을 넘지 않게 최대 너비를 제한해서 실제 해상도 그대로(업스케일 없이) 보여줌 */
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-banner__slide {
+  position: relative;
+  width: 100%;
+  /* 원본 사진이 세로로 긴 인물사진(960x1280)이라, 비율/위치를 맞춰서
+     얼굴 위쪽은 여유 있게 남기고, 아래쪽 빈 흙바닥만 최소로 걷어내도록 조정.
+     문구가 사진 밖으로 빠지면서 여백 제약이 없어져 12/5 -> 13/5 로 살짝 더 줄임. */
+  aspect-ratio: 13 / 5;
+  background-image: url("../assets/images/hero-team.png");
+  background-size: cover;
+  background-position: center 55%;
+}
+
+.hero-banner__dots {
+  position: absolute;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+
+.hero-banner__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.hero-banner__dot--active {
+  width: 18px;
+  background: #ffffff;
+}
+
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.hero__eyebrow {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.hero__title {
+  font-size: 30px;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: var(--navy);
+}
+
+.hero__desc {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ===== 오늘의 AI 리포트: 투수/타자 탭 + 4칸 정보 박스 + AI 코멘트 + 상세 리포트 보기 ===== */
+.report-tabs {
+  display: inline-flex;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+
+.report-tab {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 20px;
+  border-radius: 999px;
+}
+
+.report-tab--active {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+}
+.report-overview-wrap {
+  margin-bottom: 8px;
+}
+
+.report-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.info-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-box--type {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.info-box--status {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.info-box--date {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.info-box--points {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+.info-box__icon {
+  width: 20px;
+  height: 20px;
+  color: var(--navy);
+  margin-bottom: 4px;
+}
+
+.info-box__icon--mood {
+  color: var(--gold);
+}
+
+.info-box__label {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.info-box__value {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.info-box__value--gold {
+  color: var(--gold);
+}
+
+.info-box__sub {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.comment-box {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.comment-box__body {
+  display: flex;
+  gap: 10px;
+}
+
+.comment-box__quote {
+  width: 20px;
+  height: 20px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.comment-box__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px;
+}
+
+.comment-box__text {
+  font-size: 13px;
+  color: #3d4759;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.report-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 46px;
+  border-radius: 999px;
+  border: none;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.report-cta svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ===== 4대 기능 메뉴 ===== */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.feature-card {
+  position: relative;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--neon);
+  transform: translateY(-2px);
+}
+
+/* 카드마다 아이콘을 색이 채워진 배지 안에 넣어서 톤이 확실히 드러나도록 함 */
+.feature-card__icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.feature-card__icon {
+  width: 24px;
+  height: 24px;
+}
+
+.feature-card--neon .feature-card__icon-badge {
+  background: var(--neon);
+  color: var(--neon-ink);
+}
+
+.feature-card--gold .feature-card__icon-badge {
+  background: var(--gold);
+  color: var(--navy);
+}
+
+.feature-card--navy .feature-card__icon-badge {
+  background: var(--navy);
+  color: var(--neon);
+}
+
+/* 다크모드에서는 var(--navy)가 거의 흰색이 되어 배지가 "회색"처럼 밋밋해 보이므로,
+   FAB 버튼과 같은 배색(형광 배경 + 검정 아이콘)으로 통일 */
+:root[data-theme="dark"] .feature-card--navy .feature-card__icon-badge {
+  background: var(--neon);
+  color: var(--neon-ink);
+}
+
+.feature-card__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.feature-card__desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.feature-card__chevron {
+  display: none;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+/* ===== 3단계 안내 바 (하단, 로고 + 압축된 가로 스텝) =====
+   모든 색이 var(--bg)/var(--navy)/var(--neon) 등 기존 토큰이라 다크모드에서도 자동으로 반응합니다. */
+.how-bar {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 24px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.how-bar__brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.how-bar__logo {
+  font-family: "Playball", cursive;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--logo);
+}
+
+.how-bar__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+}
+
+.how-bar__steps {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.how-bar__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.how-bar__step-icon {
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: var(--navy);
+  color: var(--neon);
+  flex-shrink: 0;
+}
+
+/* 4대 기능 카드 배지와 동일한 이유로 다크모드에서만 FAB와 같은 배색으로 지정 */
+:root[data-theme="dark"] .how-bar__step-icon {
+  background: var(--neon);
+  color: var(--neon-ink);
+}
+
+.how-bar__step-title {
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.how-bar__step-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.how-bar__arrow {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* ===== 페이지 푸터 ===== */
+.page-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.page-footer span:first-child {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.page-footer nav {
+  display: flex;
+  gap: 16px;
+}
+
+/* ===== FAB (클릭하면 위로 메뉴 2개가 펼쳐지는 플로팅 버튼) ===== */
+.fab-wrap {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.fab {
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  background: var(--neon);
+  color: var(--neon-ink);
+  border: none;
+  box-shadow: 0 8px 20px rgba(203, 255, 61, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.fab svg {
+  width: 30px;
+  height: 30px;
+  transition: transform 0.2s ease;
+}
+
+.fab-wrap--open .fab svg {
+  transform: rotate(45deg);
+}
+
+.fab-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.fab-menu__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  /* 두 메뉴("동영상 업로드" / "바로 촬영") 글자 수가 달라도 폭이 항상 같도록 고정 */
+  width: 176px;
+  background: var(--white);
+  color: var(--navy);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 18px 10px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.fab-menu__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+.fab-wrap--open .fab-menu__item {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.fab-wrap--open .fab-menu__item:nth-child(2) {
+  transition-delay: 0.05s;
+}
+
+/* ===== 로그인 버튼 (항상 채워진 CTA 필: 라이트=짙은 녹색, 다크=형광 연두) ===== */
+.login-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 로그인된 상태(로그아웃 버튼)는 덜 강조되도록 아웃라인으로 반전 */
+.login-btn--active {
+  background: transparent;
+  color: var(--navy);
+  border-color: var(--border);
+}
+
+/* ===== 모달 공통 (분석 종류 선택 / 촬영) ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(10, 16, 11, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.modal-overlay[hidden] {
+  display: none;
+}
+
+.modal-overlay--visible {
+  opacity: 1;
+}
+
+.modal {
+  width: 100%;
+  max-width: 360px;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 50px rgba(10, 16, 11, 0.3);
+  padding: 20px;
+  transform: translateY(14px) scale(0.97);
+  transition: transform 0.18s ease;
+}
+
+.modal-overlay--visible .modal {
+  transform: translateY(0) scale(1);
+}
+
+.modal--camera {
+  max-width: 420px;
+}
+
+.modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.modal__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.modal__close {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: var(--bg);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal__close svg {
+  width: 14px;
+  height: 14px;
+}
+
+.modal__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modal-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.modal-option:hover {
+  border-color: var(--red);
+}
+
+.modal-option__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--red);
+  flex-shrink: 0;
+}
+
+/* ===== 카메라 촬영 ===== */
+.camera {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.camera__preview {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  max-height: 60vh;
+  border-radius: var(--radius-md);
+  background: #000;
+  object-fit: cover;
+}
+
+.camera__status {
+  min-height: 18px;
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--red);
+  text-align: center;
+}
+
+.camera__controls {
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.btn--primary {
+  background: var(--navy);
+  color: var(--white);
+}
+
+.btn--ghost {
+  background: var(--bg);
+  color: var(--navy);
+  border: 1px solid var(--border);
+}
+
+/* ===== 토스트 안내 메시지 ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 100px;
+  transform: translate(-50%, 12px);
+  background: var(--navy);
+  color: var(--white);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 70;
+  max-width: calc(100vw - 40px);
+  text-align: center;
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ===== 서브 페이지 공통 (분석/하이라이트/마이페이지) ===== */
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header__eyebrow {
+  color: var(--red);
+  font-weight: 700;
+  font-size: 13px;
+  margin: 0 0 8px;
+}
+
+.page-header__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 8px;
+}
+
+.page-header__desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.page-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.page-card__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 14px;
+}
+
+.page-card__title svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+/* 지금 보고 있는 페이지에 맞는 분석 종류로 바로 업로드/촬영을 시작하는 CTA */
+.quick-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.quick-action__text {
+  flex: 1;
+  min-width: 200px;
+}
+
+.quick-action__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px;
+}
+
+.quick-action__desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.quick-action__buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.quick-action__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.quick-action__btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.quick-action__btn--primary {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+.quick-action__btn--ghost {
+  background: var(--bg);
+  color: var(--navy);
+  border-color: var(--border);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 44px 20px;
+}
+
+.empty-state__icon {
+  width: 42px;
+  height: 42px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.empty-state__title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.empty-state__desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+  max-width: 320px;
+  line-height: 1.6;
+}
+
+/* 업로드/촬영한 영상을 분석 결과와는 별개로 바로 재생해볼 수 있는 미리보기 카드 */
+.video-preview__player {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  border-radius: var(--radius-md);
+  background: #000;
+}
+
+/* ===== 경기 하이라이트: 전체 / 포지션별 탭 콘텐츠 =====
+   탭 자체는 홈 화면의 .report-tabs/.report-tab 을 그대로 재사용합니다. */
+.game-meta {
+  margin-bottom: 20px;
+}
+
+.game-meta__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.game-meta__eyebrow {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--red);
+}
+
+.game-meta__logo {
+  font-family: "Playball", cursive;
+  font-size: 20px;
+  color: var(--logo);
+}
+
+.game-meta__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.game-meta__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.game-meta__label {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.game-meta__value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.game-meta__value--accent {
+  color: var(--red);
+}
+
+.highlight-main {
+  border-top: 1px solid var(--border);
+  padding-top: 18px;
+}
+
+.highlight-main__frame {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-md);
+  background: radial-gradient(circle at 30% 20%, var(--navy-light) 0%, var(--navy) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.highlight-main__tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--neon);
+  background: rgba(0, 0, 0, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.highlight-main__play {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.highlight-main__play svg {
+  width: 22px;
+  height: 22px;
+  margin-left: 2px;
+}
+
+.highlight-main__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.highlight-main__label {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.highlight-main__time {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* 주요 장면 그룹 (타격 장면 / 수비 플레이 / 주요 플레이) */
+.clip-group {
+  margin-bottom: 22px;
+}
+
+.clip-group:last-child {
+  margin-bottom: 0;
+}
+
+.clip-group__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.clip-group__badge {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: var(--neon-ink);
+  background: var(--neon);
+  padding: 3px 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.clip-group__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0;
+}
+
+.clip-group__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.clip-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  border-radius: var(--radius-md);
+  padding: 8px;
+  text-align: left;
+}
+
+.clip-card__thumb {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  background: radial-gradient(circle at 30% 20%, var(--navy-light) 0%, var(--navy) 70%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.clip-card__thumb svg {
+  width: 20px;
+  height: 20px;
+}
+
+.clip-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.clip-card__action {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.clip-card__time {
+  font-size: 11px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+
+/* 포지션별 하이라이트: 포지션 선택 */
+.position-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.position-pill {
+  min-width: 52px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.position-pill--active {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  border-color: var(--cta-bg);
+}
+
+/* ===== 마이페이지 ===== */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.profile-card__avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: var(--neon);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.profile-card__avatar svg {
+  width: 28px;
+  height: 28px;
+}
+
+.profile-card__info {
+  flex: 1;
+  min-width: 160px;
+}
+
+.profile-card__name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0 0 4px;
+}
+
+.profile-card__meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.profile-card__logout {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* ===== 로그인 / 회원가입 페이지 (login.html) ===== */
+/* 스크롤과 무관하게 항상 좌상단에 고정되는 팀 로고 = 홈으로 이동 버튼 */
+.auth-topbar {
+  position: fixed;
+  top: 20px;
+  left: 24px;
+  z-index: 10;
+  display: inline-flex;
+}
+
+.auth-topbar .logo__text {
+  font-size: 28px;
+}
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 80px 20px 40px;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: 28px 28px 24px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 22px;
+}
+
+.auth-tab {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 10px 0;
+  border-radius: 999px;
+}
+
+.auth-tab--active {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+/* 두 폼을 같은 grid 셀에 포개어, 감춰진 폼도 레이아웃 계산에는 계속 참여하게 해서
+   더 높은 쪽(회원가입) 기준으로 카드 높이가 고정되고 탭 전환 시 높이가 튀지 않게 함 */
+.auth-forms {
+  display: grid;
+}
+
+.auth-form {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 브라우저 기본 [hidden] 규칙(display:none)을 명시적으로 되돌리고,
+   대신 visibility 로만 감춰서 grid 높이 계산에는 계속 포함되게 함 */
+.auth-form[hidden] {
+  display: flex;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.auth-field input {
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.auth-field input:focus {
+  outline: 2px solid var(--neon);
+  outline-offset: 1px;
+}
+
+.auth-field__row {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-field__row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.auth-check-btn {
+  flex-shrink: 0;
+  height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--navy);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.auth-field__hint {
+  min-height: 16px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.auth-field__hint--ok {
+  color: var(--green);
+}
+
+.auth-field__hint--error {
+  color: var(--red);
+}
+
+.auth-note {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.auth-submit {
+  height: 48px;
+  border-radius: 999px;
+  border: none;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.auth-message {
+  min-height: 18px;
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--green);
+  text-align: center;
+}
+
+.auth-message--error {
+  color: var(--red);
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 1024px) {
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .sidebar--open {
+    transform: translateX(0);
+  }
+
+  .sidebar__close {
+    display: inline-flex;
+  }
+
+  .topbar__menu {
+    display: inline-flex;
+  }
+
+  .logo--mobile {
+    display: flex;
+  }
+
+  .content {
+    padding: 16px 20px 60px;
+  }
+}
+
+@media (max-width: 860px) {
+  .report-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .comment-box {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+  }
+}
+
+@media (max-width: 640px) {
+  .report-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .info-box--type,
+  .info-box--status,
+  .info-box--date,
+  .info-box--points,
+  .comment-box {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .hero-banner__slide {
+    aspect-ratio: 4 / 5;
+  }
+
+  .hero-text__headline {
+    font-size: 24px;
+  }
+
+  .hero__title {
+    font-size: 24px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    flex-direction: row;
+    align-items: center;
+    padding: 16px 44px 16px 16px;
+  }
+
+  .feature-card__icon-badge {
+    margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .feature-card__chevron {
+    display: block;
+  }
+
+  .how-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px;
+  }
+
+  .how-bar__steps {
+    gap: 10px;
+  }
+
+  .fab-wrap {
+    right: 18px;
+    bottom: 18px;
+  }
+}

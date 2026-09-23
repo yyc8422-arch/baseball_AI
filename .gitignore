@@ -1,0 +1,25 @@
+# AIHUB 원본 데이터 (용량이 크고 외부 공개 불가) - 학습은 Colab + 구글 드라이브에서
+Baseball_Sample/
+baseball_dataset/
+*.zip
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# 학습 결과 폴더 (최종 모델만 AI-Server/models 에 올림)
+runs/
+
+# 환경변수 / 비밀값
+.env
+.env.*
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/

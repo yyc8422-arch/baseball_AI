@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로그인 | BROS</title>
+  <script>
+    // 다크모드 새로고침 시 깜빡임(FOUC) 방지: 메인 페이지에서 고른 테마를 그대로 반영
+    (function () {
+      try {
+        if (localStorage.getItem("bros-theme") === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playball&family=Black+Han+Sans&family=Gaegu:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <a href="./index.html" class="auth-topbar" aria-label="BROS 홈으로 이동">
+    <span class="logo__text">Bros</span>
+  </a>
+
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-tabs" id="authTabs">
+        <button type="button" class="auth-tab auth-tab--active" data-mode="login">로그인</button>
+        <button type="button" class="auth-tab" data-mode="signup">회원가입</button>
+      </div>
+
+      <!-- 두 폼을 같은 그리드 셀에 겹쳐서, 탭을 바꿔도 카드 높이가 더 큰 쪽(회원가입) 기준으로 고정되게 함 -->
+      <div class="auth-forms">
+        <form class="auth-form" id="loginForm" data-mode-panel="login">
+          <label class="auth-field">
+            <span>아이디</span>
+            <input type="text" name="username" autocomplete="username" required />
+          </label>
+          <label class="auth-field">
+            <span>비밀번호</span>
+            <input type="password" name="password" autocomplete="current-password" required />
+          </label>
+          <button type="submit" class="auth-submit">로그인</button>
+        </form>
+
+        <form class="auth-form" id="signupForm" data-mode-panel="signup" hidden>
+          <label class="auth-field">
+            <span>이름</span>
+            <input type="text" name="name" autocomplete="name" required />
+          </label>
+          <label class="auth-field">
+            <span>아이디</span>
+            <div class="auth-field__row">
+              <input type="text" name="username" id="signupUsername" autocomplete="username" required />
+              <button type="button" class="auth-check-btn" id="checkUsernameBtn">중복확인</button>
+            </div>
+            <span class="auth-field__hint" id="usernameCheckHint"></span>
+          </label>
+          <label class="auth-field">
+            <span>비밀번호</span>
+            <input type="password" name="password" autocomplete="new-password" required />
+          </label>
+          <p class="auth-note">가입 신청 후 관리자 승인이 완료되어야 로그인하실 수 있습니다.</p>
+          <button type="submit" class="auth-submit">회원가입</button>
+        </form>
+      </div>
+
+      <p class="auth-message" id="authMessage" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+
+  <script src="./js/auth.js"></script>
+</body>
+</html>
