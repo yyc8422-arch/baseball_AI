@@ -30,7 +30,7 @@ AI-Server/
     services/pose_model.py       YOLO26 Pose 모델을 서버 시작 시 1번만 로드
     services/video_processor.py  영상 프레임별 선수 관절 24개 좌표 추출 -> results/*.json
   models/
-    best_baseball_pose.pt        Colab 에서 학습한 포즈 모델 (재학습 시 이 파일만 교체)
+    best_baseball_pose.pt        Colab 에서 학습한 포즈 모델을 직접 넣는 곳 (git 에는 올리지 않음)
   storage/
     uploads/                     저장이 완료된 영상 (최종 위치)
     tmp/                         저장 중인 영상의 임시 위치 (*.part)

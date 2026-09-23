@@ -63,22 +63,21 @@ git commit --amend -m "새 메시지"   # 방금 한 커밋의 메시지 수정 
 |---|---|
 | `Baseball_Sample/`, `baseball_dataset/`, `*.zip` | AIHUB 원본 데이터: 용량이 크고 외부 공개 불가. 학습은 Colab + 구글 드라이브에서 |
 | `.venv/`, `__pycache__/` | 각 PC 에서 새로 만드는 파일 |
-| `runs/` | 학습 중간 결과. 최종 모델만 `AI-Server/models/` 에 올림 |
+| `runs/`, `AI-Server/models/*.pt` | 학습 결과와 모델 파일. 구글 드라이브에 보관하고 PC 에 직접 넣어 사용 |
 | `.env` | 비밀번호, API 키 같은 비밀값 |
 | `AI-Server/storage/uploads, tmp, results` 안의 파일 | 업로드된 영상과 분석 결과 |
 
 ## 6. 이 프로젝트에서 자주 할 작업
 
-**모델을 다시 학습했을 때**
+**학습한 모델 넣기**
 
-1. Colab 에서 받은 `best_baseball_pose.pt` 로 `AI-Server/models/best_baseball_pose.pt` 를 덮어쓰기
-2. 커밋하고 올리기
+모델 파일(`*.pt`)은 GitHub 에 올리지 않습니다. (`AI-Server/.gitignore` 에서 제외)
 
-```bash
-git add AI-Server/models/best_baseball_pose.pt
-git commit -m "포즈 모델 재학습 (투구/타격 데이터 추가)"
-git push
-```
+1. Colab 에서 받은 `best_baseball_pose.pt` 를 `AI-Server/models/` 에 넣기
+2. 서버 재시작 (commit / push 필요 없음)
+
+> 다른 PC 에서 clone 했다면 모델 파일이 없으므로 구글 드라이브(`BROS_DATA/best_baseball_pose.pt`)에서 받아 같은 위치에 넣습니다.
+> 모델이 없어도 서버는 켜지고 업로드도 되지만, 분석 결과는 `failed` 로 기록됩니다.
 
 ## 7. 팁
 
