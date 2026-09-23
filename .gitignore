@@ -23,3 +23,18 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# Spring / STS (web/Backend)
+.metadata/
+.settings/
+.project
+.classpath
+.factorypath
+.springBeans
+.sts4-cache/
+bin/
+target/
+build/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+*.log
