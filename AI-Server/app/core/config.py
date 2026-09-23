@@ -34,6 +34,7 @@ class Settings:
 
     # 프론트엔드(js/capture.js)가 검증하는 것과 동일한 허용 타입
     ALLOWED_CONTENT_TYPES = {"video/mp4", "video/quicktime", "video/webm"}
+    ALLOWED_EXTENSIONS = {".mp4", ".mov", ".webm"}
 
 
 settings = Settings()

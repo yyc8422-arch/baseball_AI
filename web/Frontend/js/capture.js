@@ -4,10 +4,9 @@
  * 흐름: FAB 클릭 → "동영상 업로드" or "바로 촬영" 선택
  *      → 분석 종류(투구폼/타격폼/경기 하이라이트) 선택 모달
  *      → (업로드) 파일 선택  또는  (촬영) 카메라 모달에서 녹화
- *      → handleVideoUpload() / useRecordedVideo() 에서 payload 로 정리
+ *      → handleVideoUpload() / useRecordedVideo() 에서 검증
+ *      → sendForAnalysis() 가 AI-Server 로 업로드하고, 분석 진행 상황은 analysis.js 가 조회/표시
  *
- * 아직 실제 AI 분석 API가 없으므로, 여기서는 fetch 로 가짜 서버에 요청하지 않고
- * console.info 로그 + TODO 주석으로 연동 지점만 표시합니다.
  * main.js 의 window.BROS.ui.showToast() 를 재사용해 안내 메시지를 띄웁니다.
  */
 (function () {
@@ -206,8 +205,38 @@
   }
 
   /**
-   * 업로드된 영상 파일을 검증하고, 이후 AI 분석 API 연동을 위한 형태로 정리합니다.
-   * 실제 API가 준비되면 이 함수 안의 TODO 지점에서 fetch 요청만 추가하면 됩니다.
+   * 영상을 AI-Server 로 보내고 분석 진행 상황을 추적합니다. (업로드/촬영 공통)
+   * - 지금 페이지가 해당 분석 페이지면: 미리보기 + "최근 분석 결과" 카드에 진행 상황 표시
+   * - 아니면(예: 홈 화면): 업로드가 끝난 뒤 해당 분석 페이지로 이동 (그 페이지가 이어서 조회)
+   * @param {File} file
+   * @param {"pitching"|"batting"|"highlight"} analysisType
+   */
+  async function sendForAnalysis(file, analysisType) {
+    const api = window.BROS.analysis;
+    const label = analysisTypeLabel(analysisType);
+    const showsResultHere = renderUploadedVideoPreview(file) && document.body.dataset.page === analysisType;
+
+    api.stopTracking();
+    if (showsResultHere) api.renderStatus({ status: "uploading", file_name: file.name });
+    notify(`${label} 영상을 업로드하고 있어요...`);
+
+    try {
+      const result = await api.uploadVideo(file, analysisType);
+      notify("업로드 완료! AI 분석을 시작했어요.");
+      if (showsResultHere) {
+        api.trackAnalysis(analysisType, result.video_id, result.file_name);
+      } else {
+        goToAnalysisFlow(analysisType);
+      }
+    } catch (err) {
+      console.error("[BROS] 영상 업로드 실패", err);
+      notify(err.message);
+      if (showsResultHere) api.renderStatus({ status: "failed", file_name: file.name, error: err.message });
+    }
+  }
+
+  /**
+   * 업로드된 영상 파일을 검증한 뒤 AI 분석을 요청합니다.
    * @param {File} file
    * @param {"pitching"|"batting"|"highlight"} analysisType
    */
@@ -222,29 +251,7 @@
       return;
     }
 
-    /** 백엔드에 바로 보낼 수 있는 최소 정보 */
-    const payload = {
-      file,
-      fileName: file.name,
-      fileSizeBytes: file.size,
-      mimeType: file.type,
-      analysisType,
-    };
-
-    const formData = new FormData();
-    formData.append("video", file, file.name);
-    formData.append("analysisType", analysisType);
-
-    console.info("[BROS] 영상 업로드 준비 완료", payload);
-    notify(`${analysisTypeLabel(analysisType)} 영상이 준비되었습니다. (AI 분석 연동 예정)`);
-
-    // TODO: 백엔드 AI 분석 API 연동 지점
-    // fetch("/api/analysis", { method: "POST", body: formData }).then(...);
-
-    // 지금 있는 페이지에 미리보기 영역이 있으면 그 자리에서 바로 재생, 없으면 해당 분석 페이지로 이동
-    if (!renderUploadedVideoPreview(file)) {
-      goToAnalysisFlow(analysisType);
-    }
+    sendForAnalysis(file, analysisType);
   }
 
   // ===================== 바로 촬영 (카메라) =====================
@@ -382,23 +389,8 @@
     const fileName = `bros-${selectedAnalysisType}-${Date.now()}.webm`;
     const file = new File([recordedBlob], fileName, { type: recordedBlob.type });
 
-    const payload = {
-      file,
-      fileName,
-      fileSizeBytes: file.size,
-      mimeType: file.type,
-      analysisType: selectedAnalysisType,
-    };
-
-    console.info("[BROS] 촬영 영상 준비 완료", payload);
-    notify(`${analysisTypeLabel(selectedAnalysisType)} 촬영이 완료되었습니다. (AI 분석 연동 예정)`);
-
-    // TODO: 백엔드 AI 분석 API 연동 지점 (handleVideoUpload 와 동일한 payload 형태)
-
     closeCamera();
-    if (!renderUploadedVideoPreview(file)) {
-      goToAnalysisFlow(selectedAnalysisType);
-    }
+    sendForAnalysis(file, selectedAnalysisType);
   }
 
   function initCameraModal() {

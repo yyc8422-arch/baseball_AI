@@ -5,7 +5,6 @@
 storage/results/<video_id>.json 에 저장합니다.
 이 좌표로 각도/개선 포인트를 계산하는 "자세 분석" 로직은 다음 단계에서 이 결과를 이용해 붙입니다.
 """
-import json
 import time
 from pathlib import Path
 from typing import Optional
@@ -13,18 +12,8 @@ from typing import Optional
 import cv2
 
 from app.core.config import settings
+from app.services.analysis_store import save_record
 from app.services.pose_model import KEYPOINT_NAMES, get_pose_model, inference_lock
-
-
-def _save_result(video_id: str, result: dict) -> Path:
-    """결과 JSON 을 임시 파일에 다 쓴 뒤 이름을 바꿔서, 반쯤 쓰인 파일을 읽는 일이 없도록 합니다."""
-    settings.RESULT_DIR.mkdir(parents=True, exist_ok=True)
-    final_path = settings.RESULT_DIR / f"{video_id}.json"
-    temp_path = settings.RESULT_DIR / f"{video_id}.json.part"
-    with open(temp_path, "w", encoding="utf-8") as f:
-        json.dump(result, f, ensure_ascii=False)
-    temp_path.replace(final_path)
-    return final_path
 
 
 def _extract_main_player(pred) -> Optional[dict]:
@@ -98,13 +87,13 @@ def process_video(video_id: str, file_path: Path, analysis_type: str) -> None:
     라우터의 BackgroundTasks 가 응답을 보낸 "이후"에 호출하는 함수.
     (요청자는 이 함수가 끝나길 기다리지 않고, 업로드 응답을 바로 받습니다.)
 
-    결과는 성공/실패와 관계없이 storage/results/<video_id>.json 에 status 와 함께 남깁니다.
-      - 성공: {"status": "done", "pose": {...프레임별 관절 좌표...}}
-      - 실패: {"status": "failed", "error": "..."}
+    진행 상황은 analysis_store 레코드(storage/results/<video_id>.json)에 남기고,
+    프론트엔드는 GET /api/analysis/{video_id} 로 이 상태를 조회합니다.
+      - processing: 분석 중
+      - done:   summary(검출 통계) + pose(프레임별 관절 좌표)
+      - failed: error(실패 이유)
 
-    TODO 다음 단계:
-      1) pose 결과로 관절 각도/개선 포인트를 계산하는 자세 분석 로직 (analysis_type 별)
-      2) GET /api/analysis/{video_id} 로 이 결과를 조회하는 API
+    TODO 다음 단계: pose 결과로 관절 각도/개선 포인트를 계산하는 자세 분석 로직 (analysis_type 별)
 
     참고: 지금은 FastAPI 의 BackgroundTasks 를 쓰는데, 이건 "같은 프로세스 안에서,
     응답을 보낸 뒤" 실행되는 가벼운 방식입니다. 실제 AI 추론이 무겁고 오래 걸린다면
@@ -113,19 +102,25 @@ def process_video(video_id: str, file_path: Path, analysis_type: str) -> None:
     """
     print(f"[AI-Server] 분석 시작 -> video_id={video_id}, path={file_path}, type={analysis_type}")
     started = time.time()
-    result = {"video_id": video_id, "analysis_type": analysis_type}
+    save_record(video_id, status="processing")
 
     try:
         pose = extract_pose_sequence(file_path)
-        detected = sum(1 for f in pose["frames"] if f["player"] is not None)
-        result.update(status="done", pose=pose)
+        summary = {
+            "fps": pose["fps"],
+            "total_frames": pose["total_frames"],
+            "analyzed_frames": len(pose["frames"]),
+            "detected_frames": sum(1 for f in pose["frames"] if f["player"] is not None),
+        }
+        save_record(
+            video_id, status="done", summary=summary, pose=pose,
+            elapsed_sec=round(time.time() - started, 1),
+        )
         print(
             f"[AI-Server] 분석 완료 -> video_id={video_id}, "
-            f"선수 검출 {detected}/{len(pose['frames'])} 프레임, {time.time() - started:.1f}초"
+            f"선수 검출 {summary['detected_frames']}/{summary['analyzed_frames']} 프레임, "
+            f"{time.time() - started:.1f}초"
         )
     except Exception as e:
-        result.update(status="failed", error=str(e))
+        save_record(video_id, status="failed", error=str(e), elapsed_sec=round(time.time() - started, 1))
         print(f"[AI-Server] 분석 실패 -> video_id={video_id}: {e}")
-
-    result["elapsed_sec"] = round(time.time() - started, 1)
-    _save_result(video_id, result)

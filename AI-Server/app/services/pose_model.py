@@ -45,5 +45,6 @@ def load_pose_model() -> None:
 
 def get_pose_model() -> YOLO:
     if _model is None:
-        raise RuntimeError(f"포즈 모델이 로드되지 않았습니다. 파일을 확인하세요: {settings.POSE_MODEL_PATH}")
+        # 이 메시지는 프론트 화면에 그대로 보이므로 서버 경로는 넣지 않음 (경로는 서버 시작 로그에 출력됨)
+        raise RuntimeError("AI 분석 모델이 아직 준비되지 않았어요. 모델이 설치된 뒤 다시 시도해주세요.")
     return _model

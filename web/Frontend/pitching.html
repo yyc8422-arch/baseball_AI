@@ -117,12 +117,15 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6 5.5c2.2 2 2.2 11 0 13"/><path d="M18 5.5c-2.2 2-2.2 11 0 13"/></svg>
             최근 분석 결과
           </h2>
-          <div class="empty-state">
-            <span class="empty-state__icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>
-            </span>
-            <p class="empty-state__title">아직 분석한 투구 영상이 없어요</p>
-            <p class="empty-state__desc">위 버튼으로 첫 영상을 올리면, 분석이 끝나는 대로 여기에 결과가 쌓입니다.</p>
+          <!-- AI 분석 진행 상황/결과가 표시되는 자리 (js/analysis.js). 분석 기록이 없으면 아래 빈 상태가 그대로 보임 -->
+          <div id="analysisResultSlot">
+            <div class="empty-state">
+              <span class="empty-state__icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>
+              </span>
+              <p class="empty-state__title">아직 분석한 투구 영상이 없어요</p>
+              <p class="empty-state__desc">위 버튼으로 첫 영상을 올리면, 분석이 끝나는 대로 여기에 결과가 쌓입니다.</p>
+            </div>
           </div>
         </div>
 
@@ -206,6 +209,7 @@
   <script src="./js/types.js"></script>
   <script src="./js/data.js"></script>
   <script src="./js/render.js"></script>
+  <script src="./js/analysis.js"></script>
   <script src="./js/capture.js"></script>
   <script src="./js/shell.js"></script>
   <script>

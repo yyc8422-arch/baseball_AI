@@ -27,11 +27,18 @@ def _ensure_dirs() -> None:
 
 
 def _validate_content_type(file: UploadFile) -> None:
-    if file.content_type not in settings.ALLOWED_CONTENT_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"허용되지 않는 파일 형식입니다: {file.content_type}",
-        )
+    # 브라우저 녹화 영상은 "video/webm;codecs=vp8,opus" 처럼 뒤에 코덱 정보가 붙으므로 앞부분만 비교
+    content_type = (file.content_type or "").split(";")[0].strip().lower()
+    if content_type in settings.ALLOWED_CONTENT_TYPES:
+        return
+    # 일부 브라우저/OS 는 .mov 등의 타입을 비워서 보내므로, 그때는 확장자로 확인 (프론트 isAllowedVideo 와 동일)
+    extension = Path(file.filename or "").suffix.lower()
+    if content_type in ("", "application/octet-stream") and extension in settings.ALLOWED_EXTENSIONS:
+        return
+    raise HTTPException(
+        status_code=400,
+        detail=f"허용되지 않는 파일 형식입니다: {file.content_type}",
+    )
 
 
 async def save_upload_safely(file: UploadFile) -> Tuple[str, Path, int]:

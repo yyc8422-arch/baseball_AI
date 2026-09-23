@@ -1282,6 +1282,84 @@ svg {
   background: #000;
 }
 
+/* "최근 분석 결과" 카드 안의 AI 분석 진행 상황 (js/analysis.js 가 그림) */
+.analysis-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.analysis-status__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--bg);
+  color: var(--muted);
+}
+
+.analysis-status__file {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--navy);
+  word-break: break-all;
+}
+
+.analysis-status__desc {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* 진행 중(업로드/대기/분석 중)에는 배지 앞에 깜빡이는 점 */
+.analysis-status--uploading .analysis-status__badge::before,
+.analysis-status--queued .analysis-status__badge::before,
+.analysis-status--processing .analysis-status__badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: analysis-pulse 1.2s ease-in-out infinite;
+}
+
+.analysis-status--processing .analysis-status__badge {
+  background: var(--blue-soft);
+  color: var(--navy);
+}
+
+.analysis-status--done .analysis-status__badge {
+  background: var(--green-soft);
+  color: var(--green);
+}
+
+.analysis-status--failed .analysis-status__badge,
+.analysis-status--offline .analysis-status__badge {
+  background: var(--gold-soft);
+  color: var(--gold);
+}
+
+@keyframes analysis-pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .analysis-status__badge::before {
+    animation: none;
+  }
+}
+
 /* ===== 경기 하이라이트: 전체 / 포지션별 탭 콘텐츠 =====
    탭 자체는 홈 화면의 .report-tabs/.report-tab 을 그대로 재사용합니다. */
 .game-meta {
