@@ -1,6 +1,7 @@
 # Git 사용 가이드 (baseball_AI)
 
-- 저장소: https://github.com/yyc8422-arch/baseball_AI (Private, 개인 계정 `yyc8422-arch`)
+- 저장소: https://github.com/yyc8422-arch/baseball_AI (Public, 개인 계정 `yyc8422-arch`)
+- 공개 저장소이므로 비밀번호, API 키 같은 비밀값은 코드에 직접 쓰지 말고 `.env` 에 넣습니다. (`.env` 는 GitHub 에 올라가지 않음)
 - 기본 브랜치: `main`
 - 이 폴더의 git 은 개인 저장소에만 연결되어 있고, hexagon 쪽 저장소와는 별개입니다.
 
