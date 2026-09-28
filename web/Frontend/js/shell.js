@@ -47,11 +47,13 @@
   }
 
   // 히어로 영역을 지나 스크롤하면 상단바에 유리 배경 + 축약 타이틀이 떠오르는 효과.
+  // 홈은 화면 전체 메인 비주얼(.home-hero)을 기준으로 하고, 그 위에 있는 동안은 상단바를 흰 글씨로(topbar--on-hero).
   // .hero 가 없는 페이지에서는 조용히 아무 일도 하지 않습니다.
   function bindScrollHeader() {
     const topbar = document.getElementById("topbar");
     const title = document.getElementById("topbarTitle");
-    const hero = document.querySelector(".hero");
+    const photoHero = document.querySelector(".home-hero");
+    const hero = photoHero || document.querySelector(".hero");
     if (!topbar || !title || !hero) return;
 
     const FADE_RANGE = 60;
@@ -74,6 +76,7 @@
       title.style.opacity = progress.toFixed(3);
       title.style.transform = `translateY(${(-10 * (1 - progress)).toFixed(2)}px)`;
       title.style.pointerEvents = progress > 0.5 ? "auto" : "none";
+      if (photoHero) topbar.classList.toggle("topbar--on-hero", progress < 0.5);
     }
 
     function onScroll() {
