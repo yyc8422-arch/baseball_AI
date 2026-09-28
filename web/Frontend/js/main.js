@@ -70,6 +70,60 @@
     window.addEventListener("resize", update);
   }
 
+  // 메인 비주얼은 화면에 고정(sticky)되어 있고, 스크롤한 정도(0~1)를 --hero-cover 로 넘겨
+  // 배경을 어둡게 하고 슬로건을 흐리게 함 (화면 높이의 70% 만큼 스크롤하면 1)
+  function bindHeroCover() {
+    const hero = document.getElementById("homeHero");
+    if (!hero) return;
+    let ticking = false;
+    const update = () => {
+      const progress = Math.min(Math.max(window.scrollY / (window.innerHeight * 0.7), 0), 1);
+      hero.style.setProperty("--hero-cover", progress.toFixed(3));
+      ticking = false;
+    };
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
+  }
+
+  // ===== 첫 화면 제목 글씨 쓰기 =====
+  // "함께라서, 더 멀리" 를 글자마다 span 으로 나눠 순서대로 써지게 함 (애니메이션 자체는 CSS .write-char).
+  // 붓글씨 폰트가 늦게 받아지면 다른 글씨체로 써졌다가 바뀌어 보이므로, 폰트를 받은 뒤(최대 1.5초 대기) 시작.
+  function initHeroWriting() {
+    const title = document.getElementById("heroTitle");
+    if (!title || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    // 줄바꿈(<br />)도 띄어쓰기로 읽히도록 화면낭독기용 이름을 따로 붙임
+    title.setAttribute("aria-label", title.innerHTML.replace(/<br\s*\/?>/gi, " ").replace(/\s+/g, " ").trim());
+    let index = 0;
+    [...title.childNodes].forEach((node) => {
+      if (node.nodeType !== Node.TEXT_NODE) return; // <br /> 는 그대로 둠
+      const frag = document.createDocumentFragment();
+      [...node.textContent].forEach((ch) => {
+        const span = document.createElement("span");
+        span.className = "write-char";
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = ch;
+        span.style.setProperty("--i", String(index++));
+        frag.appendChild(span);
+      });
+      node.replaceWith(frag);
+    });
+    document.documentElement.classList.add("writing-ready");
+
+    const fontReady = document.fonts ? document.fonts.load('1em "Nanum Brush Script"') : Promise.resolve();
+    const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
+    Promise.race([fontReady, timeout]).then(() => {
+      // 폰트를 받은 다음 프레임에 시작해야 첫 글자가 바뀐 폰트로 그려짐
+      requestAnimationFrame(() => title.classList.add("is-writing"));
+    });
+  }
+
   // ===== 스크롤하면 섹션이 아래에서 떠오르는 효과 =====
   // data-reveal 이 붙은 요소는 화면에 들어올 때 is-visible 클래스를 받아 나타납니다.
   // JS 가 실행된 경우에만(html.reveal-ready) 숨기므로, JS 가 실패해도 내용은 그대로 보입니다.
@@ -112,6 +166,8 @@
   document.addEventListener("DOMContentLoaded", () => {
     mount();
     syncTopbarHeight();
+    initHeroWriting();
+    bindHeroCover();
     initScrollReveal();
     bindInteractions();
     window.BROS.shell.init(); // 홈 화면은 사이드바에서 특정 메뉴를 활성 표시하지 않음

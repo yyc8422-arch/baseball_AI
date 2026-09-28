@@ -47,7 +47,8 @@
   }
 
   // 히어로 영역을 지나 스크롤하면 상단바에 유리 배경 + 축약 타이틀이 떠오르는 효과.
-  // 홈은 화면 전체 메인 비주얼(.home-hero)을 기준으로 하고, 그 위에 있는 동안은 상단바를 흰 글씨로(topbar--on-hero).
+  // 홈은 메인 비주얼(.home-hero)이 화면에 고정된 배경이라 상단바는 항상 흰 글씨(topbar--on-hero)이고,
+  // 위로 올라온 콘텐츠가 상단바에 닿으면 어두운 유리 배경을 깔아 글씨가 겹쳐 보이지 않게 합니다.
   // .hero 가 없는 페이지에서는 조용히 아무 일도 하지 않습니다.
   function bindScrollHeader() {
     const topbar = document.getElementById("topbar");
@@ -59,24 +60,31 @@
     const FADE_RANGE = 60;
     let ticking = false;
 
+    const heroContent = photoHero && photoHero.nextElementSibling;
+    if (photoHero) topbar.classList.add("topbar--on-hero");
+
     function computeProgress() {
       const topbarHeight = topbar.getBoundingClientRect().height;
-      const heroBottom = hero.getBoundingClientRect().bottom;
-      const raw = topbarHeight - heroBottom;
+      // 고정된 메인 비주얼은 스크롤해도 제자리이므로, 그 위로 올라오는 콘텐츠의 윗부분이 기준
+      const edge = heroContent ? heroContent.getBoundingClientRect().top : hero.getBoundingClientRect().bottom;
+      const raw = topbarHeight - edge;
       return Math.min(Math.max(raw / FADE_RANGE, 0), 1);
     }
 
     function applyProgress(progress) {
-      topbar.style.backgroundColor = `rgba(var(--bg-rgb), ${(0.82 * progress).toFixed(3)})`;
+      topbar.style.backgroundColor = photoHero
+        ? `rgba(8, 20, 13, ${(0.72 * progress).toFixed(3)})`
+        : `rgba(var(--bg-rgb), ${(0.82 * progress).toFixed(3)})`;
       topbar.style.backdropFilter = `blur(${(10 * progress).toFixed(2)}px)`;
       topbar.style.webkitBackdropFilter = topbar.style.backdropFilter;
-      topbar.style.borderBottomColor = `rgba(var(--border-rgb), ${progress.toFixed(3)})`;
+      topbar.style.borderBottomColor = photoHero
+        ? `rgba(255, 255, 255, ${(0.1 * progress).toFixed(3)})`
+        : `rgba(var(--border-rgb), ${progress.toFixed(3)})`;
       topbar.style.boxShadow = `0 6px 18px rgba(var(--shadow-rgb), ${(0.06 * progress).toFixed(3)})`;
 
       title.style.opacity = progress.toFixed(3);
       title.style.transform = `translateY(${(-10 * (1 - progress)).toFixed(2)}px)`;
       title.style.pointerEvents = progress > 0.5 ? "auto" : "none";
-      if (photoHero) topbar.classList.toggle("topbar--on-hero", progress < 0.5);
     }
 
     function onScroll() {

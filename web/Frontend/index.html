@@ -16,7 +16,7 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Playball&family=Black+Han+Sans&family=Gaegu:wght@700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playball&family=Black+Han+Sans&family=Gaegu:wght@700&family=Nanum+Brush+Script&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
@@ -78,17 +78,20 @@
         </div>
       </header>
 
-      <!-- 메인 비주얼: 화면 전체 높이. 스크롤하면 아래 콘텐츠가 차례로 떠오름 (js/main.js)
+      <!-- 메인 비주얼: 화면에 고정된 배경. 스크롤하면 이 배경은 그대로 있고 아래 콘텐츠만 위로 올라옴 (js/main.js)
            사진(960x1280)을 원본보다 크게 늘리지 않도록 PC 에서는 흐린 배경 + 선명한 사진 액자로 보여줌 -->
       <section class="home-hero" id="homeHero">
         <div class="home-hero__backdrop" aria-hidden="true"></div>
+        <!-- 스크롤할수록 진해져서 위로 올라온 카드 글씨가 잘 읽히게 함 -->
+        <div class="home-hero__dim" aria-hidden="true"></div>
         <div class="home-hero__inner">
           <div class="home-hero__text">
             <p class="home-hero__eyebrow">
               <span class="home-hero__eyebrow-line"></span>
               BROTHERS UNITED · GWANGJU
             </p>
-            <h1 class="home-hero__title">함께라서,<br />더 멀리</h1>
+            <!-- js/main.js 가 글자마다 나눠서 붓으로 한 글자씩 써 내려가는 애니메이션을 붙임 -->
+            <h1 class="home-hero__title" id="heroTitle">함께라서,<br />더 멀리</h1>
             <p class="home-hero__desc">야구는 혼자가 아닌, 우리가 만드는 이야기.<br />AI 자세 분석으로 한 걸음 더 성장하세요.</p>
             <div class="home-hero__actions">
               <a href="./pitching.html" class="home-hero__cta">투구폼 분석 시작</a>
@@ -105,7 +108,7 @@
         </a>
       </section>
 
-      <main class="content">
+      <main class="content home-content">
         <section class="hero" id="homeReport" data-reveal>
           <div class="hero__text">
             <p class="hero__eyebrow">AI가 만들어주는 더 나은 야구</p>
