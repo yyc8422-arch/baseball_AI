@@ -7,10 +7,18 @@
  */
 (function () {
   /**
-   * Spring 백엔드 주소. 백엔드 application.yml 의 server.port 와 반드시 같아야 합니다.
+   * Spring 백엔드 포트. 백엔드 application.yml 의 server.port 와 반드시 같아야 합니다.
    * 8080 이 이미 사용 중이라 8081 로 실행 중. 다른 포트로 띄우면 여기만 바꾸면 됩니다.
    */
-  const API_BASE_URL = "http://localhost:8081";
+  const API_PORT = 8081;
+
+  /**
+   * 호스트는 지금 페이지를 연 주소를 그대로 따라갑니다.
+   * 페이지는 127.0.0.1 인데 API 는 localhost 로 부르면, 브라우저가 둘을 다른 사이트로 보고
+   * 로그인 세션 쿠키를 저장하지 않아서 로그인해도 바로 풀립니다. (file:// 로 열면 localhost)
+   */
+  const API_HOST = window.location.hostname || "localhost";
+  const API_BASE_URL = `http://${API_HOST}:${API_PORT}`;
 
   const OFFLINE_MESSAGE = "서버에 연결할 수 없어요. 백엔드 서버가 켜져 있는지 확인해주세요.";
 

@@ -51,10 +51,10 @@ app:
 
 - 본인 PC에서 8080 이 비어 있으면 8080 으로 바꿔도 되고, 8081 그대로 써도 됩니다.
 - 실행했는데 `Port 8081 was already in use` (또는 8080) 가 뜨면 비어 있는 다른 포트로 바꾸세요.
-- **포트를 바꾸면 프론트 `web/Frontend/js/api.js` 의 `API_BASE_URL` 도 실제로 뜬 포트로 똑같이 바꿔야 합니다.**
+- **포트를 바꾸면 프론트 `web/Frontend/js/api.js` 의 `API_PORT` 도 실제로 뜬 포트로 똑같이 바꿔야 합니다.**
 
 ```js
-const API_BASE_URL = "http://localhost:8081";
+const API_PORT = 8081;
 ```
 
 ## 5. AI-Server 주소 확인
@@ -116,7 +116,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 
 아래는 모두 반영되어 있습니다. 새로 API 를 호출하는 코드를 짤 때도 같은 규칙을 지키면 됩니다.
 
-- 백엔드 주소는 **`js/api.js` 의 `API_BASE_URL` 한 곳**에서만 관리 (`analysis.js` 도 이 값을 씀)
+- 백엔드 주소는 **`js/api.js` 한 곳**에서만 관리 (`analysis.js` 도 이 값을 씀). 포트는 `API_PORT`, 호스트는 페이지를 연 주소(`localhost` 또는 `127.0.0.1`)를 그대로 따라감 — 둘이 다르면 브라우저가 로그인 쿠키를 저장하지 않기 때문
 - 모든 요청에 `credentials: "include"` 를 붙여서 세션 쿠키가 전달됨 (`api.request()` 를 쓰면 자동)
 - `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
@@ -130,6 +130,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | 페이지 주소 자체가 404 (`http://127.0.0.1:5500/web/Frontend/login.html`) | 5500 포트를 Live Server 가 아닌 다른 프로그램이 쓰고 있음. 그 프로그램을 끄고 Live Server 를 다시 켜기 |
 | API 가 404 `"요청한 API 를 찾을 수 없습니다"` | 백엔드가 예전 코드로 떠 있음. STS 에서 `web/Backend` 프로젝트로 다시 실행 |
 | 분석 페이지 결과 카드에 "연결 실패 / AI 서버에 연결할 수 없어요" | AI-Server(8000)가 꺼져 있음. `uvicorn main:app --port 8000` 으로 켜기 (마이페이지 목록은 AI-Server 가 꺼져 있어도 마지막 상태로 보임) |
+| 로그인 누르면 잠깐 됐다가 다시 로그인 전 상태로 돌아옴 | 페이지 주소와 API 주소의 호스트가 다름(`127.0.0.1` ↔ `localhost`) → 쿠키가 저장 안 됨. `api.js` 가 자동으로 맞추므로 `api.js` 를 직접 `localhost` 로 고정하지 말 것 |
 | 로그인했는데 새로고침하면 풀림 / 마이페이지가 로그인으로 튕김 | 프론트를 `file://` 로 열었거나, 프론트 주소가 `app.cors.allowed-origins` 에 없음. 또는 세션 30분 만료 |
 | 콘솔에 `401 /api/auth/me` 가 한 번 찍힘 | 로그인 표시는 남아 있는데 서버 세션이 만료된 경우로, 화면을 자동으로 로그아웃 상태로 맞추는 정상 동작 |
 
