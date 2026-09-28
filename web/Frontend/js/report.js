@@ -6,8 +6,8 @@
  * 프론트는 값을 계산하지 않고 AI(Python/FastAPI)가 보내준 JSON 을 그대로 그리기만 합니다.
  * (예외: 이전 분석 비교의 "변화" 칸은 표시용으로 현재 - 이전 을 뺄셈만 함. API 가 change 를 주면 그 값을 그대로 씀)
  *
- * 화면 순서: ① 분석 영상 (+ 영상 아래 동작 단계 구간 바, 누르면 그 시점으로 이동) ② 자세 및 관절 수치
- *           ③ 동작 연결 분석 ④ 움직임 수치 ⑤ 이전 분석 비교 ⑥ 분석 안내
+ * 화면 순서: ① 분석 영상 (+ 영상 아래 동작 단계 타임라인, 누르면 그 시점으로 이동)
+ *           ② 자세 및 움직임 수치 (관절 각도 / 움직임) ③ 이전 분석 비교 + 분석 안내
  *
  * 연결 함수 (향후 FastAPI 결과 → 화면):
  *   renderPitchAnalysis(result) / renderBattingAnalysis(result)   result 형식은 js/types.js 의 AnalysisReport
@@ -30,9 +30,7 @@
       noun: "투구",
       titles: {
         phases: "투구 동작 단계",
-        angles: "자세 및 관절 수치",
-        sequence: "투구 동작 연결 분석",
-        movement: "움직임 수치",
+        metrics: "자세 및 움직임 수치",
         compare: "이전 투구 분석 비교",
       },
       // key 는 API 의 phases[].key 와 같은 영어 값(그대로 유지), 화면에는 야구 용어를 한글 발음으로 표기한 label
@@ -59,23 +57,10 @@
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
+        { group: "sequence", key: "totalMotionSec", label: "전체 투구 동작 시간", unit: "sec" },
       ],
-      // 흐름: 하체 이동 → 골반 회전 → 어깨 회전 → 팔 가속 → 릴리스 (각 단계 아래 시작 시점)
-      sequenceFlow: [
-        { label: "하체 이동", key: "lowerBodyMoveStartSec" },
-        { label: "골반 회전", key: "pelvisRotationStartSec" },
-        { label: "어깨 회전", key: "shoulderRotationStartSec" },
-        { label: "팔 가속", key: "armAccelerationStartSec" },
-        { label: "릴리스", key: "releaseSec" },
-      ],
-      sequenceItems: [
-        { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
-        { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
-        { key: "armAccelerationStartSec", label: "팔 가속 시작 시점", unit: "sec" },
-        { key: "releaseSec", label: "릴리스 시점", unit: "sec" },
-        { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
-        { key: "totalMotionSec", label: "전체 투구 동작 시간", unit: "sec" },
-      ],
+      // 시점 데이터(sequence) 중 화면에 보이는 건 전체 동작 시간 (움직임 묶음 + 이전 분석 비교)
+      sequenceItems: [{ key: "totalMotionSec", label: "전체 투구 동작 시간", unit: "sec" }],
       compare: [
         { group: "angles", key: "elbowAngleAtRelease", label: "팔꿈치 각도" },
         { group: "angles", key: "shoulderAngleAtRelease", label: "어깨 각도" },
@@ -93,9 +78,7 @@
       noun: "타격",
       titles: {
         phases: "타격 동작 단계",
-        angles: "자세 및 관절 수치",
-        sequence: "타격 동작 연결 분석",
-        movement: "움직임 수치",
+        metrics: "자세 및 움직임 수치",
         compare: "이전 타격 분석 비교",
       },
       // CONTACT 는 공/배트 인식 모델이 생기면 API 가 phases 에 넣어 보내면 자동으로 표시됨 (EXTRA_PHASE_LABELS)
@@ -119,26 +102,9 @@
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
+        { group: "sequence", key: "totalSwingSec", label: "전체 스윙 동작 시간", unit: "sec" },
       ],
-      // 흐름: 로드 → 스트라이드 → 골반 회전 → 어깨 회전 → 스윙 → 팔로 스루
-      sequenceFlow: [
-        { label: "로드", key: "loadStartSec" },
-        { label: "스트라이드", key: "strideStartSec" },
-        { label: "골반 회전", key: "pelvisRotationStartSec" },
-        { label: "어깨 회전", key: "shoulderRotationStartSec" },
-        { label: "스윙", key: "swingStartSec" },
-        { label: "팔로 스루", key: "followThroughStartSec" },
-      ],
-      sequenceItems: [
-        { key: "loadStartSec", label: "로드 시작 시점", unit: "sec" },
-        { key: "strideStartSec", label: "스트라이드 시작 시점", unit: "sec" },
-        { key: "frontFootLandingSec", label: "앞발 착지 시점", unit: "sec" },
-        { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
-        { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
-        { key: "swingStartSec", label: "스윙 시작 시점", unit: "sec" },
-        { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
-        { key: "totalSwingSec", label: "전체 스윙 동작 시간", unit: "sec" },
-      ],
+      sequenceItems: [{ key: "totalSwingSec", label: "전체 스윙 동작 시간", unit: "sec" }],
       compare: [
         { group: "angles", key: "pelvisRotation" },
         { group: "angles", key: "shoulderRotation" },
@@ -530,52 +496,40 @@
     }
   }
 
-  // ===================== ② 자세 및 관절 수치 / ④ 움직임 수치 =====================
-  function renderMetricGrid(body, config, defs, values) {
-    const grid = el("div", "metric-grid");
+  // ===================== ② 자세 및 움직임 수치 (관절 각도 / 움직임 두 묶음) =====================
+  function renderMetricsCard(body, config, result) {
+    const groups = [
+      { title: "관절 각도", defs: config.angles, group: "angles" },
+      {
+        title: "움직임",
+        defs: config.movement,
+        group: "movement",
+        desc: "실제 거리 보정 전이므로 정규화 좌표·신체 비율 기준의 상대 값입니다.",
+      },
+    ];
     let filled = 0;
-    defs.forEach((def) => {
-      const metric = metricOf(values, def.key);
-      if (metric) filled += 1;
-      const item = el("div", "metric-card");
-      item.append(el("span", "metric-card__label", def.label));
-      item.append(el("span", "metric-card__value", metric ? formatNumber(metric.value, def.unit) : "—"));
-      const notes = [metric && metric.at ? `${phaseLabel(config, metric.at)} 시점` : null, UNITS[def.unit].note].filter(Boolean);
-      if (notes.length) item.append(el("span", "metric-card__note", notes.join(" · ")));
-      grid.appendChild(item);
+    groups.forEach(({ title, defs, group, desc }) => {
+      const section = el("div", "metric-group");
+      section.appendChild(el("h3", "metric-group__title", title));
+      if (desc) section.appendChild(el("p", "metric-group__desc", desc));
+      const grid = el("div", "metric-grid");
+      defs.forEach((def) => {
+        const metric = metricOf(result[def.group || group], def.key);
+        if (metric) filled += 1;
+        const item = el("div", "metric-card");
+        item.append(el("span", "metric-card__label", def.label));
+        item.append(el("span", "metric-card__value", metric ? formatNumber(metric.value, def.unit) : "—"));
+        const notes = [metric && metric.at ? `${phaseLabel(config, metric.at)} 시점` : null, UNITS[def.unit].note].filter(Boolean);
+        if (notes.length) item.append(el("span", "metric-card__note", notes.join(" · ")));
+        grid.appendChild(item);
+      });
+      section.appendChild(grid);
+      body.appendChild(section);
     });
-    body.appendChild(grid);
     if (!filled) body.appendChild(pendingNote());
   }
 
-  // ===================== ③ 동작 연결 분석 =====================
-  function renderSequenceCard(body, config, result) {
-    const seq = result.sequence || {};
-    const flow = el("ol", "sequence-flow");
-    config.sequenceFlow.forEach((step, i) => {
-      const metric = metricOf(seq, step.key);
-      const item = el("li", "sequence-flow__step");
-      item.append(el("span", "sequence-flow__label", step.label), el("span", "sequence-flow__time", metric ? formatNumber(metric.value, "sec") : "—"));
-      flow.appendChild(item);
-      if (i < config.sequenceFlow.length - 1) flow.appendChild(el("li", "sequence-flow__arrow", "→"));
-    });
-    body.appendChild(el("div", "sequence-flow-wrap")).appendChild(flow);
-
-    const list = el("dl", "sequence-list");
-    let filled = 0;
-    config.sequenceItems.forEach((def) => {
-      const metric = metricOf(seq, def.key);
-      if (metric) filled += 1;
-      const row = el("div", "sequence-list__row");
-      row.append(el("dt", null, def.label), el("dd", null, metric ? formatNumber(metric.value, def.unit) : "—"));
-      list.appendChild(row);
-    });
-    body.appendChild(list);
-    if (!filled) body.appendChild(pendingNote("동작 시점 데이터는 AI 동작 연결 분석이 연결되면 표시됩니다."));
-    else body.appendChild(el("p", "report-card__meta", "시점은 영상 시작 기준 초(s)입니다."));
-  }
-
-  // ===================== ⑤ 이전 분석 비교 =====================
+  // ===================== ③ 이전 분석 비교 =====================
   function renderCompareCard(body, config, result) {
     const prev = result.previousAnalysis;
     if (!prev) {
@@ -616,7 +570,7 @@
     body.appendChild(el("p", "report-card__meta", "변화는 현재 값에서 이전 값을 뺀 수치입니다."));
   }
 
-  // ===================== ⑥ 분석 안내 =====================
+  // ===================== 분석 안내 =====================
   function renderNotice(config) {
     const box = el("aside", "report-notice");
     box.append(el("span", "report-notice__icon", "ⓘ"), el("p", "report-notice__text", config.notice));
@@ -676,15 +630,11 @@
     if (result && !options.partial) {
       const r = result;
       let step = 2;
-      const angles = card(step++, config.titles.angles, "영상의 신체 좌표에서 측정한 값입니다.");
-      renderMetricGrid(angles.body, config, config.angles, r.angles);
-      const sequence = card(step++, config.titles.sequence, "신체 부위가 움직이기 시작한 시점의 순서입니다.");
-      renderSequenceCard(sequence.body, config, r);
-      const movement = card(step++, config.titles.movement, "실제 거리 보정 전이므로 정규화 좌표·신체 비율 기준의 상대 값입니다.");
-      renderMetricGrid(movement.body, config, config.movement, r.movement);
+      const metrics = card(step++, config.titles.metrics, "영상의 신체 좌표에서 측정한 관절 각도와 움직임 값입니다.");
+      renderMetricsCard(metrics.body, config, r);
       const compare = card(step++, config.titles.compare, "같은 사용자의 이전 영상 수치와 현재 수치를 나란히 보여줍니다.");
       renderCompareCard(compare.body, config, r);
-      container.append(angles.section, sequence.section, movement.section, compare.section);
+      container.append(metrics.section, compare.section);
     }
     container.appendChild(renderNotice(config));
   }

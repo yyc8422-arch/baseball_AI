@@ -48,7 +48,7 @@
  *   투구: elbowAngleAtRelease, shoulderAngleAtRelease, frontKneeAngle, backKneeAngle, trunkTilt, pelvisRotation, shoulderRotation (°), strideLength (신장 대비)
  *   타격: pelvisRotation, shoulderRotation, trunkTilt, frontKneeAngle, backKneeAngle (°), strideLength (신장 대비)
  * @property {Object.<string, MetricValue>} movement headDisplacement, pelvisDisplacement (정규화 좌표), trunkTiltChange (°)
- * @property {Object.<string, MetricValue>} sequence 시점/시간(초)
+ * @property {Object.<string, MetricValue>} sequence 시점/시간(초). 지금 화면에는 전체 동작 시간(totalMotionSec / totalSwingSec)만 표시, 나머지는 보내도 무시됨
  *   투구: lowerBodyMoveStartSec, pelvisRotationStartSec, shoulderRotationStartSec, armAccelerationStartSec, releaseSec, pelvisToShoulderGapSec, totalMotionSec
  *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec, swingStartSec, followThroughStartSec, pelvisToShoulderGapSec, totalSwingSec
  * @property {ReportPreviousAnalysis|null} previousAnalysis

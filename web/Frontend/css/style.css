@@ -3046,7 +3046,25 @@ a.record-item:hover {
   color: var(--cta-ink);
 }
 
-/* ② 자세 및 관절 수치 / ④ 움직임 수치 카드 (평가 태그 없이 값만) */
+/* ② 자세 및 움직임 수치: 관절 각도 / 움직임 두 묶음 (평가 태그 없이 값만) */
+.metric-group + .metric-group {
+  margin-top: 24px;
+}
+
+.metric-group__title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.metric-group__desc {
+  margin: -4px 0 10px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -3082,82 +3100,7 @@ a.record-item:hover {
   color: var(--muted);
 }
 
-/* ③ 동작 연결 분석: 순서 흐름 + 시점 목록 */
-.sequence-flow-wrap {
-  overflow-x: auto;
-  padding-bottom: 4px;
-}
-
-.sequence-flow {
-  display: flex;
-  align-items: stretch;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  min-width: max-content;
-}
-
-.sequence-flow__step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 92px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-}
-
-.sequence-flow__label {
-  font-size: 13px;
-  font-weight: 800;
-  color: var(--navy);
-  white-space: nowrap;
-}
-
-.sequence-flow__time {
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.sequence-flow__arrow {
-  align-self: center;
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.sequence-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 24px;
-  margin: 16px 0 0;
-}
-
-.sequence-list__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 13.5px;
-}
-
-.sequence-list dt {
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.sequence-list dd {
-  margin: 0;
-  font-weight: 800;
-  color: var(--navy);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ⑤ 이전 분석 비교 표 (변화는 부호만, 좋고 나쁨을 뜻하는 색은 쓰지 않음) */
+/* ③ 이전 분석 비교 표 (변화는 부호만, 좋고 나쁨을 뜻하는 색은 쓰지 않음) */
 .compare-table-wrap {
   overflow-x: auto;
   margin-top: 12px;
@@ -3195,7 +3138,7 @@ a.record-item:hover {
   font-weight: 800;
 }
 
-/* ⑥ 분석 안내 (경고창이 아닌 차분한 정보 박스) */
+/* 분석 안내 (경고창이 아닌 차분한 정보 박스) */
 .report-notice {
   display: flex;
   gap: 10px;
@@ -3232,10 +3175,6 @@ a.record-item:hover {
 @media (max-width: 860px) {
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sequence-list {
-    grid-template-columns: 1fr;
   }
 }
 
