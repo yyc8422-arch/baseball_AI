@@ -6,8 +6,8 @@
  * 프론트는 값을 계산하지 않고 AI(Python/FastAPI)가 보내준 JSON 을 그대로 그리기만 합니다.
  * (예외: 이전 분석 비교의 "변화" 칸은 표시용으로 현재 - 이전 을 뺄셈만 함. API 가 change 를 주면 그 값을 그대로 씀)
  *
- * 화면 순서: ① 분석 영상 ② 영상/분석 정보 ③ 동작 단계 ④ 자세 및 관절 수치
- *           ⑤ 동작 연결 분석 ⑥ 움직임 수치 ⑦ 이전 분석 비교 ⑧ 분석 안내
+ * 화면 순서: ① 분석 영상 (+ 영상 아래 동작 단계 구간 바, 누르면 그 시점으로 이동) ② 자세 및 관절 수치
+ *           ③ 동작 연결 분석 ④ 움직임 수치 ⑤ 이전 분석 비교 ⑥ 분석 안내
  *
  * 연결 함수 (향후 FastAPI 결과 → 화면):
  *   renderPitchAnalysis(result) / renderBattingAnalysis(result)   result 형식은 js/types.js 의 AnalysisReport
@@ -35,44 +35,44 @@
         movement: "움직임 수치",
         compare: "이전 투구 분석 비교",
       },
-      // API 의 phases[].key 와 같은 값 (표시는 label)
+      // key 는 API 의 phases[].key 와 같은 영어 값(그대로 유지), 화면에는 한글 label 로 표시
       phases: [
-        { key: "SET", label: "SET" },
-        { key: "LEG_LIFT", label: "LEG LIFT" },
-        { key: "STRIDE", label: "STRIDE" },
-        { key: "ARM_COCKING", label: "ARM COCKING" },
-        { key: "ACCELERATION", label: "ACCELERATION" },
-        { key: "RELEASE", label: "RELEASE" },
-        { key: "FOLLOW_THROUGH", label: "FOLLOW THROUGH" },
+        { key: "SET", label: "준비 자세" },
+        { key: "LEG_LIFT", label: "다리 들기" },
+        { key: "STRIDE", label: "앞발 내딛기" },
+        { key: "ARM_COCKING", label: "팔 젖히기" },
+        { key: "ACCELERATION", label: "팔 가속" },
+        { key: "RELEASE", label: "공 놓기" },
+        { key: "FOLLOW_THROUGH", label: "마무리 동작" },
       ],
       angles: [
-        { key: "elbowAngleAtRelease", label: "릴리스 시 팔꿈치 각도", unit: "deg" },
-        { key: "shoulderAngleAtRelease", label: "릴리스 시 어깨 각도", unit: "deg" },
+        { key: "elbowAngleAtRelease", label: "공 놓을 때 팔꿈치 각도", unit: "deg" },
+        { key: "shoulderAngleAtRelease", label: "공 놓을 때 어깨 각도", unit: "deg" },
         { key: "frontKneeAngle", label: "앞무릎 각도", unit: "deg" },
         { key: "backKneeAngle", label: "뒷무릎 각도", unit: "deg" },
         { key: "trunkTilt", label: "상체 기울기", unit: "deg" },
         { key: "pelvisRotation", label: "골반 회전량", unit: "deg" },
         { key: "shoulderRotation", label: "어깨 회전량", unit: "deg" },
-        { key: "strideLength", label: "스트라이드 크기", unit: "ratio" },
+        { key: "strideLength", label: "보폭 (스트라이드)", unit: "ratio" },
       ],
       movement: [
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
       ],
-      // 흐름: 하체 이동 → 골반 회전 → 어깨 회전 → 팔 가속 → RELEASE (각 단계 아래 시작 시점)
+      // 흐름: 하체 이동 → 골반 회전 → 어깨 회전 → 팔 가속 → 공 놓기 (각 단계 아래 시작 시점)
       sequenceFlow: [
         { label: "하체 이동", key: "lowerBodyMoveStartSec" },
         { label: "골반 회전", key: "pelvisRotationStartSec" },
         { label: "어깨 회전", key: "shoulderRotationStartSec" },
         { label: "팔 가속", key: "armAccelerationStartSec" },
-        { label: "RELEASE", key: "releaseSec" },
+        { label: "공 놓기", key: "releaseSec" },
       ],
       sequenceItems: [
         { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
         { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
         { key: "armAccelerationStartSec", label: "팔 가속 시작 시점", unit: "sec" },
-        { key: "releaseSec", label: "릴리스 시점", unit: "sec" },
+        { key: "releaseSec", label: "공 놓는 시점", unit: "sec" },
         { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
         { key: "totalMotionSec", label: "전체 투구 동작 시간", unit: "sec" },
       ],
@@ -100,12 +100,12 @@
       },
       // CONTACT 는 공/배트 인식 모델이 생기면 API 가 phases 에 넣어 보내면 자동으로 표시됨 (EXTRA_PHASE_LABELS)
       phases: [
-        { key: "STANCE", label: "STANCE" },
-        { key: "LOAD", label: "LOAD" },
-        { key: "STRIDE", label: "STRIDE" },
-        { key: "ROTATION", label: "ROTATION" },
-        { key: "SWING", label: "SWING" },
-        { key: "FOLLOW_THROUGH", label: "FOLLOW THROUGH" },
+        { key: "STANCE", label: "준비 자세" },
+        { key: "LOAD", label: "뒤로 당기기" },
+        { key: "STRIDE", label: "앞발 내딛기" },
+        { key: "ROTATION", label: "몸통 회전" },
+        { key: "SWING", label: "배트 휘두르기" },
+        { key: "FOLLOW_THROUGH", label: "마무리 동작" },
       ],
       angles: [
         { key: "pelvisRotation", label: "골반 회전량", unit: "deg" },
@@ -113,29 +113,29 @@
         { key: "trunkTilt", label: "상체 기울기", unit: "deg" },
         { key: "frontKneeAngle", label: "앞무릎 각도", unit: "deg" },
         { key: "backKneeAngle", label: "뒷무릎 각도", unit: "deg" },
-        { key: "strideLength", label: "스트라이드 크기", unit: "ratio" },
+        { key: "strideLength", label: "보폭 (스트라이드)", unit: "ratio" },
       ],
       movement: [
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
       ],
-      // 흐름: LOAD → STRIDE → 골반 회전 → 어깨 회전 → SWING → FOLLOW THROUGH
+      // 흐름: 뒤로 당기기 → 앞발 내딛기 → 골반 회전 → 어깨 회전 → 배트 휘두르기 → 마무리 동작
       sequenceFlow: [
-        { label: "LOAD", key: "loadStartSec" },
-        { label: "STRIDE", key: "strideStartSec" },
+        { label: "뒤로 당기기", key: "loadStartSec" },
+        { label: "앞발 내딛기", key: "strideStartSec" },
         { label: "골반 회전", key: "pelvisRotationStartSec" },
         { label: "어깨 회전", key: "shoulderRotationStartSec" },
-        { label: "SWING", key: "swingStartSec" },
-        { label: "FOLLOW THROUGH", key: "followThroughStartSec" },
+        { label: "배트 휘두르기", key: "swingStartSec" },
+        { label: "마무리 동작", key: "followThroughStartSec" },
       ],
       sequenceItems: [
-        { key: "loadStartSec", label: "LOAD 시작 시점", unit: "sec" },
-        { key: "strideStartSec", label: "STRIDE 시작 시점", unit: "sec" },
+        { key: "loadStartSec", label: "뒤로 당기기 시작 시점", unit: "sec" },
+        { key: "strideStartSec", label: "앞발 내딛기 시작 시점", unit: "sec" },
         { key: "frontFootLandingSec", label: "앞발 착지 시점", unit: "sec" },
         { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
         { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
-        { key: "swingStartSec", label: "SWING 시작 시점", unit: "sec" },
+        { key: "swingStartSec", label: "배트 휘두르기 시작 시점", unit: "sec" },
         { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
         { key: "totalSwingSec", label: "전체 스윙 동작 시간", unit: "sec" },
       ],
@@ -154,17 +154,9 @@
   };
 
   /** 설정에 없는 단계가 API 에서 오면(예: 추후 CONTACT) 이 이름으로 표시, 없으면 key 그대로 */
-  const EXTRA_PHASE_LABELS = { CONTACT: "CONTACT" };
+  const EXTRA_PHASE_LABELS = { CONTACT: "공 맞히기" };
 
-  const STATUS_LABEL = {
-    uploading: "업로드 중",
-    queued: "분석 대기",
-    processing: "분석 중",
-    done: "분석 완료",
-    failed: "분석 실패",
-  };
 
-  const CAMERA_VIEW_LABEL = { side: "측면", front: "정면", back: "후면", diagonal: "사선" };
 
   // ===================== 예시 데이터 (화면 확인용, 실제 분석 결과 아님) =====================
   // 실제 AI 모델이 완성되기 전 화면 구성을 미리 볼 수 있도록 "예시 리포트 보기" 에서만 사용.
@@ -380,37 +372,7 @@
     state.overlay.setPose(state.result && state.result.pose ? state.result.pose : null);
   }
 
-  // ===================== ② 영상/분석 정보 =====================
-  function countMetrics(result) {
-    const groups = [result.angles, result.movement, result.sequence];
-    return groups.reduce((sum, g) => sum + Object.keys(g || {}).filter((k) => metricOf(g, k)).length, 0);
-  }
-
-  function renderInfoCard(body, result) {
-    const info = result.videoInfo || {};
-    const metricCount = info.metricCount != null ? info.metricCount : countMetrics(result) || null;
-    const items = [
-      ["분석 상태", STATUS_LABEL[info.status] || info.status],
-      ["촬영 방향", info.cameraView ? CAMERA_VIEW_LABEL[info.cameraView] || info.cameraView : null],
-      ["영상 FPS", info.fps != null ? `${Number(info.fps).toFixed(0)} fps` : null],
-      ["영상 길이", info.durationSec != null ? `${Number(info.durationSec).toFixed(1)}초` : null],
-      ["분석 프레임 수", info.analyzedFrames != null ? `${info.analyzedFrames}프레임` : null],
-      ["측정 지표 수", metricCount != null ? `${metricCount}개` : null],
-    ];
-    const grid = el("div", "report-info");
-    items.forEach(([label, value]) => {
-      const item = el("div", "report-info__item");
-      item.append(el("span", "report-info__label", label), el("span", "report-info__value", value || "—"));
-      grid.appendChild(item);
-    });
-    body.appendChild(grid);
-    const sub = [info.fileName, info.analyzedAt ? `분석일 ${info.analyzedAt}` : null, info.detectedFrames != null ? `선수 검출 ${info.detectedFrames}프레임` : null]
-      .filter(Boolean)
-      .join(" · ");
-    if (sub) body.appendChild(el("p", "report-card__meta", sub));
-  }
-
-  // ===================== ③ 동작 단계 (영상 타임라인과 연결) =====================
+  // ===================== ① 안의 동작 단계 구간 바 (영상 타임라인과 연결) =====================
   function orderedPhases(config, apiPhases) {
     const byKey = {};
     (apiPhases || []).forEach((p) => {
@@ -429,71 +391,118 @@
     return list;
   }
 
-  function renderPhaseCard(body, config, result) {
-    const phases = orderedPhases(config, result.phases);
-    const timed = phases.every((p) => typeof p.startSec === "number" && typeof p.endSec === "number");
-    const start = timed ? phases[0].startSec : 0;
-    const end = timed ? phases[phases.length - 1].endSec : 0;
-    const total = end - start;
+  /**
+   * 동작 단계 구간 바 (영상 바로 아래, 플레이어의 일부).
+   * 구간 위치/길이는 "영상 전체 길이" 기준이라 브라우저 기본 탐색바와 같은 축이고, 구간을 누르면 그 시작 시점으로 이동.
+   * 구간 시작/종료 시점(startSec/endSec)이 없으면 아무것도 그리지 않음.
+   * @param {HTMLElement} target 구간 바를 넣을 곳
+   * @param {HTMLElement|null} before 이 요소 앞에 넣음 (플레이어의 재생속도 줄 앞)
+   */
+  function renderPhaseChapters(target, before, config, result) {
+    const phases = orderedPhases(config, result.phases).filter(
+      (p) => typeof p.startSec === "number" && typeof p.endSec === "number"
+    );
+    if (!phases.length) return;
 
-    const scroller = el("div", "phase-timeline");
-    const track = el("div", "phase-timeline__track");
-    phases.forEach((p) => {
-      const seg = el("button", "phase-seg");
+    const video = state.player && !state.isSample ? state.player.video : null;
+    const lastEnd = phases[phases.length - 1].endSec;
+    /** 영상 길이: 실제 영상 → API 의 영상 길이 → 마지막 구간 끝 */
+    const duration = () =>
+      (video && Number.isFinite(video.duration) && video.duration) ||
+      (result.videoInfo && result.videoInfo.durationSec) ||
+      lastEnd;
+
+    const wrap = el("div", "phase-chapters");
+    const head = el("div", "phase-chapters__head");
+    head.append(el("span", "phase-chapters__title", config.titles.phases));
+    const now = el("span", "phase-chapters__now", "");
+    head.appendChild(now);
+    const track = el("div", "phase-chapters__track");
+    const playhead = el("span", "phase-chapters__playhead");
+    playhead.hidden = true;
+
+    const segs = phases.map((p) => {
+      const seg = el("button", "phase-chapter");
       seg.type = "button";
-      seg.dataset.key = p.key;
-      if (timed && total > 0) seg.style.flexGrow = String(Math.max(p.endSec - p.startSec, total * 0.04));
-      seg.append(el("span", "phase-seg__label", p.label));
-      const time = timed
-        ? `${p.startSec.toFixed(2)}–${p.endSec.toFixed(2)}s`
-        : p.startFrame != null && p.endFrame != null
-          ? `${p.startFrame}–${p.endFrame} 프레임`
-          : "—";
-      seg.append(el("span", "phase-seg__time", time));
-      if (timed) {
-        seg.title = `${p.label} 구간으로 이동`;
+      seg.title = `${p.label} ${p.startSec.toFixed(2)}–${p.endSec.toFixed(2)}s`;
+      seg.setAttribute("aria-label", `${p.label} 구간으로 이동 (${p.startSec.toFixed(2)}초)`);
+      seg.append(el("span", "phase-chapter__label", p.label));
+      if (video) {
         seg.addEventListener("click", () => {
-          if (!state.player) return;
-          state.player.video.currentTime = p.startSec;
-          state.player.video.pause();
+          video.currentTime = p.startSec;
+          video.pause();
         });
       } else {
         seg.disabled = true;
       }
       track.appendChild(seg);
+      return { seg, phase: p };
     });
-    const playhead = el("span", "phase-timeline__playhead");
-    playhead.hidden = true;
     track.appendChild(playhead);
-    scroller.appendChild(track);
-    body.appendChild(scroller);
 
-    if (!timed) {
-      body.appendChild(pendingNote("구간별 시작/종료 시점은 AI 동작 구간 분석이 연결되면 표시됩니다."));
-      return;
-    }
-    body.appendChild(el("p", "report-card__meta", "구간을 누르면 영상이 그 시점으로 이동해요."));
-
-    // 영상 재생 위치를 타임라인에 표시하고, 지금 구간을 강조
-    if (state.player) {
-      const video = state.player.video;
-      const sync = () => {
-        const t = video.currentTime;
-        const inRange = t >= start && t <= end;
-        playhead.hidden = !inRange;
-        if (inRange) playhead.style.left = `${((t - start) / total) * 100}%`;
-        track.querySelectorAll(".phase-seg").forEach((seg) => {
-          const p = phases.find((x) => x.key === seg.dataset.key);
-          seg.classList.toggle("phase-seg--active", inRange && t >= p.startSec && t < p.endSec);
+    // 아주 짧은 구간은 막대 안에서 이름이 잘리므로, 아래에 단계 이름 + 시작 시간을 칩으로 한 번 더 나열 (눌러도 이동)
+    const list = el("div", "phase-chapters__list");
+    const chips = phases.map((p) => {
+      const chip = el("button", "phase-chip");
+      chip.type = "button";
+      chip.append(el("span", "phase-chip__label", p.label), el("span", "phase-chip__time", `${p.startSec.toFixed(2)}s`));
+      if (video) {
+        chip.addEventListener("click", () => {
+          video.currentTime = p.startSec;
+          video.pause();
         });
-      };
-      video.ontimeupdate = sync; // 리포트를 다시 그릴 때마다 덮어써서 중복 등록되지 않게 속성으로 연결
+      } else {
+        chip.disabled = true;
+      }
+      list.appendChild(chip);
+      return chip;
+    });
+
+    wrap.append(head, track, list);
+    target.insertBefore(wrap, before);
+
+    function layout() {
+      const d = duration();
+      segs.forEach(({ seg, phase }) => {
+        seg.style.left = `${(phase.startSec / d) * 100}%`;
+        seg.style.width = `${((phase.endSec - phase.startSec) / d) * 100}%`;
+      });
+    }
+
+    /** 재생 위치 표시선 + 지금 구간 강조 + "현재 구간" 이름 */
+    function sync() {
+      if (!video) {
+        now.textContent = `${phases[0].label} → ${phases[phases.length - 1].label}`;
+        return;
+      }
+      const t = video.currentTime;
+      const d = duration();
+      playhead.hidden = false;
+      playhead.style.left = `${Math.min(t / d, 1) * 100}%`;
+      let current = null;
+      segs.forEach(({ seg, phase }, i) => {
+        const active = t >= phase.startSec && t < phase.endSec;
+        seg.classList.toggle("phase-chapter--active", active);
+        chips[i].classList.toggle("phase-chip--active", active);
+        if (active) current = phase;
+      });
+      now.textContent = current ? `현재 구간 · ${current.label}` : "구간을 누르면 그 시점으로 이동해요";
+    }
+
+    layout();
+    sync();
+    if (video) {
+      // 리포트를 다시 그릴 때마다 덮어써서 중복 등록되지 않게 속성으로 연결
+      video.ontimeupdate = sync;
       video.onseeked = sync;
-      sync();
+      video.onloadedmetadata = () => {
+        layout();
+        sync();
+      };
     }
   }
 
-  // ===================== ④ 자세 및 관절 수치 / ⑥ 움직임 수치 =====================
+  // ===================== ② 자세 및 관절 수치 / ④ 움직임 수치 =====================
   function renderMetricGrid(body, config, defs, values) {
     const grid = el("div", "metric-grid");
     let filled = 0;
@@ -511,7 +520,7 @@
     if (!filled) body.appendChild(pendingNote());
   }
 
-  // ===================== ⑤ 동작 연결 분석 =====================
+  // ===================== ③ 동작 연결 분석 =====================
   function renderSequenceCard(body, config, result) {
     const seq = result.sequence || {};
     const flow = el("ol", "sequence-flow");
@@ -538,7 +547,7 @@
     else body.appendChild(el("p", "report-card__meta", "시점은 영상 시작 기준 초(s)입니다."));
   }
 
-  // ===================== ⑦ 이전 분석 비교 =====================
+  // ===================== ⑤ 이전 분석 비교 =====================
   function renderCompareCard(body, config, result) {
     const prev = result.previousAnalysis;
     if (!prev) {
@@ -579,7 +588,7 @@
     body.appendChild(el("p", "report-card__meta", "변화는 현재 값에서 이전 값을 뺀 수치입니다."));
   }
 
-  // ===================== ⑧ 분석 안내 =====================
+  // ===================== ⑥ 분석 안내 =====================
   function renderNotice(config) {
     const box = el("aside", "report-notice");
     box.append(el("span", "report-notice__icon", "ⓘ"), el("p", "report-notice__text", config.notice));
@@ -591,7 +600,7 @@
    * 투구/타격 공통 리포트 렌더링.
    * @param {"pitching"|"batting"} type
    * @param {AnalysisReport|null} result
-   * @param {{partial?: boolean}} [options] partial: 분석 중이라 ① 영상과 ② 정보만 (result 는 정보 표시에만 사용)
+   * @param {{partial?: boolean}} [options] partial: 분석 중이라 ① 영상만
    */
   function renderAnalysisReport(type, result, options = {}) {
     const container = state.container;
@@ -610,7 +619,7 @@
     if (container.hidden) return;
 
     if (!keepVideo) {
-      const video = card(1, "분석 영상", "영상 아래에서 재생속도를 바꿔 느리게 볼 수 있어요.");
+      const video = card(1, "분석 영상", "영상 아래 동작 구간을 누르면 그 시점으로 이동하고, 재생속도를 바꿔 느리게 볼 수 있어요.");
       renderVideoCard(video.body);
       state.videoSection = video.section;
       state.videoSectionUrl = videoUrl;
@@ -625,15 +634,20 @@
       container.insertBefore(badge, container.firstChild);
     }
 
-    const r = result || { videoInfo: { status: "uploading", fileName: state.sourceName } };
-    let step = 2;
-    const info = card(step++, "영상/분석 정보");
-    renderInfoCard(info.body, r);
-    container.append(info.section);
+    // 동작 단계 구간 바는 ① 영상 바로 아래 (플레이어 안, 재생속도 줄 위)에 다시 그림
+    state.videoSection.querySelectorAll(".phase-chapters").forEach((node) => node.remove());
+    if (result && !options.partial) {
+      const inPlayer = state.player && !state.isSample && state.videoSection.contains(state.player.element);
+      if (inPlayer) {
+        renderPhaseChapters(state.player.element, state.player.element.querySelector(".player__controls"), config, result);
+      } else {
+        renderPhaseChapters(state.videoSection.querySelector(".report-card__body"), null, config, result);
+      }
+    }
 
     if (result && !options.partial) {
-      const phases = card(step++, config.titles.phases);
-      renderPhaseCard(phases.body, config, r);
+      const r = result;
+      let step = 2;
       const angles = card(step++, config.titles.angles, "영상의 신체 좌표에서 측정한 값입니다.");
       renderMetricGrid(angles.body, config, config.angles, r.angles);
       const sequence = card(step++, config.titles.sequence, "신체 부위가 움직이기 시작한 시점의 순서입니다.");
@@ -642,7 +656,7 @@
       renderMetricGrid(movement.body, config, config.movement, r.movement);
       const compare = card(step++, config.titles.compare, "같은 사용자의 이전 영상 수치와 현재 수치를 나란히 보여줍니다.");
       renderCompareCard(compare.body, config, r);
-      container.append(phases.section, angles.section, sequence.section, movement.section, compare.section);
+      container.append(angles.section, sequence.section, movement.section, compare.section);
     }
     container.appendChild(renderNotice(config));
   }
@@ -709,7 +723,7 @@
     state.lastRecordKey = key;
     state.isSample = false;
     const result = resultFromRecord(type, record);
-    // 진행 중인 동안에는 ③~⑦ 을 비워 둠 (영상과 기본 정보만)
+    // 진행 중인 동안에는 영상만 (분석 상태는 위쪽 "최근 분석 결과" 카드에 표시됨)
     renderAnalysisReport(type, result, { partial: record.status !== "done" });
     if (record.status === "done") loadPose(record);
   }
