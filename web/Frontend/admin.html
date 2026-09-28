@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>회원 승인 관리 | BROS</title>
+  <title>관리자 | BROS</title>
   <script>
     (function () {
       try {
@@ -69,7 +69,7 @@
         </div>
         <div class="topbar__title" id="topbarTitle">
           <span class="topbar__title-mark">B</span>
-          <span class="topbar__title-text">회원 승인</span>
+          <span class="topbar__title-text">관리자</span>
         </div>
         <div class="topbar__right">
           <button class="icon-btn icon-btn--ghost" id="themeToggle" type="button" aria-label="다크모드 전환"></button>
@@ -80,19 +80,99 @@
       <main class="content">
         <div class="page-header">
           <p class="page-header__eyebrow">관리자 전용</p>
-          <h1 class="page-header__title">회원 승인 관리</h1>
-          <p class="page-header__desc">가입 신청을 승인하면 그 회원이 로그인할 수 있어요.</p>
+          <h1 class="page-header__title">관리자</h1>
+          <p class="page-header__desc">가입 신청을 승인하고, 경기 하이라이트를 등록할 수 있어요.</p>
         </div>
 
-        <div class="page-card">
-          <div class="admin-filter" id="adminFilter" role="tablist" aria-label="회원 상태">
-            <button type="button" class="admin-filter__btn admin-filter__btn--active" data-status="PENDING">승인 대기</button>
-            <button type="button" class="admin-filter__btn" data-status="APPROVED">승인됨</button>
-            <button type="button" class="admin-filter__btn" data-status="REJECTED">거절됨</button>
-            <button type="button" class="admin-filter__btn" data-status="">전체</button>
+        <!-- 위쪽 탭: 회원 승인 / 하이라이트 관리 (js/admin.js) -->
+        <div class="report-tabs admin-tabs" id="adminTabs" role="tablist" aria-label="관리 메뉴">
+          <button type="button" class="report-tab report-tab--active" data-panel="users">회원 승인</button>
+          <button type="button" class="report-tab" data-panel="highlights">하이라이트 관리</button>
+        </div>
+
+        <!-- 회원 승인 -->
+        <div id="usersPanel">
+          <div class="page-card">
+            <div class="admin-filter" id="adminFilter" role="tablist" aria-label="회원 상태">
+              <button type="button" class="admin-filter__btn admin-filter__btn--active" data-status="PENDING">승인 대기</button>
+              <button type="button" class="admin-filter__btn" data-status="APPROVED">승인됨</button>
+              <button type="button" class="admin-filter__btn" data-status="REJECTED">거절됨</button>
+              <button type="button" class="admin-filter__btn" data-status="">전체</button>
+            </div>
+            <!-- js/admin.js 가 회원 목록을 그림 -->
+            <div class="record-list" id="adminUserList"></div>
           </div>
-          <!-- js/admin.js 가 회원 목록을 그림 -->
-          <div class="record-list" id="adminUserList"></div>
+        </div>
+
+        <!-- 하이라이트 관리 (js/admin-highlight.js). 하이라이트 페이지에는 가장 최근 날짜의 경기가 보임 -->
+        <div id="highlightsPanel" hidden>
+          <div class="page-card">
+            <h2 class="page-card__title">경기 등록</h2>
+            <form class="admin-form" id="gameForm">
+              <label class="auth-field">
+                <span>경기 날짜</span>
+                <input type="date" name="gameDate" required />
+              </label>
+              <label class="auth-field">
+                <span>상대 팀</span>
+                <input type="text" name="opponent" maxlength="100" placeholder="예: 한빛 타이거즈" required />
+              </label>
+              <label class="auth-field">
+                <span>점수</span>
+                <input type="text" name="score" maxlength="50" placeholder="예: BROS 7 : 3" required />
+              </label>
+              <button type="submit" class="admin-form__submit">경기 추가</button>
+            </form>
+          </div>
+
+          <div class="page-card">
+            <h2 class="page-card__title">경기 목록</h2>
+            <div class="record-list" id="adminGameList"></div>
+          </div>
+
+          <!-- 경기 목록에서 "장면 관리" 를 누르면 보임 -->
+          <div class="page-card" id="clipCard" hidden>
+            <h2 class="page-card__title" id="clipCardTitle">장면 관리</h2>
+            <form class="admin-form" id="clipForm">
+              <label class="auth-field">
+                <span>분류</span>
+                <select name="category" required>
+                  <option value="batting">타격 장면</option>
+                  <option value="defense">수비 플레이</option>
+                  <option value="highlight">주요 플레이</option>
+                </select>
+              </label>
+              <label class="auth-field">
+                <span>포지션 (수비는 필수)</span>
+                <select name="position">
+                  <option value="">없음</option>
+                  <option value="P">P 투수</option>
+                  <option value="C">C 포수</option>
+                  <option value="1B">1B 1루수</option>
+                  <option value="2B">2B 2루수</option>
+                  <option value="3B">3B 3루수</option>
+                  <option value="SS">SS 유격수</option>
+                  <option value="LF">LF 좌익수</option>
+                  <option value="CF">CF 중견수</option>
+                  <option value="RF">RF 우익수</option>
+                </select>
+              </label>
+              <label class="auth-field">
+                <span>장면 이름</span>
+                <input type="text" name="actionLabel" maxlength="100" placeholder="예: 5회 솔로 홈런" required />
+              </label>
+              <label class="auth-field">
+                <span>영상 시간</span>
+                <input type="text" name="timestamp" placeholder="예: 00:34:02" pattern="\d{1,2}:\d{2}:\d{2}" required />
+              </label>
+              <label class="auth-field admin-form__wide">
+                <span>영상 주소 (선택)</span>
+                <input type="url" name="clipUrl" maxlength="500" placeholder="https://..." />
+              </label>
+              <button type="submit" class="admin-form__submit">장면 추가</button>
+            </form>
+            <div class="record-list admin-clip-list" id="adminClipList"></div>
+          </div>
         </div>
 
         <footer class="page-footer">
@@ -116,5 +196,6 @@
   <script src="./js/api.js"></script>
   <script src="./js/shell.js"></script>
   <script src="./js/admin.js"></script>
+  <script src="./js/admin-highlight.js"></script>
 </body>
 </html>

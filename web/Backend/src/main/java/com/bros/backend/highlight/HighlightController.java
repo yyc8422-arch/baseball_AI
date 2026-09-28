@@ -15,8 +15,8 @@ import com.bros.backend.highlight.dto.HighlightClipResponse;
 import com.bros.backend.highlight.dto.HighlightPageResponse;
 
 /**
- * highlight.html/highlight.js 가 지금 쓰는 GAME_INFO / MOCK_HIGHLIGHTS 목데이터를
- * 이 API 응답으로 교체하면 됩니다 (필드명을 동일하게 맞췄습니다).
+ * highlight.html/highlight.js 가 보여주는 최신 경기 + 하이라이트 장면 조회 (비로그인도 가능).
+ * 경기/장면 등록은 관리자 화면(AdminHighlightController)에서 합니다.
  *
  * 참고: 이 컨트롤러는 "저장된 경기/하이라이트를 조회"만 합니다. 경기 하이라이트 영상을 올리면
  * AI-Server 가 자동으로 장면을 찾아 games/highlight_clips 테이블에 채워주는 부분은
@@ -47,11 +47,16 @@ public class HighlightController {
                 game.getGameDate().format(DATE_FORMAT), game.getOpponent(), game.getScore());
 
         List<HighlightClipResponse> clipResponses = clips.stream()
-                .map(c -> new HighlightClipResponse(
-                        String.valueOf(c.getId()), c.getPosition(), c.getCategory(), c.getAction(),
-                        c.getActionLabel(), c.getTimestampLabel(), c.getClipUrl(), c.getThumbnailUrl()))
+                .map(HighlightController::toResponse)
                 .collect(Collectors.toList());
 
         return new HighlightPageResponse(gameResponse, clipResponses);
+    }
+
+    /** 하이라이트 페이지와 관리자 화면이 같은 모양으로 쓰는 장면 응답 */
+    static HighlightClipResponse toResponse(HighlightClip c) {
+        return new HighlightClipResponse(
+                String.valueOf(c.getId()), c.getPosition(), c.getCategory(), c.getAction(),
+                c.getActionLabel(), c.getTimestampLabel(), c.getClipUrl(), c.getThumbnailUrl());
     }
 }

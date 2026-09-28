@@ -2441,6 +2441,59 @@ a.record-item:hover {
   color: var(--gold);
 }
 
+/* 관리자 화면: 위쪽 "회원 승인 / 하이라이트 관리" 탭 */
+.admin-tabs {
+  margin-bottom: 20px;
+}
+
+/* 관리자 화면: 경기/장면 등록 폼 (입력칸 모양은 로그인 페이지의 auth-field 재사용) */
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  align-items: end;
+}
+
+.admin-form__wide {
+  grid-column: 1 / -1;
+}
+
+.auth-field select {
+  height: 46px;
+  padding: 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+}
+
+.auth-field select:focus {
+  outline: 2px solid var(--neon);
+  outline-offset: 1px;
+}
+
+.admin-form__submit {
+  height: 46px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.admin-form__submit:disabled {
+  opacity: 0.5;
+}
+
+.admin-clip-list {
+  margin-top: 20px;
+}
+
 /* 관리자 화면: 상태별 필터 탭 */
 .admin-filter {
   display: flex;

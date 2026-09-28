@@ -113,6 +113,12 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | GET | `/api/admin/users?status=PENDING` | 회원 목록 (`PENDING`/`APPROVED`/`REJECTED`, 생략하면 전체) | **관리자** |
 | POST | `/api/admin/users/{id}/approve` | 가입 승인 | **관리자** |
 | POST | `/api/admin/users/{id}/reject` | 가입 거절 | **관리자** |
+| GET | `/api/admin/highlights/games` | 경기 목록 (장면 수, 하이라이트에 표시 중인 경기) | **관리자** |
+| POST | `/api/admin/highlights/games` | 경기 등록 (`{gameDate: "2026-09-20", opponent, score}`) | **관리자** |
+| DELETE | `/api/admin/highlights/games/{id}` | 경기 삭제 (장면도 함께) | **관리자** |
+| GET | `/api/admin/highlights/games/{id}/clips` | 장면 목록 | **관리자** |
+| POST | `/api/admin/highlights/games/{id}/clips` | 장면 추가 (`{category, position, actionLabel, timestamp: "00:34:02", clipUrl}`) | **관리자** |
+| DELETE | `/api/admin/highlights/clips/{id}` | 장면 삭제 | **관리자** |
 
 **에러 응답은 모두 `{"detail": "메시지"}` 형태로 통일되어 있습니다.** 프론트(`js/api.js`, `js/analysis.js`)는 이 `detail` 을 그대로 화면에 보여줍니다.
 
@@ -127,7 +133,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - `mypage.html` + `js/mypage.js`: 프로필 사진, 내 정보, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
 - `index.html` + `js/main.js`: 홈 "오늘의 AI 리포트" 를 `/api/mypage/report-summary` 로 표시 (로그인 전에는 안내 문구, 자세 평가 칸은 "준비 중")
 - `highlight.html` + `js/highlight.js`: `/api/highlights/latest` 로 최신 경기와 장면 목록 표시 (영상 주소 `clip_url` 이 있으면 새 탭 재생)
-- `admin.html` + `js/admin.js`: 회원 승인 관리 화면
+- `admin.html` + `js/admin.js` / `js/admin-highlight.js`: 관리자 화면 (회원 승인 / 하이라이트 관리 탭, `admin.html#highlights` 로 바로 열림)
 - `password.html` + `js/password.js`: 비밀번호 변경 화면 (마이페이지 내 정보의 "비밀번호 변경" 버튼)
 - 프로필 사진 파일은 백엔드 실행 위치 기준 `uploads/profile/` 에 저장됨 (`app.upload-dir`, git 제외). DB 에는 파일 이름만 저장
 
@@ -144,6 +150,6 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 
 ## 12. 아직 안 된 것 (다음 단계 후보)
 
-- **경기/하이라이트 등록**: 화면은 DB(`games`, `highlight_clips`)를 읽지만, 등록은 아직 MySQL 에 직접 INSERT 해야 합니다 (AI-Server 자동 생성 파이프라인 또는 관리자 등록 API 필요).
+- **하이라이트 자동 생성**: 지금은 관리자가 화면에서 경기/장면을 직접 등록합니다. 경기 영상에서 장면을 자동으로 찾으려면 AI-Server 에 장면(동작) 인식 모델이 추가로 필요합니다.
 - 자세 평가(관절 각도 계산, 개선 포인트 산출, 홈 리포트의 "AI 코멘트") — `pose` 데이터(24개 관절)는 이미 받아오고 있어서, 이 위에 로직만 추가하면 됩니다
 - 경기 하이라이트 자동 생성 파이프라인
