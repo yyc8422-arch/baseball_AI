@@ -3,7 +3,9 @@
 
 지금은 1단계로, 영상을 프레임 단위로 읽어서 YOLO26 Pose 모델로 선수의 관절 24개 좌표를 뽑고
 storage/results/<video_id>.json 에 저장합니다.
-이 좌표로 각도/개선 포인트를 계산하는 "자세 분석" 로직은 다음 단계에서 이 결과를 이용해 붙입니다.
+이 좌표로 관절 각도·동작 구간·움직임 수치를 "측정" 하는 로직은 다음 단계에서 이 결과를 이용해 붙입니다.
+(자세를 좋다/나쁘다 평가하지 않고 측정값만 냄. 결과는 레코드의 report 필드에 담으면 웹 리포트가 그대로 표시함 —
+ 형식: web/Frontend/js/types.js 의 AnalysisReport = {videoInfo, phases, angles, movement, sequence, previousAnalysis})
 """
 import time
 from pathlib import Path
@@ -93,7 +95,7 @@ def process_video(video_id: str, file_path: Path, analysis_type: str) -> None:
       - done:   summary(검출 통계) + pose(프레임별 관절 좌표)
       - failed: error(실패 이유)
 
-    TODO 다음 단계: pose 결과로 관절 각도/개선 포인트를 계산하는 자세 분석 로직 (analysis_type 별)
+    TODO 다음 단계: pose 결과로 관절 각도/동작 구간/움직임 수치를 측정해 report 에 저장 (analysis_type 별, 평가 없이 측정값만)
 
     참고: 지금은 FastAPI 의 BackgroundTasks 를 쓰는데, 이건 "같은 프로세스 안에서,
     응답을 보낸 뒤" 실행되는 가벼운 방식입니다. 실제 AI 추론이 무겁고 오래 걸린다면

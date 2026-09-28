@@ -10,8 +10,8 @@
   const DEFAULT_REPORT_TYPE = "pitching";
 
   // ===== 오늘의 AI 리포트 (GET /api/mypage/report-summary) =====
-  // 자세 평가(종합 점수, 개선 포인트, 코멘트)는 AI-Server 에 아직 없어서, 실제로 있는 값(분석 수, 최근 영상, 상태)만 보여주고
-  // 평가 칸은 "준비 중" 으로 표시합니다.
+  // 리포트는 자세를 평가하지 않고 측정값만 보여주는 방향이라, 지금은 실제로 있는 값(분석 수, 최근 영상, 상태)만 보여주고
+  // 관절 각도·움직임 수치 칸은 AI 측정 기능이 연결될 때까지 "준비 중" 으로 표시합니다.
   const REPORT_TYPE_META = {
     pitching: { icon: "pitching", label: "투구폼 분석", noun: "투구", page: "./pitching.html" },
     batting: { icon: "batting", label: "타격폼 분석", noun: "타격", page: "./batting.html" },
@@ -25,7 +25,7 @@
     failed: { label: "분석 실패", sentence: "분석에 실패했어요" },
   };
 
-  const EVALUATION_PENDING = { value: "준비 중", description: "관절 각도 기반 자세 평가를 준비하고 있어요" };
+  const MEASUREMENT_PENDING = { value: "준비 중", description: "관절 각도·움직임 수치 측정을 준비하고 있어요" };
 
   /** 서버 응답을 받기 전/로그인 전/연결 실패 시에 보여줄 안내용 리포트 */
   function buildNoticeReport(type, notice) {
@@ -34,7 +34,7 @@
       analysisType: { icon: meta.icon, label: meta.label },
       overallStatus: { label: notice.status, description: notice.statusDesc },
       recentAnalysisDate: "-",
-      improvementPoints: EVALUATION_PENDING,
+      improvementPoints: MEASUREMENT_PENDING,
       aiSummaryComment: notice.comment,
       cta: notice.cta,
     };
@@ -61,10 +61,10 @@
       analysisType: { icon: meta.icon, label: meta.label },
       overallStatus: { label: status.label, description: frames },
       recentAnalysisDate: summary.latestDate || "-",
-      improvementPoints: EVALUATION_PENDING,
+      improvementPoints: MEASUREMENT_PENDING,
       aiSummaryComment:
         `최근 올린 "${summary.latestFileName}" 영상은 ${status.sentence}. ` +
-        `지금까지 ${meta.noun} 영상 ${summary.totalCount}개를 분석했어요. 관절 각도와 개선 포인트 평가는 곧 추가될 예정이에요.`,
+        `지금까지 ${meta.noun} 영상 ${summary.totalCount}개를 분석했어요. 관절 각도·움직임 수치와 이전 영상 비교는 분석 페이지 리포트에서 볼 수 있어요.`,
       cta: { label: "내 분석 기록 보기", href: "./mypage.html" },
     };
   }

@@ -49,18 +49,31 @@
   function renderUploadedVideoPreview(file) {
     const card = document.getElementById("uploadedVideoCard");
     const slot = document.getElementById("uploadedVideoSlot");
-    if (!card || !slot) return false;
+    const report = document.getElementById("analysisReport") && window.BROS.report;
+    if (!report && (!card || !slot)) return false;
 
     if (lastPreviewUrl) URL.revokeObjectURL(lastPreviewUrl);
     lastPreviewUrl = URL.createObjectURL(file);
 
+    // 투구/타격 페이지: 분석 리포트의 ① 분석 영상으로 연결 (재생속도 + 관절 점 표시)
+    if (report) {
+      window.BROS.report.setSourceVideo(lastPreviewUrl, file.name);
+      document.getElementById("analysisReport").scrollIntoView({ behavior: "smooth", block: "start" });
+      return true;
+    }
+
+    // 그 외(하이라이트): 미리보기 카드에 공통 분석용 플레이어 (재생속도 조절 포함)
     slot.innerHTML = "";
-    const video = document.createElement("video");
-    video.src = lastPreviewUrl;
-    video.controls = true;
-    video.playsInline = true;
-    video.className = "video-preview__player";
-    slot.appendChild(video);
+    if (window.BROS.player) {
+      slot.appendChild(window.BROS.player.createAnalysisPlayer({ src: lastPreviewUrl, label: "업로드한 영상" }).element);
+    } else {
+      const video = document.createElement("video");
+      video.src = lastPreviewUrl;
+      video.controls = true;
+      video.playsInline = true;
+      video.className = "video-preview__player";
+      slot.appendChild(video);
+    }
 
     card.hidden = false;
     card.scrollIntoView({ behavior: "smooth", block: "nearest" });

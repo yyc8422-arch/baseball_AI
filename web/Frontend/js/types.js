@@ -5,6 +5,57 @@
  */
 
 /**
+ * ===== 투구/타격 AI 분석 리포트 (js/report.js 가 그대로 표시, 프론트는 계산하지 않음) =====
+ * 향후 Python/FastAPI 가 GET /api/analysis/{id} 응답의 report 필드로 보내줄 형식.
+ * 평가(좋음/나쁨, 권장 범위, 개선 포인트)는 넣지 않고 측정값만 보냄.
+ *
+ * 지표 값은 숫자 또는 { value, at } (at = 측정한 동작 단계 key, 예: "RELEASE")
+ * @typedef {number | {value: number, at?: string}} MetricValue
+ *
+ * @typedef {Object} ReportVideoInfo
+ * @property {"uploading"|"queued"|"processing"|"done"|"failed"} status
+ * @property {string} [cameraView] "side" | "front" | "back" | "diagonal" (또는 표시할 글자)
+ * @property {number} [fps]
+ * @property {number} [durationSec] 영상 길이(초)
+ * @property {number} [analyzedFrames] 분석한 프레임 수
+ * @property {number} [detectedFrames] 선수가 검출된 프레임 수
+ * @property {number} [metricCount] 측정 지표 수 (없으면 받은 지표 개수를 셈)
+ * @property {string} [analyzedAt] "2026.09.28"
+ * @property {string} [videoUrl] 분석 영상 주소 (있으면 ① 에서 재생)
+ *
+ * 동작 단계 1개. key 는 투구 SET/LEG_LIFT/STRIDE/ARM_COCKING/ACCELERATION/RELEASE/FOLLOW_THROUGH,
+ * 타격 STANCE/LOAD/STRIDE/ROTATION/SWING/FOLLOW_THROUGH (추후 CONTACT 등 추가 가능)
+ * @typedef {Object} ReportPhase
+ * @property {string} key
+ * @property {number} [startSec]
+ * @property {number} [endSec]
+ * @property {number} [startFrame]
+ * @property {number} [endFrame]
+ *
+ * @typedef {Object} ReportPreviousAnalysis 같은 사용자의 이전 같은 종류 분석
+ * @property {string} analyzedAt
+ * @property {string} [fileName]
+ * @property {Object.<string, MetricValue>} [angles]
+ * @property {Object.<string, MetricValue>} [movement]
+ * @property {Object.<string, MetricValue>} [sequence]
+ * @property {Object.<string, number>} [changes] 지표 key → 변화값 (없으면 화면에서 현재 - 이전)
+ *
+ * @typedef {Object} AnalysisReport
+ * @property {"pitching"|"batting"} analysisType
+ * @property {ReportVideoInfo} videoInfo
+ * @property {ReportPhase[]} phases
+ * @property {Object.<string, MetricValue>} angles
+ *   투구: elbowAngleAtRelease, shoulderAngleAtRelease, frontKneeAngle, backKneeAngle, trunkTilt, pelvisRotation, shoulderRotation (°), strideLength (신장 대비)
+ *   타격: pelvisRotation, shoulderRotation, trunkTilt, frontKneeAngle, backKneeAngle (°), strideLength (신장 대비)
+ * @property {Object.<string, MetricValue>} movement headDisplacement, pelvisDisplacement (정규화 좌표), trunkTiltChange (°)
+ * @property {Object.<string, MetricValue>} sequence 시점/시간(초)
+ *   투구: lowerBodyMoveStartSec, pelvisRotationStartSec, shoulderRotationStartSec, armAccelerationStartSec, releaseSec, pelvisToShoulderGapSec, totalMotionSec
+ *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec, swingStartSec, followThroughStartSec, pelvisToShoulderGapSec, totalSwingSec
+ * @property {ReportPreviousAnalysis|null} previousAnalysis
+ * @property {Object|null} [pose] AI-Server 의 프레임별 관절 좌표 (영상 위 관절 점 표시용)
+ */
+
+/**
  * 메인 4대 기능 메뉴 카드 (AI 투구폼 분석 등)
  * @typedef {Object} FeatureMenuItem
  * @property {string} id
@@ -42,7 +93,7 @@
  */
 
 /**
- * 값 + 보조 설명 한 쌍 (주요 개선 포인트 박스)
+ * 값 + 보조 설명 한 쌍 (측정 지표 박스)
  * @typedef {Object} ReportValue
  * @property {string} value 크게 보이는 값 (예: "2개", "준비 중")
  * @property {string} description 아래 작은 설명
@@ -55,7 +106,7 @@
  * @property {ReportBadgeInfo} analysisType 분석 유형 박스
  * @property {ReportBadgeInfo} overallStatus 분석 상태 박스
  * @property {string} recentAnalysisDate 최근 분석 박스에 쓰일 날짜 문자열 (예: "2026.09.28", 없으면 "-")
- * @property {ReportValue} improvementPoints 주요 개선 포인트 박스
+ * @property {ReportValue} improvementPoints 측정 지표 박스
  * @property {string} aiSummaryComment AI 코멘트 박스 문구
  * @property {{label: string, href: string}} cta 코멘트 아래 버튼
  */

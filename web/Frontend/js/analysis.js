@@ -89,7 +89,7 @@
     if (record.status === "done" && record.summary) {
       const { detected_frames, analyzed_frames } = record.summary;
       const seconds = record.elapsed_sec != null ? ` · ${record.elapsed_sec}초 소요` : "";
-      return `선수 검출 ${detected_frames} / ${analyzed_frames} 프레임${seconds}. 자세 평가(관절 각도·개선 포인트)는 준비 중이에요.`;
+      return `선수 검출 ${detected_frames} / ${analyzed_frames} 프레임${seconds}. 아래 리포트에서 영상 위 관절 점과 분석 정보를 확인할 수 있어요.`;
     }
     if (record.status === "failed") return record.error || "알 수 없는 오류로 분석하지 못했어요.";
     return STATUS_TEXT[record.status].desc;
@@ -159,6 +159,10 @@
       }
 
       renderStatus(record);
+      // 투구/타격 페이지면 아래 분석 리포트도 갱신 (js/report.js)
+      if (window.BROS.report && document.body.dataset.page === analysisType) {
+        window.BROS.report.showFromRecord(analysisType, record);
+      }
       if (record.status === "done" || record.status === "failed") return;
       pollTimer = setTimeout(poll, POLL_INTERVAL_MS);
     }

@@ -131,7 +131,9 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
 - `mypage.html` + `js/mypage.js`: 프로필 사진, 내 정보, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
-- `index.html` + `js/main.js`: 홈 "오늘의 AI 리포트" 를 `/api/mypage/report-summary` 로 표시 (로그인 전에는 안내 문구, 자세 평가 칸은 "준비 중")
+- `index.html` + `js/main.js`: 홈 "오늘의 AI 리포트" 를 `/api/mypage/report-summary` 로 표시 (로그인 전에는 안내 문구, 측정 지표 칸은 "준비 중")
+- `pitching.html` / `batting.html` + `js/report.js`: 투구/타격 AI 분석 리포트 ①~⑧ (평가 없이 측정값·이전 분석 비교만). 분석 상태 조회 결과(`/api/analysis/{id}`)의 `summary` 로 영상 정보를, `includePose=true` 의 `pose` 로 영상 위 관절 점을 그림. 관절 각도·동작 단계 등은 AI-Server 가 응답에 `report` 필드(형식: `js/types.js` 의 `AnalysisReport`)를 넣으면 그대로 표시 (Spring 은 `AnalysisStatusResponse.report` 로 전달만 함)
+- `js/video-player.js`: 분석용 영상 플레이어 공통 (재생속도 0.25x~2x `setPlaybackRate`, 관절 점 오버레이 `createPoseOverlay`)
 - `highlight.html` + `js/highlight.js`: `/api/highlights/latest` 로 최신 경기와 장면 목록 표시 (영상 주소 `clip_url` 이 있으면 새 탭 재생)
 - `admin.html` + `js/admin.js` / `js/admin-highlight.js`: 관리자 화면 (회원 승인 / 하이라이트 관리 탭, `admin.html#highlights` 로 바로 열림)
 - `password.html` + `js/password.js`: 비밀번호 변경 화면 (마이페이지 내 정보의 "비밀번호 변경" 버튼)

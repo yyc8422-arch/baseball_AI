@@ -104,7 +104,7 @@ function renderReportOverview(report) {
       </div>
       <div class="info-box info-box--points">
         <span class="info-box__icon">${ICONS.chart}</span>
-        <span class="info-box__label">주요 개선 포인트</span>
+        <span class="info-box__label">측정 지표</span>
         <span class="info-box__value">${escapeHtml(report.improvementPoints.value)}</span>
         <span class="info-box__sub">${escapeHtml(report.improvementPoints.description)}</span>
       </div>

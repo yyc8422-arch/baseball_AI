@@ -315,22 +315,6 @@ svg {
   letter-spacing: 0.5px;
 }
 
-.sidebar__links {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 8px;
-  flex-wrap: wrap;
-}
-
-.sidebar__copy {
-  font-size: 10px;
-  color: #b7bdc9;
-  margin: 0;
-}
-
 /* ===== 상단바 (스크롤 시 떠오르는 GNB) =====
    배경/그림자/타이틀의 실제 값은 CSS가 아니라 js/main.js 의 updateTopbarOnScroll() 이
    스크롤 진행도(progress 0~1)를 매 프레임 계산해 inline style 로 직접 적용합니다.
@@ -2549,6 +2533,592 @@ a.record-item:hover {
   .record-item--static .record-item__side {
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* ===== 분석용 영상 플레이어 (js/video-player.js, 투구/타격 리포트와 하이라이트 미리보기 공통) ===== */
+.player {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 영상 + 그 위에 겹치는 관절 점 캔버스 */
+.player__stage {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: #000;
+}
+
+.player__video {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  background: #000;
+}
+
+.player__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* 영상 기본 컨트롤(재생/탐색바 등)은 그대로 누를 수 있게 */
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+.player__rate-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.player__rate-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.player__rate-btn {
+  height: 32px;
+  min-width: 48px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.player__rate-btn--active {
+  background: var(--cta-bg);
+  border-color: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+/* 폰에서만 보이는 드롭다운 */
+.player__rate-select {
+  display: none;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+}
+
+.player__rate-current {
+  margin-left: auto;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .player__rate-buttons {
+    display: none;
+  }
+
+  .player__rate-select {
+    display: inline-block;
+  }
+}
+
+/* ===== 투구/타격 AI 분석 리포트 (js/report.js) ===== */
+.analysis-report {
+  display: flex;
+  flex-direction: column;
+}
+
+.analysis-report[hidden] {
+  display: none;
+}
+
+.report-sample-btn {
+  margin-top: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.report-sample-badge {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  background: var(--gold-soft);
+  color: var(--navy);
+  font-size: 13px;
+}
+
+.report-sample-badge strong {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: #ffffff;
+  font-size: 12px;
+}
+
+/* 카드 머리: 번호 + 제목 (투구/타격 모든 카드 동일) */
+.report-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.report-card__step {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--navy);
+  color: var(--neon);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.report-card__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.report-card__desc {
+  margin: 0 0 14px 40px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.report-card__body {
+  margin-top: 14px;
+}
+
+.report-card__desc + .report-card__body {
+  margin-top: 0;
+}
+
+.report-card__meta {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* 아직 AI 측정 데이터가 없는 항목 */
+.report-pending {
+  margin: 12px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ① 영상이 없을 때 */
+.report-video-empty {
+  padding: 36px 20px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  text-align: center;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ① 관절 점 표시 켜기/끄기 + 색 안내 */
+.report-joint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.report-joint__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  color: var(--navy);
+  cursor: pointer;
+}
+
+.report-joint__toggle input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--green);
+}
+
+.report-joint__legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.report-joint__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  margin-left: 4px;
+}
+
+.report-joint__status {
+  width: 100%;
+  color: var(--gold);
+}
+
+.report-joint__status:empty {
+  display: none;
+}
+
+/* ② 영상/분석 정보 */
+.report-info {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.report-info__item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.report-info__label {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.report-info__value {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ③ 동작 단계 타임라인 (구간 길이 = 실제 시간 비율, 누르면 영상 이동) */
+.phase-timeline {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.phase-timeline__track {
+  position: relative;
+  display: flex;
+  gap: 4px;
+  min-width: 640px;
+}
+
+.phase-seg {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--navy);
+  text-align: left;
+  cursor: pointer;
+}
+
+.phase-seg:disabled {
+  cursor: default;
+}
+
+.phase-seg__label {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.phase-seg__time {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.phase-seg--active {
+  background: var(--cta-bg);
+  border-color: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+.phase-seg--active .phase-seg__time {
+  color: inherit;
+  opacity: 0.8;
+}
+
+/* 영상 재생 위치 표시선 */
+.phase-timeline__playhead {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--gold);
+  pointer-events: none;
+}
+
+/* ④ 자세 및 관절 수치 / ⑥ 움직임 수치 카드 (평가 태그 없이 값만) */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.metric-card__label {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.metric-card__value {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.metric-card__note {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* ⑤ 동작 연결 분석: 순서 흐름 + 시점 목록 */
+.sequence-flow-wrap {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.sequence-flow {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: max-content;
+}
+
+.sequence-flow__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 92px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.sequence-flow__label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.sequence-flow__time {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.sequence-flow__arrow {
+  align-self: center;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.sequence-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin: 16px 0 0;
+}
+
+.sequence-list__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.sequence-list dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.sequence-list dd {
+  margin: 0;
+  font-weight: 800;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ⑦ 이전 분석 비교 표 (변화는 부호만, 좋고 나쁨을 뜻하는 색은 쓰지 않음) */
+.compare-table-wrap {
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.compare-table {
+  width: 100%;
+  min-width: 420px;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+  color: var(--navy);
+}
+
+.compare-table thead th {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  background: var(--bg);
+}
+
+.compare-table th:first-child {
+  text-align: left;
+  font-weight: 700;
+}
+
+.compare-table__change {
+  font-weight: 800;
+}
+
+/* ⑧ 분석 안내 (경고창이 아닌 차분한 정보 박스) */
+.report-notice {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.report-notice__icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.report-notice__text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* 태블릿: 정보 3열, 수치 3열 */
+@media (max-width: 1100px) {
+  .report-info {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .metric-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 작은 태블릿: 수치 2열 */
+@media (max-width: 860px) {
+  .metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sequence-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 폰: 정보 2열, 수치 2열(아주 좁으면 1열), 카드 설명은 번호 아래로 */
+@media (max-width: 640px) {
+  .report-info {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .report-card__desc {
+    margin-left: 0;
+  }
+
+  .metric-card__value {
+    font-size: 21px;
+  }
+
+  .phase-timeline__track {
+    min-width: 560px;
+  }
+}
+
+@media (max-width: 380px) {
+  .metric-grid {
+    grid-template-columns: 1fr;
   }
 }
 

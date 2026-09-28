@@ -18,6 +18,11 @@ public class AnalysisStatusResponse {
     private String error;
     private AnalysisSummary summary;
     private Map<String, Object> pose;
+    /**
+     * 향후 FastAPI 가 보낼 분석 리포트 (videoInfo, phases, angles, movement, sequence, previousAnalysis).
+     * 형식은 프론트 js/types.js 의 AnalysisReport. 지금은 AI-Server 가 보내지 않아 null 이고, 오면 그대로 전달만 함.
+     */
+    private Map<String, Object> report;
 
     public AnalysisStatusResponse() {
     }
@@ -100,5 +105,13 @@ public class AnalysisStatusResponse {
 
     public void setPose(Map<String, Object> pose) {
         this.pose = pose;
+    }
+
+    public Map<String, Object> getReport() {
+        return report;
+    }
+
+    public void setReport(Map<String, Object> report) {
+        this.report = report;
     }
 }
