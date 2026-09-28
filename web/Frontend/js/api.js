@@ -35,14 +35,17 @@
    * JSON API 호출. 실패하면 서버의 detail 메시지를 담은 Error 를 던지고, err.status 에 HTTP 상태코드를 넣습니다.
    * (서버에 아예 연결이 안 되면 err.status 는 0)
    * @param {string} path 예: "/api/auth/login"
-   * @param {{method?: string, json?: any, fallbackError?: string}} [options]
+   * @param {{method?: string, json?: any, formData?: FormData, fallbackError?: string}} [options]
+   *   파일 업로드는 formData 로 넘기면 됩니다 (Content-Type 은 브라우저가 자동으로 붙임)
    */
   async function request(path, options = {}) {
-    const { method = "GET", json, fallbackError = "요청을 처리하지 못했어요." } = options;
+    const { method = "GET", json, formData, fallbackError = "요청을 처리하지 못했어요." } = options;
     const init = { method, credentials: "include", headers: {} };
     if (json !== undefined) {
       init.headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(json);
+    } else if (formData) {
+      init.body = formData;
     }
 
     let res;

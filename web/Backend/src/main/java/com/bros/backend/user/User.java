@@ -42,6 +42,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.USER;
 
+    /** 프로필 사진 파일 이름 (app.upload-dir/profile 아래). 없으면 null */
+    @Column(name = "profile_image", length = 100)
+    private String profileImage;
+
     /** 관리자가 승인 또는 거절한 시각 (대기 중이면 null) */
     @Column(name = "reviewed_at")
     private LocalDateTime reviewedAt;
@@ -108,6 +112,14 @@ public class User {
 
     public void setReviewedAt(LocalDateTime reviewedAt) {
         this.reviewedAt = reviewedAt;
+    }
+
+    public String getProfileImage() {
+        return profileImage;
+    }
+
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
     }
 
     public LocalDateTime getCreatedAt() {

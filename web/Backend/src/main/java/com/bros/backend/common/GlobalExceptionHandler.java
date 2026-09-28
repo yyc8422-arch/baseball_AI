@@ -12,6 +12,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.client.HttpStatusCodeException;
 
 /**
@@ -54,7 +56,7 @@ public class GlobalExceptionHandler {
 
     /** JSON 형식 오류, 필수 파라미터 누락, 숫자 자리에 문자 등 - 클라이언트 요청 문제라 400 */
     @ExceptionHandler({HttpMessageNotReadableException.class, MissingServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class})
+            MethodArgumentTypeMismatchException.class, MissingServletRequestPartException.class, MultipartException.class})
     public ResponseEntity<Map<String, String>> handleBadRequest(Exception e) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("detail", "요청 형식이 올바르지 않습니다."));

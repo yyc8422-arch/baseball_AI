@@ -211,12 +211,31 @@
    * 그 값을 그대로 사이드바 active 표시에 사용합니다 (currentKey 를 생략해도 됨).
    * @param {string} [currentKey]
    */
+  /**
+   * 상단바 다크모드 버튼 옆에 마이페이지 바로가기 아이콘을 붙임 (모든 페이지 공통이라 HTML 대신 여기서 생성).
+   * 로그인하지 않았으면 마이페이지가 알아서 로그인 페이지로 보내줍니다.
+   */
+  function renderMypageButton(currentKey) {
+    const themeBtn = document.getElementById("themeToggle");
+    if (!themeBtn || document.getElementById("mypageBtn")) return;
+    const link = document.createElement("a");
+    link.id = "mypageBtn";
+    link.href = "./mypage.html";
+    link.className = "icon-btn icon-btn--neon";
+    link.classList.toggle("icon-btn--active", currentKey === "mypage");
+    link.setAttribute("aria-label", "마이페이지");
+    link.title = "마이페이지";
+    link.innerHTML = window.BROS.render.ICONS.mypage;
+    themeBtn.after(link);
+  }
+
   function init(currentKey) {
     const key = currentKey || document.body.dataset.page || null;
     renderSidebarNav(key);
     bindSidebar();
     bindScrollHeader();
     initTheme();
+    renderMypageButton(key);
     initAuth();
     if (window.BROS.capture) window.BROS.capture.initCaptureFeature();
   }

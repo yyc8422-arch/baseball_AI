@@ -18,6 +18,8 @@ runs/
 .env.*
 # Spring 로컬 설정 (MySQL 비밀번호, 관리자 계정)
 application-local.yml
+# 사용자가 올린 프로필 사진 등 (web/Backend/uploads)
+uploads/
 
 # OS / 에디터
 .DS_Store

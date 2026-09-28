@@ -100,11 +100,14 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | GET | `/api/auth/check-username?username=` | 아이디 중복확인 | X |
 | POST | `/api/auth/login` | 로그인 (`{username, password}`), 세션 쿠키 발급. 응답 `{username, name, role}` | X |
 | POST | `/api/auth/logout` | 로그아웃 | X |
-| GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role}` | O |
+| GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role, status, createdAt, reviewedAt, profileImageUrl}` | O |
 | POST | `/api/auth/password` | 비밀번호 변경 (`{currentPassword, newPassword}`, 새 비밀번호 8자 이상) | O |
 | POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`) | X (로그인 시 자동으로 내 기록으로 연결) |
 | GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | X |
 | GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
+| GET | `/api/mypage/profile-image` | 내 프로필 사진 (img src 로 사용) | **O** |
+| POST | `/api/mypage/profile-image` | 프로필 사진 등록/변경 (multipart: `image`, JPG/PNG/WEBP/GIF, 5MB 이하) | **O** |
+| DELETE | `/api/mypage/profile-image` | 프로필 사진 삭제 | **O** |
 | GET | `/api/highlights/latest` | 최신 경기 + 하이라이트 클립 | X |
 | GET | `/api/admin/users?status=PENDING` | 회원 목록 (`PENDING`/`APPROVED`/`REJECTED`, 생략하면 전체) | **관리자** |
 | POST | `/api/admin/users/{id}/approve` | 가입 승인 | **관리자** |
@@ -120,8 +123,10 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - 모든 요청에 `credentials: "include"` 를 붙여서 세션 쿠키가 전달됨 (`api.request()` 를 쓰면 자동)
 - `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
-- `mypage.html` + `js/mypage.js`: 비밀번호 변경 폼, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
+- `mypage.html` + `js/mypage.js`: 프로필 사진, 내 정보, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
 - `admin.html` + `js/admin.js`: 회원 승인 관리 화면
+- `password.html` + `js/password.js`: 비밀번호 변경 화면 (마이페이지 내 정보의 "비밀번호 변경" 버튼)
+- 프로필 사진 파일은 백엔드 실행 위치 기준 `uploads/profile/` 에 저장됨 (`app.upload-dir`, git 제외). DB 에는 파일 이름만 저장
 
 ## 11. 문제 해결
 

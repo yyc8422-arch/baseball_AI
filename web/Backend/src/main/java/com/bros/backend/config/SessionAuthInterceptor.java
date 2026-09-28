@@ -1,6 +1,7 @@
 package com.bros.backend.config;
 
 import org.springframework.stereotype.Component;
+import org.springframework.web.cors.CorsUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.bros.backend.common.SessionKeys;
@@ -18,6 +19,11 @@ public class SessionAuthInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        // DELETE 등을 보내기 전에 브라우저가 쿠키 없이 먼저 보내는 CORS 사전 확인(OPTIONS)은 통과시켜야
+        // 실제 요청이 나갈 수 있음 (막으면 브라우저가 CORS 에러로 요청 자체를 취소함)
+        if (CorsUtils.isPreFlightRequest(request)) {
+            return true;
+        }
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute(SessionKeys.USER_ID) == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);

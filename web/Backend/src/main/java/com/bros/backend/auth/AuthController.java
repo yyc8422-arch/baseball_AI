@@ -58,7 +58,7 @@ public class AuthController {
         session.setAttribute(SessionKeys.USER_ID, user.getId());
         session.setAttribute(SessionKeys.USERNAME, user.getUsername());
 
-        return new UserInfoResponse(user.getUsername(), user.getName(), user.getRole().name());
+        return UserInfoResponse.from(user);
     }
 
     @PostMapping("/logout")
@@ -88,6 +88,6 @@ public class AuthController {
             session.invalidate();
             throw new ApiException(HttpStatus.FORBIDDEN, "가입이 승인되지 않았습니다. 관리자에게 문의해주세요.");
         }
-        return new UserInfoResponse(user.getUsername(), user.getName(), user.getRole().name());
+        return UserInfoResponse.from(user);
     }
 }

@@ -130,6 +130,41 @@ svg {
   box-shadow: none;
 }
 
+/* 상단바 마이페이지 아이콘: 오른쪽 아래 플로팅 버튼(.fab)과 같은 형광 연두 */
+.icon-btn--neon {
+  background: var(--neon);
+  color: var(--neon-ink);
+  border: none;
+  box-shadow: 0 4px 12px rgba(203, 255, 61, 0.45);
+}
+
+/* 지금 마이페이지에 있으면 진한 테두리로 표시 */
+.icon-btn--neon.icon-btn--active {
+  box-shadow: 0 0 0 2px var(--neon-ink) inset, 0 4px 12px rgba(203, 255, 61, 0.45);
+}
+
+.login-btn {
+  white-space: nowrap;
+}
+
+/* 폰 화면: 상단바에 메뉴/로고/다크모드/마이페이지/로그인이 다 들어가면 제목이 한 글자씩 꺾여서,
+   본문에 같은 제목(page-header)이 크게 있는 만큼 상단바 제목은 숨기고 간격을 줄임 */
+/* (아래쪽에 정의된 .topbar__title / .topbar__right / .login-btn 기본값보다 우선하도록 .topbar 를 앞에 붙임) */
+@media (max-width: 520px) {
+  .topbar .topbar__title {
+    display: none;
+  }
+
+  .topbar .topbar__right {
+    gap: 6px;
+    align-items: center;
+  }
+
+  .topbar .login-btn {
+    padding: 0 14px;
+  }
+}
+
 /* ===== 레이아웃 ===== */
 .app {
   display: flex;
@@ -1659,7 +1694,122 @@ svg {
   display: none;
 }
 
-/* 마이페이지 비밀번호 변경 폼 (입력칸/버튼 모양은 로그인 페이지의 auth-* 를 그대로 사용) */
+/* 마이페이지 "내 정보" 카드 */
+.info-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.info-list__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  min-height: 50px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.info-list__row:last-child {
+  border-bottom: none;
+}
+
+.info-list dt {
+  color: var(--muted);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.info-list dd {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 700;
+  text-align: right;
+  word-break: break-all;
+}
+
+.info-list__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 비밀번호는 보여주지 않고 자리만 표시 */
+.info-list__secret {
+  color: var(--muted);
+  letter-spacing: 2px;
+}
+
+/* "사진 변경" / "비밀번호 변경" 같은 작은 버튼 (로그아웃 버튼과 같은 톤) */
+.info-action {
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--navy);
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.info-action[hidden] {
+  display: none;
+}
+
+/* 프로필 사진 버튼: 누르면 사진 선택, 오른쪽 아래 카메라 배지 */
+.profile-card__avatar--button {
+  position: relative;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.profile-card__avatar-img {
+  width: 100%;
+  height: 100%;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.profile-card__avatar-img[hidden],
+.profile-card__avatar-icon[hidden] {
+  display: none;
+}
+
+.profile-card__avatar-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--neon);
+  color: var(--neon-ink);
+  border: 2px solid var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-card__avatar-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.profile-card__avatar--button:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
+/* 비밀번호 변경 페이지 (password.html). 입력칸/버튼 모양은 로그인 페이지의 auth-* 를 그대로 사용 */
 .password-form {
   display: flex;
   flex-direction: column;
@@ -1670,6 +1820,23 @@ svg {
 .password-form .auth-message {
   margin: 0;
   text-align: left;
+}
+
+/* 하위 페이지 제목 위의 "< 마이페이지로" 링크 */
+.page-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.page-back svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* ===== 마이페이지 기록 목록 / 관리자 회원 목록 (js/mypage.js, js/admin.js) ===== */
