@@ -35,44 +35,44 @@
         movement: "움직임 수치",
         compare: "이전 투구 분석 비교",
       },
-      // key 는 API 의 phases[].key 와 같은 영어 값(그대로 유지), 화면에는 한글 label 로 표시
+      // key 는 API 의 phases[].key 와 같은 영어 값(그대로 유지), 화면에는 야구 용어를 한글 발음으로 표기한 label
       phases: [
-        { key: "SET", label: "준비 자세" },
-        { key: "LEG_LIFT", label: "다리 들기" },
-        { key: "STRIDE", label: "앞발 내딛기" },
-        { key: "ARM_COCKING", label: "팔 젖히기" },
-        { key: "ACCELERATION", label: "팔 가속" },
-        { key: "RELEASE", label: "공 놓기" },
-        { key: "FOLLOW_THROUGH", label: "마무리 동작" },
+        { key: "SET", label: "세트" },
+        { key: "LEG_LIFT", label: "레그 리프트" },
+        { key: "STRIDE", label: "스트라이드" },
+        { key: "ARM_COCKING", label: "암 코킹" },
+        { key: "ACCELERATION", label: "액셀러레이션" },
+        { key: "RELEASE", label: "릴리스" },
+        { key: "FOLLOW_THROUGH", label: "팔로 스루" },
       ],
       angles: [
-        { key: "elbowAngleAtRelease", label: "공 놓을 때 팔꿈치 각도", unit: "deg" },
-        { key: "shoulderAngleAtRelease", label: "공 놓을 때 어깨 각도", unit: "deg" },
+        { key: "elbowAngleAtRelease", label: "릴리스 시 팔꿈치 각도", unit: "deg" },
+        { key: "shoulderAngleAtRelease", label: "릴리스 시 어깨 각도", unit: "deg" },
         { key: "frontKneeAngle", label: "앞무릎 각도", unit: "deg" },
         { key: "backKneeAngle", label: "뒷무릎 각도", unit: "deg" },
         { key: "trunkTilt", label: "상체 기울기", unit: "deg" },
         { key: "pelvisRotation", label: "골반 회전량", unit: "deg" },
         { key: "shoulderRotation", label: "어깨 회전량", unit: "deg" },
-        { key: "strideLength", label: "보폭 (스트라이드)", unit: "ratio" },
+        { key: "strideLength", label: "스트라이드 크기", unit: "ratio" },
       ],
       movement: [
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
       ],
-      // 흐름: 하체 이동 → 골반 회전 → 어깨 회전 → 팔 가속 → 공 놓기 (각 단계 아래 시작 시점)
+      // 흐름: 하체 이동 → 골반 회전 → 어깨 회전 → 팔 가속 → 릴리스 (각 단계 아래 시작 시점)
       sequenceFlow: [
         { label: "하체 이동", key: "lowerBodyMoveStartSec" },
         { label: "골반 회전", key: "pelvisRotationStartSec" },
         { label: "어깨 회전", key: "shoulderRotationStartSec" },
         { label: "팔 가속", key: "armAccelerationStartSec" },
-        { label: "공 놓기", key: "releaseSec" },
+        { label: "릴리스", key: "releaseSec" },
       ],
       sequenceItems: [
         { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
         { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
         { key: "armAccelerationStartSec", label: "팔 가속 시작 시점", unit: "sec" },
-        { key: "releaseSec", label: "공 놓는 시점", unit: "sec" },
+        { key: "releaseSec", label: "릴리스 시점", unit: "sec" },
         { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
         { key: "totalMotionSec", label: "전체 투구 동작 시간", unit: "sec" },
       ],
@@ -100,12 +100,12 @@
       },
       // CONTACT 는 공/배트 인식 모델이 생기면 API 가 phases 에 넣어 보내면 자동으로 표시됨 (EXTRA_PHASE_LABELS)
       phases: [
-        { key: "STANCE", label: "준비 자세" },
-        { key: "LOAD", label: "뒤로 당기기" },
-        { key: "STRIDE", label: "앞발 내딛기" },
-        { key: "ROTATION", label: "몸통 회전" },
-        { key: "SWING", label: "배트 휘두르기" },
-        { key: "FOLLOW_THROUGH", label: "마무리 동작" },
+        { key: "STANCE", label: "스탠스" },
+        { key: "LOAD", label: "로드" },
+        { key: "STRIDE", label: "스트라이드" },
+        { key: "ROTATION", label: "로테이션" },
+        { key: "SWING", label: "스윙" },
+        { key: "FOLLOW_THROUGH", label: "팔로 스루" },
       ],
       angles: [
         { key: "pelvisRotation", label: "골반 회전량", unit: "deg" },
@@ -113,29 +113,29 @@
         { key: "trunkTilt", label: "상체 기울기", unit: "deg" },
         { key: "frontKneeAngle", label: "앞무릎 각도", unit: "deg" },
         { key: "backKneeAngle", label: "뒷무릎 각도", unit: "deg" },
-        { key: "strideLength", label: "보폭 (스트라이드)", unit: "ratio" },
+        { key: "strideLength", label: "스트라이드 크기", unit: "ratio" },
       ],
       movement: [
         { key: "headDisplacement", label: "머리 이동량", unit: "norm" },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "norm" },
         { key: "trunkTiltChange", label: "상체 기울기 변화량", unit: "deg" },
       ],
-      // 흐름: 뒤로 당기기 → 앞발 내딛기 → 골반 회전 → 어깨 회전 → 배트 휘두르기 → 마무리 동작
+      // 흐름: 로드 → 스트라이드 → 골반 회전 → 어깨 회전 → 스윙 → 팔로 스루
       sequenceFlow: [
-        { label: "뒤로 당기기", key: "loadStartSec" },
-        { label: "앞발 내딛기", key: "strideStartSec" },
+        { label: "로드", key: "loadStartSec" },
+        { label: "스트라이드", key: "strideStartSec" },
         { label: "골반 회전", key: "pelvisRotationStartSec" },
         { label: "어깨 회전", key: "shoulderRotationStartSec" },
-        { label: "배트 휘두르기", key: "swingStartSec" },
-        { label: "마무리 동작", key: "followThroughStartSec" },
+        { label: "스윙", key: "swingStartSec" },
+        { label: "팔로 스루", key: "followThroughStartSec" },
       ],
       sequenceItems: [
-        { key: "loadStartSec", label: "뒤로 당기기 시작 시점", unit: "sec" },
-        { key: "strideStartSec", label: "앞발 내딛기 시작 시점", unit: "sec" },
+        { key: "loadStartSec", label: "로드 시작 시점", unit: "sec" },
+        { key: "strideStartSec", label: "스트라이드 시작 시점", unit: "sec" },
         { key: "frontFootLandingSec", label: "앞발 착지 시점", unit: "sec" },
         { key: "pelvisRotationStartSec", label: "골반 회전 시작 시점", unit: "sec" },
         { key: "shoulderRotationStartSec", label: "어깨 회전 시작 시점", unit: "sec" },
-        { key: "swingStartSec", label: "배트 휘두르기 시작 시점", unit: "sec" },
+        { key: "swingStartSec", label: "스윙 시작 시점", unit: "sec" },
         { key: "pelvisToShoulderGapSec", label: "골반 → 어깨 회전 시간차", unit: "sec" },
         { key: "totalSwingSec", label: "전체 스윙 동작 시간", unit: "sec" },
       ],
@@ -154,7 +154,7 @@
   };
 
   /** 설정에 없는 단계가 API 에서 오면(예: 추후 CONTACT) 이 이름으로 표시, 없으면 key 그대로 */
-  const EXTRA_PHASE_LABELS = { CONTACT: "공 맞히기" };
+  const EXTRA_PHASE_LABELS = { CONTACT: "컨택" };
 
 
 
@@ -392,10 +392,12 @@
   }
 
   /**
-   * 동작 단계 구간 바 (영상 바로 아래, 플레이어의 일부).
-   * 구간 위치/길이는 "영상 전체 길이" 기준이라 브라우저 기본 탐색바와 같은 축이고, 구간을 누르면 그 시작 시점으로 이동.
-   * 구간 시작/종료 시점(startSec/endSec)이 없으면 아무것도 그리지 않음.
-   * @param {HTMLElement} target 구간 바를 넣을 곳
+   * 동작 단계 타임라인 (영상 바로 아래, 플레이어의 일부).
+   *  - 가는 줄: 영상 전체 길이 기준(기본 탐색바와 같은 축). 각 단계 시작 지점에 눈금, 재생된 부분은 채움, 지금 단계 구간은 은은하게 표시.
+   *    줄이나 눈금을 누르면 그 시점으로 이동.
+   *  - 아래 단계 표시: "세트 › 레그 리프트 › …" 한 줄 (눌러서 이동, 폰에서는 가로 스크롤)
+   * 단계 시작/종료 시점(startSec/endSec)이 없으면 아무것도 그리지 않음.
+   * @param {HTMLElement} target 넣을 곳
    * @param {HTMLElement|null} before 이 요소 앞에 넣음 (플레이어의 재생속도 줄 앞)
    */
   function renderPhaseChapters(target, before, config, result) {
@@ -406,87 +408,113 @@
 
     const video = state.player && !state.isSample ? state.player.video : null;
     const lastEnd = phases[phases.length - 1].endSec;
-    /** 영상 길이: 실제 영상 → API 의 영상 길이 → 마지막 구간 끝 */
+    /** 영상 길이: 실제 영상 → API 의 영상 길이 → 마지막 단계 끝 */
     const duration = () =>
       (video && Number.isFinite(video.duration) && video.duration) ||
       (result.videoInfo && result.videoInfo.durationSec) ||
       lastEnd;
+    const seek = (sec) => {
+      if (!video) return;
+      video.currentTime = sec;
+      video.pause();
+    };
 
     const wrap = el("div", "phase-chapters");
     const head = el("div", "phase-chapters__head");
-    head.append(el("span", "phase-chapters__title", config.titles.phases));
     const now = el("span", "phase-chapters__now", "");
-    head.appendChild(now);
-    const track = el("div", "phase-chapters__track");
-    const playhead = el("span", "phase-chapters__playhead");
-    playhead.hidden = true;
+    head.append(el("span", "phase-chapters__title", config.titles.phases), now);
 
-    const segs = phases.map((p) => {
-      const seg = el("button", "phase-chapter");
-      seg.type = "button";
-      seg.title = `${p.label} ${p.startSec.toFixed(2)}–${p.endSec.toFixed(2)}s`;
-      seg.setAttribute("aria-label", `${p.label} 구간으로 이동 (${p.startSec.toFixed(2)}초)`);
-      seg.append(el("span", "phase-chapter__label", p.label));
-      if (video) {
-        seg.addEventListener("click", () => {
-          video.currentTime = p.startSec;
-          video.pause();
-        });
-      } else {
-        seg.disabled = true;
-      }
-      track.appendChild(seg);
-      return { seg, phase: p };
-    });
-    track.appendChild(playhead);
-
-    // 아주 짧은 구간은 막대 안에서 이름이 잘리므로, 아래에 단계 이름 + 시작 시간을 칩으로 한 번 더 나열 (눌러도 이동)
-    const list = el("div", "phase-chapters__list");
-    const chips = phases.map((p) => {
-      const chip = el("button", "phase-chip");
-      chip.type = "button";
-      chip.append(el("span", "phase-chip__label", p.label), el("span", "phase-chip__time", `${p.startSec.toFixed(2)}s`));
-      if (video) {
-        chip.addEventListener("click", () => {
-          video.currentTime = p.startSec;
-          video.pause();
-        });
-      } else {
-        chip.disabled = true;
-      }
-      list.appendChild(chip);
-      return chip;
+    // 가는 타임라인
+    const line = el("div", "phase-line");
+    const rail = el("div", "phase-line__rail");
+    const range = el("span", "phase-line__range");
+    const progress = el("span", "phase-line__progress");
+    const knob = el("span", "phase-line__knob");
+    range.hidden = true;
+    knob.hidden = !video;
+    rail.append(range, progress);
+    line.append(rail, knob);
+    if (video) {
+      line.addEventListener("click", (e) => {
+        if (e.target.closest(".phase-tick")) return;
+        const rect = rail.getBoundingClientRect();
+        seek(Math.min(Math.max((e.clientX - rect.left) / rect.width, 0), 1) * duration());
+      });
+    } else {
+      line.classList.add("phase-line--static");
+    }
+    const ticks = phases.map((p) => {
+      const tick = el("button", "phase-tick");
+      tick.type = "button";
+      tick.title = `${p.label} ${p.startSec.toFixed(2)}s`;
+      tick.setAttribute("aria-label", `${p.label} 시작 지점으로 이동 (${p.startSec.toFixed(2)}초)`);
+      if (video) tick.addEventListener("click", () => seek(p.startSec));
+      else tick.disabled = true;
+      line.appendChild(tick);
+      return tick;
     });
 
-    wrap.append(head, track, list);
+    // 아래 단계 표시 (세트 › 레그 리프트 › …)
+    const steps = el("ol", "phase-steps");
+    const stepButtons = phases.map((p) => {
+      const li = el("li", "phase-steps__item");
+      const btn = el("button", "phase-step");
+      btn.type = "button";
+      btn.append(el("span", "phase-step__label", p.label), el("span", "phase-step__time", `${p.startSec.toFixed(2)}s`));
+      if (video) btn.addEventListener("click", () => seek(p.startSec));
+      else btn.disabled = true;
+      li.appendChild(btn);
+      steps.appendChild(li);
+      return btn;
+    });
+
+    const stepsWrap = el("div", "phase-steps-wrap");
+    stepsWrap.appendChild(steps);
+    wrap.append(head, line, stepsWrap);
     target.insertBefore(wrap, before);
 
+    const pct = (sec) => `${Math.min(Math.max(sec / duration(), 0), 1) * 100}%`;
+    let current = -1; // 지금 재생 중인 단계 번호
+
     function layout() {
-      const d = duration();
-      segs.forEach(({ seg, phase }) => {
-        seg.style.left = `${(phase.startSec / d) * 100}%`;
-        seg.style.width = `${((phase.endSec - phase.startSec) / d) * 100}%`;
+      phases.forEach((p, i) => {
+        ticks[i].style.left = pct(p.startSec);
       });
     }
 
-    /** 재생 위치 표시선 + 지금 구간 강조 + "현재 구간" 이름 */
+    /** 재생된 부분 채움 + 지금 단계 구간 표시 + 단계 강조 + "현재 구간" 이름 */
     function sync() {
       if (!video) {
         now.textContent = `${phases[0].label} → ${phases[phases.length - 1].label}`;
         return;
       }
       const t = video.currentTime;
-      const d = duration();
-      playhead.hidden = false;
-      playhead.style.left = `${Math.min(t / d, 1) * 100}%`;
-      let current = null;
-      segs.forEach(({ seg, phase }, i) => {
-        const active = t >= phase.startSec && t < phase.endSec;
-        seg.classList.toggle("phase-chapter--active", active);
-        chips[i].classList.toggle("phase-chip--active", active);
-        if (active) current = phase;
+      progress.style.width = pct(t);
+      knob.style.left = pct(t);
+      const before = current;
+      current = -1;
+      phases.forEach((p, i) => {
+        const active = t >= p.startSec && t < p.endSec;
+        if (active) current = i;
+        stepButtons[i].classList.toggle("phase-step--active", active);
+        stepButtons[i].classList.toggle("phase-step--done", t >= p.endSec);
+        ticks[i].classList.toggle("phase-tick--passed", t >= p.startSec);
       });
-      now.textContent = current ? `현재 구간 · ${current.label}` : "구간을 누르면 그 시점으로 이동해요";
+      // 좁은 화면에서 단계 줄이 가로로 넘치면, 지금 단계가 보이도록 가운데로 스크롤
+      if (current >= 0 && current !== before) {
+        const btn = stepButtons[current];
+        const target = btn.offsetLeft - (stepsWrap.clientWidth - btn.offsetWidth) / 2;
+        stepsWrap.scrollTo({ left: Math.max(target, 0), behavior: "smooth" });
+      }
+      range.hidden = current < 0;
+      if (current >= 0) {
+        const p = phases[current];
+        range.style.left = pct(p.startSec);
+        range.style.width = `calc(${pct(p.endSec)} - ${pct(p.startSec)})`;
+        now.textContent = `현재 구간 · ${p.label}`;
+      } else {
+        now.textContent = "눈금이나 단계를 누르면 그 시점으로 이동해요";
+      }
     }
 
     layout();

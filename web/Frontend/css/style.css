@@ -2852,9 +2852,10 @@ a.record-item:hover {
   display: none;
 }
 
-/* ① 영상 바로 아래 동작 단계 구간 바 (영상 전체 길이 기준, 누르면 그 시점으로 이동) */
+/* ① 영상 바로 아래 동작 단계 타임라인 (js/report.js renderPhaseChapters)
+   가는 줄 = 영상 전체 길이(기본 탐색바와 같은 축), 눈금 = 각 단계 시작, 아래 = 단계 이름 한 줄 */
 .phase-chapters {
-  padding: 12px 14px 14px;
+  padding: 14px 16px 12px;
   border-radius: var(--radius-md);
   background: var(--bg);
   border: 1px solid var(--border);
@@ -2880,115 +2881,169 @@ a.record-item:hover {
   color: var(--muted);
 }
 
-.phase-chapters__track {
+/* 가는 타임라인 (위아래 여백을 넉넉히 둬서 누르기 쉽게) */
+.phase-line {
   position: relative;
-  height: 40px;
-  margin-top: 10px;
-  border-radius: 10px;
-  background: var(--white);
-  border: 1px solid var(--border);
+  margin: 14px 0 6px;
+  padding: 9px 0;
+  cursor: pointer;
+}
+
+.phase-line--static {
+  cursor: default;
+}
+
+.phase-line__rail {
+  position: relative;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
   overflow: hidden;
 }
 
-.phase-chapter {
+.phase-line__progress {
   position: absolute;
   top: 0;
   bottom: 0;
-  padding: 0 6px;
-  border: none;
-  border-right: 2px solid var(--white);
-  background: var(--red-soft);
-  color: var(--navy);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.phase-chapter:nth-child(even) {
-  background: var(--green-soft);
-}
-
-.phase-chapter:hover {
+  left: 0;
+  width: 0;
   background: var(--neon);
-  color: var(--neon-ink);
 }
 
-.phase-chapter:disabled {
+/* 지금 재생 중인 단계의 구간 */
+.phase-line__range {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--navy);
+  opacity: 0.25;
+}
+
+.phase-line__knob {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--neon);
+  border: 2px solid var(--navy);
+  pointer-events: none;
+}
+
+/* 단계 시작 눈금 (보이는 건 가는 선, 누르는 범위는 넓게) */
+.phase-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 16px;
+  margin-left: -8px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
+
+.phase-tick::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--muted);
+}
+
+.phase-tick--passed::before {
+  background: var(--navy);
+}
+
+.phase-tick:disabled {
   cursor: default;
 }
 
-.phase-chapter--active,
-.phase-chapter--active:nth-child(even) {
-  background: var(--cta-bg);
-  color: var(--cta-ink);
+/* 단계 이름 한 줄: 세트 › 레그 리프트 › … (폰에서는 가로 스크롤) */
+.phase-steps-wrap {
+  position: relative; /* 단계 버튼 offsetLeft 기준 (지금 단계 자동 스크롤) */
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* 양끝을 살짝 흐리게 해서 옆으로 더 있다는 걸 보여줌 */
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 12px, #000 calc(100% - 12px), transparent 100%);
 }
 
-.phase-chapter__label {
-  display: block;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.phase-steps-wrap::-webkit-scrollbar {
+  display: none;
 }
 
-/* 막대 아래 단계 이름 칩 (짧은 구간 이름이 잘리지 않게, 눌러도 이동) */
-.phase-chapters__list {
+.phase-steps {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+  align-items: center;
+  margin: 0;
+  padding: 0 8px;
+  list-style: none;
+  min-width: max-content;
 }
 
-.phase-chip {
+.phase-steps__item {
+  display: flex;
+  align-items: center;
+}
+
+.phase-steps__item + .phase-steps__item::before {
+  content: "›";
+  margin: 0 4px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.phase-step {
   display: inline-flex;
   align-items: baseline;
-  gap: 6px;
-  height: 30px;
-  padding: 0 12px;
+  gap: 5px;
+  padding: 6px 10px;
+  border: none;
   border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--navy);
+  background: none;
+  color: var(--muted);
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.phase-chip:disabled {
+.phase-step:disabled {
   cursor: default;
 }
 
-.phase-chip__label {
-  font-size: 12px;
+.phase-step:not(:disabled):hover {
+  background: var(--white);
+  color: var(--navy);
+}
+
+.phase-step__label {
+  font-size: 12.5px;
   font-weight: 800;
-  line-height: 28px;
 }
 
-.phase-chip__time {
+.phase-step__time {
   font-size: 11px;
-  color: var(--muted);
   font-variant-numeric: tabular-nums;
-}
-
-.phase-chip--active {
-  background: var(--cta-bg);
-  border-color: var(--cta-bg);
-  color: var(--cta-ink);
-}
-
-.phase-chip--active .phase-chip__time {
-  color: inherit;
   opacity: 0.8;
 }
 
-/* 영상 재생 위치 표시선 */
-.phase-chapters__playhead {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  margin-left: -1px;
-  background: var(--gold);
-  pointer-events: none;
+.phase-step--done {
+  color: var(--navy);
+}
+
+.phase-step--active {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
+}
+
+.phase-step--active:not(:disabled):hover {
+  background: var(--cta-bg);
+  color: var(--cta-ink);
 }
 
 /* ② 자세 및 관절 수치 / ④ 움직임 수치 카드 (평가 태그 없이 값만) */
