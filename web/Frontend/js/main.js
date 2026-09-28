@@ -115,9 +115,11 @@
         .replace(/\s+/g, " ")
         .trim();
 
-      const line = block.querySelector(".home-hero__eyebrow-line");
-      if (line) {
-        line.style.animationDelay = `${time}s`;
+      // 영문 줄 양옆의 짧은 선: 앞 선은 글자보다 먼저, 뒤 선(--end)은 글자를 다 쓴 뒤
+      const leadLine = block.querySelector(".home-hero__eyebrow-line:not(.home-hero__eyebrow-line--end)");
+      const endLine = block.querySelector(".home-hero__eyebrow-line--end");
+      if (leadLine) {
+        leadLine.style.animationDelay = `${time}s`;
         time += LINE_DRAW_TIME;
       }
 
@@ -143,7 +145,12 @@
         });
         node.replaceWith(wrap);
       });
-      time += count * step + duration + GAP_BETWEEN_BLOCKS;
+      time += count * step + duration;
+      if (endLine) {
+        endLine.style.animationDelay = `${time - duration}s`;
+        time += LINE_DRAW_TIME - duration;
+      }
+      time += GAP_BETWEEN_BLOCKS;
 
       const srText = document.createElement("span");
       srText.className = "sr-only";
@@ -183,15 +190,15 @@
           el.classList.add("is-visible");
           observer.unobserve(el); // 한 번 나타나면 다시 숨기지 않음
           // 다 나타난 뒤에는 등장용 스타일을 떼서, 카드에 마우스를 올릴 때의 떠오르는 효과(transform)와 겹치지 않게 함
-          el.addEventListener(
-            "transitionend",
-            () => {
-              el.removeAttribute("data-reveal");
-              el.classList.remove("is-visible");
-              el.style.removeProperty("--reveal-delay");
-            },
-            { once: true }
-          );
+          // (투명도보다 움직임이 더 오래 걸리는 요소도 있어서, 움직임(transform)이 끝났을 때 정리)
+          const cleanUp = (e) => {
+            if (e.target !== el || e.propertyName !== "transform") return;
+            el.removeEventListener("transitionend", cleanUp);
+            el.removeAttribute("data-reveal");
+            el.classList.remove("is-visible");
+            el.style.removeProperty("--reveal-delay");
+          };
+          el.addEventListener("transitionend", cleanUp);
         });
       },
       { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }

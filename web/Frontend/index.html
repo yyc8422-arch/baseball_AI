@@ -90,6 +90,7 @@
             <p class="home-hero__eyebrow" data-write data-write-step="0.03">
               <span class="home-hero__eyebrow-line" aria-hidden="true"></span>
               BROTHERS UNITED · GWANGJU
+              <span class="home-hero__eyebrow-line home-hero__eyebrow-line--end" aria-hidden="true"></span>
             </p>
             <h1 class="home-hero__title" data-write data-write-step="0.18">함께라서,<br />더 멀리</h1>
             <p class="home-hero__desc" data-write data-write-step="0.035">야구는 혼자가 아닌, 우리가 만드는 이야기.<br />AI 자세 분석으로 한 걸음 더 성장하세요.</p>
@@ -101,14 +102,14 @@
         </a>
       </section>
 
-      <main class="content home-content">
-        <!-- 장면 1: 팀 전체 사진이 아래에서 크게 올라옴. 원본(960x1280)보다 크게 늘리지 않음 -->
-        <section class="home-scene home-scene--team" id="homeTeam">
-          <figure class="home-team-photo" data-reveal>
-            <img src="./assets/images/hero-team.jpg" width="960" height="1280" loading="lazy" alt="BROS 야구단 선수들이 CHAMPIONS 현수막을 들고 찍은 단체 사진" />
-          </figure>
-        </section>
+      <!-- 장면 1: 팀 전체 사진이 아래에서 올라와 가로로 화면을 꽉 채움 (콘텐츠 여백 밖, 좌우 끝까지) -->
+      <section class="home-scene home-scene--team" id="homeTeam">
+        <figure class="home-team-photo" data-reveal>
+          <img src="./assets/images/hero-team.jpg" width="960" height="1280" loading="lazy" alt="BROS 야구단 선수들이 CHAMPIONS 현수막을 들고 찍은 단체 사진" />
+        </figure>
+      </section>
 
+      <main class="content home-content">
         <!-- 장면 2: 오늘의 AI 리포트 -->
         <section class="home-scene">
           <section class="hero" id="homeReport" data-reveal>
@@ -127,14 +128,11 @@
           <section id="reportOverviewSlot" data-reveal style="--reveal-delay: 240ms"></section>
         </section>
 
-        <!-- 장면 3: 기능 메뉴 4개 (카드가 하나씩 순서대로 올라옴) -->
-        <section class="home-scene">
-          <section class="feature-grid" id="featureGrid"></section>
-        </section>
-
-        <!-- 장면 4: 3단계 안내 -->
+        <!-- 장면 3: 기능 메뉴 4개(카드가 하나씩 순서대로 올라옴) + 3단계 안내를 한 화면에 -->
         <section class="home-scene home-scene--last">
-          <section class="how-bar" id="howBar" data-reveal>
+          <section class="feature-grid" id="featureGrid"></section>
+
+          <section class="how-bar" id="howBar" data-reveal style="--reveal-delay: 600ms">
             <div class="how-bar__brand">
               <span class="how-bar__logo">BROS</span>
               <p class="how-bar__title">3단계로 만나는 AI 야구 분석</p>
