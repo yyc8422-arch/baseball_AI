@@ -65,7 +65,11 @@
   function syncTopbarHeight() {
     const topbar = document.getElementById("topbar");
     if (!topbar) return;
-    const update = () => document.documentElement.style.setProperty("--topbar-h", `${topbar.offsetHeight}px`);
+    // 상단바 없이 버튼만 떠 있으면(topbar--floating) 가려지는 영역이 없으므로 0
+    const update = () => {
+      const h = topbar.classList.contains("topbar--floating") ? 0 : topbar.offsetHeight;
+      document.documentElement.style.setProperty("--topbar-h", `${h}px`);
+    };
     // 장면 단위 스크롤 맞춤(CSS scroll-snap)은 홈에서만
     document.documentElement.classList.add("home-snap");
     update();
@@ -196,7 +200,7 @@
 
     function update() {
       const vh = window.innerHeight;
-      const top = topbar ? topbar.offsetHeight : 0;
+      const top = topbar && !topbar.classList.contains("topbar--floating") ? topbar.offsetHeight : 0;
       // 페이지 맨 끝이면 더 내려갈 수 없으므로, 화면 안에 들어온 요소는 끝까지 다 나타난 것으로 처리
       const atBottom = window.scrollY + vh >= document.documentElement.scrollHeight - 4;
       targets.forEach((el) => {

@@ -869,27 +869,86 @@ svg {
   color: rgba(255, 255, 255, 0.72);
 }
 
-/* 홈 상단바: 뒤가 항상 사진이라 흰 글씨 (js/shell.js 가 topbar--on-hero 를 붙임) */
-.topbar--on-hero .logo__text,
-.topbar--on-hero .icon-btn--ghost {
-  color: #ffffff;
+/* 홈: 상단바 막대 없이 버튼들만 화면 모서리에 떠 있게 고정 (오른쪽 아래 플로팅 버튼처럼).
+   막대 자체는 투명하고 클릭도 통과시키며, 버튼마다 배경과 그림자를 줘서 어떤 장면 위에서도 잘 보이게 함 */
+.topbar--floating {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 20px 24px;
+  background: none;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
 }
 
-.topbar--on-hero .topbar__menu {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #ffffff;
+.topbar--floating .topbar__left,
+.topbar--floating .topbar__right {
+  pointer-events: auto;
 }
 
-.topbar--on-hero .login-btn {
+.topbar--floating .logo--mobile {
+  display: none;
+}
+
+.topbar--floating .icon-btn {
+  width: 48px;
+  height: 48px;
+}
+
+.topbar--floating .icon-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 다크모드 버튼 / 모바일 메뉴 버튼: 어두운 반투명 원 */
+.topbar--floating .icon-btn--ghost,
+.topbar--floating .topbar__menu {
+  background: rgba(15, 36, 26, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+.topbar--floating .icon-btn--neon {
+  box-shadow: 0 8px 20px rgba(203, 255, 61, 0.45);
+}
+
+/* 로그인: 흰색 알약 / 로그아웃: 어두운 반투명 알약 */
+.topbar--floating .login-btn {
+  height: 48px;
+  padding: 0 22px;
+  font-size: 14px;
   background: #ffffff;
   color: #0f241a;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-.topbar--on-hero .login-btn--active {
-  background: transparent;
+.topbar--floating .login-btn--active {
+  background: rgba(15, 36, 26, 0.72);
   color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+@media (max-width: 520px) {
+  .topbar--floating {
+    padding: 14px 16px;
+  }
+
+  .topbar--floating .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .topbar--floating .login-btn {
+    height: 44px;
+    padding: 0 16px;
+  }
 }
 
 /* ===== 스크롤 위치에 연동되는 등장/퇴장 효과 (js/main.js initScrollReveal) =====

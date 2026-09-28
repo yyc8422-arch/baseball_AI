@@ -47,39 +47,28 @@
   }
 
   // 히어로 영역을 지나 스크롤하면 상단바에 유리 배경 + 축약 타이틀이 떠오르는 효과.
-  // 홈은 메인 비주얼(.home-hero)이 화면에 고정된 배경이라 상단바는 항상 흰 글씨(topbar--on-hero)이고,
-  // 위로 올라온 콘텐츠가 상단바에 닿으면 어두운 유리 배경을 깔아 글씨가 겹쳐 보이지 않게 합니다.
-  // .hero 가 없는 페이지에서는 조용히 아무 일도 하지 않습니다.
+  // 홈처럼 상단바 없이 버튼만 떠 있는 페이지(topbar--floating)와 .hero 가 없는 페이지에서는 아무 일도 하지 않습니다.
   function bindScrollHeader() {
     const topbar = document.getElementById("topbar");
     const title = document.getElementById("topbarTitle");
-    const photoHero = document.querySelector(".home-hero");
-    const hero = photoHero || document.querySelector(".hero");
-    if (!topbar || !hero) return; // 가운데 제목(#topbarTitle)은 없어도 됨 (홈은 제목 없음)
+    const hero = document.querySelector(".hero");
+    if (!topbar || !hero || topbar.classList.contains("topbar--floating")) return;
 
     const FADE_RANGE = 60;
     let ticking = false;
 
-    const heroContent = photoHero && photoHero.nextElementSibling;
-    if (photoHero) topbar.classList.add("topbar--on-hero");
-
     function computeProgress() {
       const topbarHeight = topbar.getBoundingClientRect().height;
-      // 고정된 메인 비주얼은 스크롤해도 제자리이므로, 그 위로 올라오는 콘텐츠의 윗부분이 기준
-      const edge = heroContent ? heroContent.getBoundingClientRect().top : hero.getBoundingClientRect().bottom;
-      const raw = topbarHeight - edge;
+      const heroBottom = hero.getBoundingClientRect().bottom;
+      const raw = topbarHeight - heroBottom;
       return Math.min(Math.max(raw / FADE_RANGE, 0), 1);
     }
 
     function applyProgress(progress) {
-      topbar.style.backgroundColor = photoHero
-        ? `rgba(8, 20, 13, ${(0.72 * progress).toFixed(3)})`
-        : `rgba(var(--bg-rgb), ${(0.82 * progress).toFixed(3)})`;
+      topbar.style.backgroundColor = `rgba(var(--bg-rgb), ${(0.82 * progress).toFixed(3)})`;
       topbar.style.backdropFilter = `blur(${(10 * progress).toFixed(2)}px)`;
       topbar.style.webkitBackdropFilter = topbar.style.backdropFilter;
-      topbar.style.borderBottomColor = photoHero
-        ? `rgba(255, 255, 255, ${(0.1 * progress).toFixed(3)})`
-        : `rgba(var(--border-rgb), ${progress.toFixed(3)})`;
+      topbar.style.borderBottomColor = `rgba(var(--border-rgb), ${progress.toFixed(3)})`;
       topbar.style.boxShadow = `0 6px 18px rgba(var(--shadow-rgb), ${(0.06 * progress).toFixed(3)})`;
 
       if (title) {

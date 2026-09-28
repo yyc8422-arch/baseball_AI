@@ -59,7 +59,8 @@
     </aside>
 
     <div class="main">
-      <header class="topbar" id="topbar">
+      <!-- 홈은 상단바 없이 버튼들만 화면 모서리에 떠 있게 고정 (topbar--floating) -->
+      <header class="topbar topbar--floating" id="topbar">
         <div class="topbar__left">
           <button class="icon-btn topbar__menu" id="menuToggle" aria-label="메뉴 열기">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -128,7 +129,7 @@
         <section class="home-scene home-scene--last">
           <section class="feature-grid" id="featureGrid"></section>
 
-          <section class="how-bar" id="howBar" data-reveal data-reveal-offset="120">
+          <section class="how-bar" id="howBar" data-reveal>
             <div class="how-bar__brand">
               <span class="how-bar__logo">BROS</span>
               <p class="how-bar__title">3단계로 만나는 AI 야구 분석</p>
