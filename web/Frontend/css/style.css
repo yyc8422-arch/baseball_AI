@@ -956,6 +956,82 @@ svg {
   }
 }
 
+/* ===== 홈: 사이드바 뒤까지 메인 배경이 이어지게 (index.html body.page-home) =====
+   팀 사진 배경을 페이지 전체에 고정으로 깔고, 사이드바는 반투명 유리 패널 + 메뉴는 카드처럼 떠오르는 효과 */
+body.page-home {
+  background: #0b1a12 url("../assets/images/hero-team-bg.jpg") center / cover no-repeat fixed;
+}
+
+.page-home .home-hero {
+  background: transparent;
+}
+
+.page-home .home-hero__backdrop {
+  display: none;
+}
+
+.page-home .sidebar {
+  background: rgba(8, 20, 13, 0.55);
+  border-right-color: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.page-home .sidebar .logo__text {
+  color: #cbff3d;
+}
+
+.page-home .sidebar__nav {
+  gap: 10px;
+}
+
+.page-home .nav-item {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.25s ease;
+}
+
+.page-home .nav-item__icon {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.page-home .nav-item:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.12);
+  border-color: #cbff3d;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+}
+
+.page-home .nav-item:hover .nav-item__icon {
+  color: #cbff3d;
+}
+
+.page-home .sidebar__tagline {
+  color: #e8c34a;
+}
+
+.page-home .sidebar__brand-logo {
+  color: #ffffff;
+}
+
+.page-home .sidebar__brand-sub {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.page-home .sidebar__close {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-home .nav-item:hover {
+    transform: none;
+  }
+}
+
 /* ===== 스크롤 위치에 연동되는 등장/퇴장 효과 (js/main.js initScrollReveal) =====
    --p(보이는 정도 0~1), --ty(세로 이동 px) 를 JS 가 스크롤마다 계산. 휠 한 칸씩 끊겨 움직이지 않게 짧은 전환을 둠.
    transform 대신 translate/scale 속성을 써서 카드 hover 의 transform 효과와 따로 동작함. */
