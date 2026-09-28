@@ -66,6 +66,8 @@
     const topbar = document.getElementById("topbar");
     if (!topbar) return;
     const update = () => document.documentElement.style.setProperty("--topbar-h", `${topbar.offsetHeight}px`);
+    // 장면 단위 스크롤 맞춤(CSS scroll-snap)은 홈에서만
+    document.documentElement.classList.add("home-snap");
     update();
     window.addEventListener("resize", update);
   }
@@ -91,28 +93,62 @@
     update();
   }
 
-  // ===== 첫 화면 제목 글씨 쓰기 =====
-  // "함께라서, 더 멀리" 를 글자마다 span 으로 나눠 순서대로 써지게 함 (애니메이션 자체는 CSS .write-char).
+  // ===== 첫 화면 문구 글씨 쓰기 =====
+  // data-write 가 붙은 문구(영문 한 줄 → 제목 → 설명)를 글자마다 span 으로 나눠, 문구 순서대로 이어서 써지게 함.
+  // 글자마다 시작 시각(--d)과 쓰는 시간(--dur)을 계산해서 넘기고, 애니메이션 자체는 CSS(.write-char)가 담당.
   // 붓글씨 폰트가 늦게 받아지면 다른 글씨체로 써졌다가 바뀌어 보이므로, 폰트를 받은 뒤(최대 1.5초 대기) 시작.
   function initHeroWriting() {
-    const title = document.getElementById("heroTitle");
-    if (!title || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const blocks = [...document.querySelectorAll("[data-write]")];
+    if (!blocks.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    // 줄바꿈(<br />)도 띄어쓰기로 읽히도록 화면낭독기용 이름을 따로 붙임
-    title.setAttribute("aria-label", title.innerHTML.replace(/<br\s*\/?>/gi, " ").replace(/\s+/g, " ").trim());
-    let index = 0;
-    [...title.childNodes].forEach((node) => {
-      if (node.nodeType !== Node.TEXT_NODE) return; // <br /> 는 그대로 둠
-      const frag = document.createDocumentFragment();
-      [...node.textContent].forEach((ch) => {
-        const span = document.createElement("span");
-        span.className = "write-char";
-        span.setAttribute("aria-hidden", "true");
-        span.textContent = ch;
-        span.style.setProperty("--i", String(index++));
-        frag.appendChild(span);
+    const GAP_BETWEEN_BLOCKS = 0.15; // 한 문구가 끝나고 다음 문구를 시작하기까지(초)
+    const LINE_DRAW_TIME = 0.35; // 영문 줄 앞 짧은 선을 긋는 시간(초)
+    let time = 0.1;
+
+    blocks.forEach((block) => {
+      const step = parseFloat(block.dataset.writeStep) || 0.05;
+      const duration = Math.max(step * 3, 0.3);
+      // 화면낭독기에는 쪼개기 전 원래 문장을 그대로 읽어줌
+      const readable = block.innerHTML
+        .replace(/<br\s*\/?>/gi, " ")
+        .replace(/<[^>]+>/g, "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      const line = block.querySelector(".home-hero__eyebrow-line");
+      if (line) {
+        line.style.animationDelay = `${time}s`;
+        time += LINE_DRAW_TIME;
+      }
+
+      let count = 0;
+      [...block.childNodes].forEach((node) => {
+        if (node.nodeType !== Node.TEXT_NODE) return; // <br />, 짧은 선 등은 그대로 둠
+        const text = node.textContent.replace(/\s+/g, " ").trim();
+        if (!text) {
+          node.remove();
+          return;
+        }
+        // 글자들을 하나로 묶어야 flex 인 영문 줄에서 글자 사이가 벌어지지 않음
+        const wrap = document.createElement("span");
+        wrap.setAttribute("aria-hidden", "true");
+        [...text].forEach((ch) => {
+          const span = document.createElement("span");
+          span.className = "write-char";
+          span.textContent = ch;
+          span.style.setProperty("--d", `${(time + count * step).toFixed(3)}s`);
+          span.style.setProperty("--dur", `${duration}s`);
+          wrap.appendChild(span);
+          count += 1;
+        });
+        node.replaceWith(wrap);
       });
-      node.replaceWith(frag);
+      time += count * step + duration + GAP_BETWEEN_BLOCKS;
+
+      const srText = document.createElement("span");
+      srText.className = "sr-only";
+      srText.textContent = readable;
+      block.appendChild(srText);
     });
     document.documentElement.classList.add("writing-ready");
 
@@ -120,7 +156,7 @@
     const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
     Promise.race([fontReady, timeout]).then(() => {
       // 폰트를 받은 다음 프레임에 시작해야 첫 글자가 바뀐 폰트로 그려짐
-      requestAnimationFrame(() => title.classList.add("is-writing"));
+      requestAnimationFrame(() => blocks.forEach((block) => block.classList.add("is-writing")));
     });
   }
 
@@ -131,7 +167,7 @@
     // 기능 카드 4개는 한 번에 말고 순서대로 하나씩 올라오게
     document.querySelectorAll("#featureGrid > *").forEach((card, i) => {
       card.setAttribute("data-reveal", "");
-      card.style.setProperty("--reveal-delay", `${i * 90}ms`);
+      card.style.setProperty("--reveal-delay", `${i * 150}ms`);
     });
 
     const targets = document.querySelectorAll("[data-reveal]");
@@ -158,7 +194,7 @@
           );
         });
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
+      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
     );
     targets.forEach((el) => observer.observe(el));
   }
