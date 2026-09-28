@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.bros.backend.auth.dto.AuthMessageResponse;
 import com.bros.backend.auth.dto.LoginRequest;
+import com.bros.backend.auth.dto.PasswordChangeRequest;
 import com.bros.backend.auth.dto.SignupRequest;
 import com.bros.backend.auth.dto.UserInfoResponse;
 import com.bros.backend.auth.dto.UsernameCheckResponse;
@@ -67,6 +68,14 @@ public class AuthController {
             session.invalidate();
         }
         return new AuthMessageResponse("로그아웃되었습니다.");
+    }
+
+    /** 마이페이지 비밀번호 변경 (로그인 필수). 로그인 상태는 그대로 유지됩니다. */
+    @PostMapping("/password")
+    public AuthMessageResponse changePassword(@RequestBody PasswordChangeRequest req, HttpSession session) {
+        Long userId = SessionUtils.requireUserId(session);
+        authService.changePassword(userId, req);
+        return new AuthMessageResponse("비밀번호가 변경되었습니다.");
     }
 
     /** 새로고침 후에도 로그인 상태/이름을 프론트가 확인할 수 있도록 제공 */

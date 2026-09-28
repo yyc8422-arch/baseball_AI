@@ -2,6 +2,7 @@
  * BROS - 마이페이지 (mypage.html)
  * - GET /api/auth/me 로 이름/권한 표시 (관리자면 "회원 승인 관리" 버튼 노출)
  * - GET /api/mypage/analysis-records 로 "분석 기록" / "업로드한 영상" 카드 채우기
+ * - POST /api/auth/password 로 비밀번호 변경
  * 세션이 없거나(401) 승인이 취소된(403) 경우 로그인 페이지로 돌려보냅니다.
  */
 (function () {
@@ -96,6 +97,47 @@
     });
   }
 
+  // ===== 비밀번호 변경 =====
+  const MIN_PASSWORD_LENGTH = 8; // 백엔드 AuthService 와 같은 기준
+
+  function setPasswordMessage(text, isError) {
+    const el = document.getElementById("passwordMessage");
+    el.textContent = text;
+    el.classList.toggle("auth-message--error", !!isError);
+  }
+
+  function initPasswordForm() {
+    const form = document.getElementById("passwordForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const currentPassword = form.currentPassword.value;
+      const newPassword = form.newPassword.value;
+      if (newPassword.length < MIN_PASSWORD_LENGTH) {
+        return setPasswordMessage(`새 비밀번호는 ${MIN_PASSWORD_LENGTH}자 이상이어야 합니다.`, true);
+      }
+      if (newPassword !== form.confirmPassword.value) {
+        return setPasswordMessage("새 비밀번호 확인이 일치하지 않습니다.", true);
+      }
+
+      const btn = form.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      try {
+        const result = await window.BROS.api.request("/api/auth/password", {
+          method: "POST",
+          json: { currentPassword, newPassword },
+          fallbackError: "비밀번호를 변경하지 못했어요.",
+        });
+        form.reset();
+        setPasswordMessage(result.message);
+      } catch (err) {
+        if (err.status === 401) return goToLogin();
+        setPasswordMessage(err.message, true);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
   async function load() {
     const { request } = window.BROS.api;
     try {
@@ -129,6 +171,7 @@
       window.location.href = "./index.html";
     });
 
+    initPasswordForm();
     load();
   });
 })();

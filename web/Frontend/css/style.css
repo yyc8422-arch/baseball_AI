@@ -1659,6 +1659,19 @@ svg {
   display: none;
 }
 
+/* 마이페이지 비밀번호 변경 폼 (입력칸/버튼 모양은 로그인 페이지의 auth-* 를 그대로 사용) */
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 420px;
+}
+
+.password-form .auth-message {
+  margin: 0;
+  text-align: left;
+}
+
 /* ===== 마이페이지 기록 목록 / 관리자 회원 목록 (js/mypage.js, js/admin.js) ===== */
 .record-list {
   display: flex;

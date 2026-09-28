@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bros.backend.auth.dto.LoginRequest;
+import com.bros.backend.auth.dto.PasswordChangeRequest;
 import com.bros.backend.auth.dto.SignupRequest;
 import com.bros.backend.auth.dto.UsernameCheckResponse;
 import com.bros.backend.common.ApiException;
@@ -15,6 +16,8 @@ import com.bros.backend.user.UserStatus;
 
 @Service
 public class AuthService {
+
+    private static final int MIN_PASSWORD_LENGTH = 8;
 
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -62,6 +65,25 @@ public class AuthService {
             throw new ApiException(HttpStatus.FORBIDDEN, "가입이 승인되지 않았습니다. 관리자에게 문의해주세요.");
         }
         return user;
+    }
+
+    /** 마이페이지 비밀번호 변경. 현재 비밀번호를 한 번 더 확인합니다. */
+    @Transactional
+    public void changePassword(Long userId, PasswordChangeRequest req) {
+        if (isBlank(req.getCurrentPassword()) || isBlank(req.getNewPassword())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "현재 비밀번호와 새 비밀번호를 모두 입력해주세요.");
+        }
+        User user = getUserOrThrow(userId);
+        if (!passwordEncoder.matches(req.getCurrentPassword(), user.getPasswordHash())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "현재 비밀번호가 일치하지 않습니다.");
+        }
+        if (req.getNewPassword().length() < MIN_PASSWORD_LENGTH) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "새 비밀번호는 " + MIN_PASSWORD_LENGTH + "자 이상이어야 합니다.");
+        }
+        if (req.getNewPassword().equals(req.getCurrentPassword())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "새 비밀번호가 현재 비밀번호와 같습니다.");
+        }
+        user.setPasswordHash(passwordEncoder.encode(req.getNewPassword()));
     }
 
     public User getUserOrThrow(Long userId) {

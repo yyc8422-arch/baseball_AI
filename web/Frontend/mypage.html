@@ -101,6 +101,29 @@
 
         <div class="page-card">
           <h2 class="page-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+            비밀번호 변경
+          </h2>
+          <form class="password-form" id="passwordForm">
+            <label class="auth-field">
+              <span>현재 비밀번호</span>
+              <input type="password" name="currentPassword" autocomplete="current-password" required />
+            </label>
+            <label class="auth-field">
+              <span>새 비밀번호 (8자 이상)</span>
+              <input type="password" name="newPassword" autocomplete="new-password" minlength="8" required />
+            </label>
+            <label class="auth-field">
+              <span>새 비밀번호 확인</span>
+              <input type="password" name="confirmPassword" autocomplete="new-password" minlength="8" required />
+            </label>
+            <button type="submit" class="auth-submit">비밀번호 변경</button>
+            <p class="auth-message" id="passwordMessage" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="page-card">
+          <h2 class="page-card__title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9.5 13l2 2 4-4.5"/></svg>
             분석 기록
           </h2>

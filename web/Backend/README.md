@@ -84,6 +84,8 @@ VSCode Live Server 등으로 `http://localhost:5500` 같은 주소로 띄우세�
 4. 승인하면 `APPROVED` → 그 회원이 로그인 가능 / 거절하면 `REJECTED` → 로그인 불가
 5. 이미 로그인해 있던 회원을 거절로 바꾸면, 다음에 페이지를 열 때 로그아웃 처리됩니다
 
+처음 만들어진 관리자 비밀번호는 로그인 후 **마이페이지 → 비밀번호 변경**에서 꼭 바꾸세요 (예시처럼 쉬운 비밀번호면 Chrome 이 "유출된 비밀번호" 경고를 띄웁니다).
+
 관리자를 한 명 더 만들고 싶으면 그 사람이 가입한 뒤 MySQL 에서 직접 바꾸면 됩니다.
 
 ```sql
@@ -99,6 +101,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | POST | `/api/auth/login` | 로그인 (`{username, password}`), 세션 쿠키 발급. 응답 `{username, name, role}` | X |
 | POST | `/api/auth/logout` | 로그아웃 | X |
 | GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role}` | O |
+| POST | `/api/auth/password` | 비밀번호 변경 (`{currentPassword, newPassword}`, 새 비밀번호 8자 이상) | O |
 | POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`) | X (로그인 시 자동으로 내 기록으로 연결) |
 | GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | X |
 | GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
@@ -117,7 +120,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - 모든 요청에 `credentials: "include"` 를 붙여서 세션 쿠키가 전달됨 (`api.request()` 를 쓰면 자동)
 - `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
-- `mypage.html` + `js/mypage.js`: `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
+- `mypage.html` + `js/mypage.js`: 비밀번호 변경 폼, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
 - `admin.html` + `js/admin.js`: 회원 승인 관리 화면
 
 ## 11. 문제 해결
