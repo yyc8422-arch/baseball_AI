@@ -632,6 +632,160 @@ svg {
   margin-bottom: 0;
 }
 
+/* PC 에서는 장면(AI 리포트 / 기능 메뉴 + 3단계 안내)의 칸들을 화면 높이에 맞춰 키워서 한 화면을 꽉 채움.
+   vh 기준 clamp 라 노트북(768px)~큰 모니터(1080px 이상)까지 비율이 유지됨. 태블릿/폰은 원래 크기. */
+@media (min-width: 1025px) {
+  /* --- 장면: 오늘의 AI 리포트 --- */
+  .home-scene .hero {
+    margin-bottom: clamp(20px, 3vh, 36px);
+  }
+
+  .home-scene .hero__eyebrow {
+    font-size: clamp(13px, 1.6vh, 16px);
+  }
+
+  .home-scene .hero__title {
+    font-size: clamp(34px, 5vh, 50px);
+    margin-bottom: 12px;
+  }
+
+  .home-scene .hero__desc {
+    font-size: clamp(14px, 1.9vh, 18px);
+  }
+
+  .home-scene .report-tabs {
+    margin-bottom: clamp(18px, 2.6vh, 28px);
+  }
+
+  .home-scene .report-tab {
+    font-size: 15px;
+    padding: 10px 28px;
+  }
+
+  .home-scene .report-overview {
+    grid-template-rows: repeat(2, minmax(clamp(130px, 19vh, 220px), auto));
+    gap: clamp(14px, 2vh, 20px);
+    margin-bottom: 0;
+  }
+
+  .home-scene .info-box {
+    padding: clamp(18px, 2.6vh, 28px);
+    gap: 6px;
+    border-radius: var(--radius-lg);
+  }
+
+  .home-scene .info-box__icon {
+    width: 28px;
+    height: 28px;
+    margin-bottom: auto; /* 아이콘은 위, 글씨는 칸 아래쪽으로 */
+  }
+
+  .home-scene .info-box__label {
+    font-size: 13.5px;
+  }
+
+  .home-scene .info-box__value {
+    font-size: clamp(20px, 2.8vh, 26px);
+  }
+
+  .home-scene .info-box__sub {
+    font-size: 13px;
+  }
+
+  .home-scene .comment-box {
+    padding: clamp(22px, 3vh, 32px);
+    border-radius: var(--radius-lg);
+  }
+
+  .home-scene .comment-box__quote {
+    width: 28px;
+    height: 28px;
+  }
+
+  .home-scene .comment-box__title {
+    font-size: 16px;
+    margin-bottom: 8px;
+  }
+
+  .home-scene .comment-box__text {
+    font-size: clamp(15px, 2vh, 18px);
+    line-height: 1.7;
+  }
+
+  .home-scene .report-cta {
+    height: 56px;
+    font-size: 16px;
+  }
+
+  /* --- 장면: 기능 메뉴 + 3단계 안내 --- */
+  .home-scene--last {
+    gap: clamp(20px, 3.2vh, 36px);
+  }
+
+  .home-scene .feature-grid {
+    gap: clamp(16px, 2vh, 22px);
+  }
+
+  .home-scene .feature-card {
+    min-height: clamp(220px, 32vh, 330px);
+    padding: clamp(24px, 3.4vh, 36px) clamp(22px, 1.8vw, 30px);
+    gap: 10px;
+  }
+
+  .home-scene .feature-card__icon-badge {
+    width: clamp(54px, 7vh, 68px);
+    height: clamp(54px, 7vh, 68px);
+    border-radius: 18px;
+    margin-bottom: auto; /* 아이콘은 위, 제목/설명은 카드 아래쪽으로 */
+  }
+
+  .home-scene .feature-card__icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .home-scene .feature-card__title {
+    font-size: clamp(18px, 2.4vh, 22px);
+  }
+
+  .home-scene .feature-card__desc {
+    font-size: clamp(13.5px, 1.8vh, 15.5px);
+    line-height: 1.6;
+  }
+
+  .home-scene .how-bar {
+    padding: clamp(24px, 3.4vh, 36px) clamp(28px, 2.4vw, 40px);
+    margin-bottom: 0;
+  }
+
+  .home-scene .how-bar__logo {
+    font-size: 34px;
+  }
+
+  .home-scene .how-bar__title {
+    font-size: 15px;
+  }
+
+  .home-scene .how-bar__step {
+    gap: 14px;
+  }
+
+  .home-scene .how-bar__step-icon {
+    width: 52px;
+    height: 52px;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .home-scene .how-bar__step-title {
+    font-size: 16px;
+  }
+
+  .home-scene .how-bar__step-desc {
+    font-size: 13px;
+  }
+}
+
 /* 첫 화면 문구와 균형을 맞춰 장면 제목과 투수/타자 탭도 가운데로
    (장면이 세로 flex 라서 탭이 가로로 늘어나지 않게 align-self 로 내용 폭만큼만) */
 .home-scene .hero {
@@ -697,15 +851,10 @@ svg {
   object-position: center 52%;
 }
 
-/* 팀 사진은 작은 카드처럼 올라오다가 화면을 꽉 채우며 커짐 */
+/* 팀 사진: 스크롤해서 들어올수록 작은 카드(82%, 둥근 모서리) → 화면 가득(100%, 각진 모서리)으로 커짐 */
 .reveal-ready .home-team-photo[data-reveal] {
-  transform: translateY(120px) scale(0.82);
-  border-radius: 32px;
-  transition: opacity 0.9s ease, transform 1.3s cubic-bezier(0.2, 0.7, 0.2, 1), border-radius 1.3s ease;
-}
-
-.reveal-ready .home-team-photo[data-reveal].is-visible {
-  border-radius: 0;
+  scale: calc(0.82 + var(--enter, 1) * 0.18);
+  border-radius: calc((1 - var(--enter, 1)) * 32px);
 }
 
 .home-content .hero__eyebrow {
@@ -743,17 +892,18 @@ svg {
   border-color: rgba(255, 255, 255, 0.45);
 }
 
-/* ===== 스크롤하면 떠오르는 효과 (js/main.js initScrollReveal) ===== */
+/* ===== 스크롤 위치에 연동되는 등장/퇴장 효과 (js/main.js initScrollReveal) =====
+   --p(보이는 정도 0~1), --ty(세로 이동 px) 를 JS 가 스크롤마다 계산. 휠 한 칸씩 끊겨 움직이지 않게 짧은 전환을 둠.
+   transform 대신 translate/scale 속성을 써서 카드 hover 의 transform 효과와 따로 동작함. */
 .reveal-ready [data-reveal] {
-  opacity: 0;
-  transform: translateY(40px);
-  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1);
-  transition-delay: var(--reveal-delay, 0ms);
-}
-
-.reveal-ready [data-reveal].is-visible {
-  opacity: 1;
-  transform: none;
+  opacity: var(--p, 0);
+  translate: 0 calc(var(--ty, 160) * 1px);
+  /* 살짝 작게(94%) 시작해서 원래 크기로 → 아래에서 확 튀어 올라오는 느낌 */
+  scale: calc(0.94 + var(--enter, 1) * 0.06);
+  /* 뒤의 border-color/transform 은 카드 hover 효과가 원래처럼 부드럽게 바뀌도록 유지 */
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), translate 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    scale 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.45s ease-out, border-color 0.15s ease, transform 0.15s ease;
+  will-change: opacity, translate, scale;
 }
 
 @media (max-width: 760px) {

@@ -167,43 +167,62 @@
     });
   }
 
-  // ===== 스크롤하면 섹션이 아래에서 떠오르는 효과 =====
-  // data-reveal 이 붙은 요소는 화면에 들어올 때 is-visible 클래스를 받아 나타납니다.
+  // ===== 스크롤 위치에 계속 연동되는 장면 등장/퇴장 효과 =====
+  // 한 번 재생하고 끝나는 애니메이션이 아니라, 스크롤할 때마다(내릴 때도 올릴 때도) 위치에 맞춰 다시 계산:
+  //   - 화면 아래에서 들어올 때: 아래에서 떠오르며 나타남 (팀 사진은 작은 카드 → 화면 가득)
+  //   - 위로 빠져나갈 때: 살짝 위로 올라가며 사라짐
+  // 결과는 CSS 변수(--p 보이는 정도, --ty 세로 이동 px, --s 크기)로 넘기고 모양은 CSS 가 담당.
+  // 카드에 마우스를 올릴 때의 떠오르는 효과(transform)와 겹치지 않도록 CSS 에서는 translate/scale 속성을 씀.
   // JS 가 실행된 경우에만(html.reveal-ready) 숨기므로, JS 가 실패해도 내용은 그대로 보입니다.
   function initScrollReveal() {
-    // 기능 카드 4개는 한 번에 말고 순서대로 하나씩 올라오게
+    // 기능 카드 4개는 스크롤에 맞춰 하나씩 차례로 (카드마다 조금씩 늦게 시작)
     document.querySelectorAll("#featureGrid > *").forEach((card, i) => {
       card.setAttribute("data-reveal", "");
-      card.style.setProperty("--reveal-delay", `${i * 150}ms`);
+      card.dataset.revealOffset = String(i * 50);
     });
 
-    const targets = document.querySelectorAll("[data-reveal]");
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!("IntersectionObserver" in window) || reduceMotion) return;
-
+    const targets = [...document.querySelectorAll("[data-reveal]")];
+    if (!targets.length || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     document.documentElement.classList.add("reveal-ready");
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const el = entry.target;
-          el.classList.add("is-visible");
-          observer.unobserve(el); // 한 번 나타나면 다시 숨기지 않음
-          // 다 나타난 뒤에는 등장용 스타일을 떼서, 카드에 마우스를 올릴 때의 떠오르는 효과(transform)와 겹치지 않게 함
-          // (투명도보다 움직임이 더 오래 걸리는 요소도 있어서, 움직임(transform)이 끝났을 때 정리)
-          const cleanUp = (e) => {
-            if (e.target !== el || e.propertyName !== "transform") return;
-            el.removeEventListener("transitionend", cleanUp);
-            el.removeAttribute("data-reveal");
-            el.classList.remove("is-visible");
-            el.style.removeProperty("--reveal-delay");
-          };
-          el.addEventListener("transitionend", cleanUp);
-        });
-      },
-      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" }
-    );
-    targets.forEach((el) => observer.observe(el));
+
+    const topbar = document.getElementById("topbar");
+    const ENTER_DISTANCE = 0.3; // 화면 높이의 30% 만큼 올라오는 동안 다 나타남
+    const EXIT_DISTANCE = 0.22; // 위로 빠져나갈 때 화면 높이의 22% 동안 사라짐
+    const RISE_PX = 160; // 들어올 때 아래에서 "확" 올라오는 거리
+    const LEAVE_PX = 50; // 나갈 때 위로 올라가는 거리
+    const clamp01 = (v) => Math.min(Math.max(v, 0), 1);
+    // 들어오는 초반에 빠르게 올라오고 끝에서 부드럽게 멈추도록 (easeOutCubic)
+    const easeOut = (t) => 1 - Math.pow(1 - t, 3);
+
+    function update() {
+      const vh = window.innerHeight;
+      const top = topbar ? topbar.offsetHeight : 0;
+      // 페이지 맨 끝이면 더 내려갈 수 없으므로, 화면 안에 들어온 요소는 끝까지 다 나타난 것으로 처리
+      const atBottom = window.scrollY + vh >= document.documentElement.scrollHeight - 4;
+      targets.forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        const offset = Number(el.dataset.revealOffset || 0);
+        let enter = easeOut(clamp01((vh - rect.top - offset) / (vh * ENTER_DISTANCE)));
+        if (atBottom && rect.top < vh) enter = 1;
+        const exit = clamp01((rect.bottom - top) / (vh * EXIT_DISTANCE));
+        const shown = Math.min(enter, exit);
+        const shift = enter < 1 ? (1 - enter) * RISE_PX : -(1 - exit) * LEAVE_PX;
+        el.style.setProperty("--p", shown.toFixed(3));
+        el.style.setProperty("--ty", shift.toFixed(1));
+        el.style.setProperty("--enter", enter.toFixed(3));
+      });
+      ticking = false;
+    }
+
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
   }
 
   document.addEventListener("DOMContentLoaded", () => {
