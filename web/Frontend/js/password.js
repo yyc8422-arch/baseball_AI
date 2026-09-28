@@ -1,6 +1,6 @@
 /**
- * BROS - 비밀번호 변경 (password.html, 마이페이지 "내 정보"의 "비밀번호 변경" 버튼으로 들어옴)
- * POST /api/auth/password. 바꾼 뒤에도 로그인은 유지되고, 잠시 후 마이페이지로 돌아갑니다.
+ * BROS - 비밀번호 변경 (password.html, 내 정보 페이지의 "비밀번호 변경" 버튼으로 들어옴)
+ * POST /api/auth/password. 바꾼 뒤에도 로그인은 유지되고, 잠시 후 내 정보로 돌아갑니다.
  */
 (function () {
   const MIN_PASSWORD_LENGTH = 8; // 백엔드 AuthService 와 같은 기준
@@ -38,9 +38,9 @@
           fallbackError: "비밀번호를 변경하지 못했어요.",
         });
         form.reset();
-        setMessage(`${result.message} 마이페이지로 돌아갑니다.`);
+        setMessage(`${result.message} 내 정보로 돌아갑니다.`);
         setTimeout(() => {
-          window.location.href = "./mypage.html";
+          window.location.href = "./account.html";
         }, 1500);
       } catch (err) {
         if (err.status === 401) return goToLogin();

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>내 정보 | BROS</title>
+  <script>
+    (function () {
+      try {
+        if (localStorage.getItem("bros-theme") === "dark") {
+          document.documentElement.setAttribute("data-theme", "dark");
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playball&family=Black+Han+Sans&family=Gaegu:wght@700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body data-page="account">
+  <div class="app">
+    <div class="overlay" id="overlay"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__top">
+        <button class="icon-btn sidebar__close" id="sidebarClose" aria-label="메뉴 닫기">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <a href="./index.html" class="logo">
+          <span class="logo__text">Bros</span>
+        </a>
+      </div>
+
+      <nav class="sidebar__nav" id="sidebarNav"></nav>
+
+      <div class="sidebar__footer">
+        <div class="stitch" aria-hidden="true">
+          <svg viewBox="0 0 160 160" fill="none">
+            <path d="M0 40 C 60 40, 100 80, 160 80" stroke="#E7E3C9" stroke-width="26" stroke-linecap="round"/>
+            <g stroke="#C9A227" stroke-width="2.5" stroke-linecap="round">
+              <path d="M20 28 l10 10 M30 24 l10 10 M42 22 l10 10 M55 22 l10 10 M68 24 l10 10 M80 28 l10 10 M92 34 l10 10 M104 42 l10 10 M116 52 l10 10 M128 62 l10 10 M140 72 l10 8"/>
+            </g>
+          </svg>
+        </div>
+        <p class="sidebar__tagline">BASEBALL MAKES<br />US STRONGER</p>
+        <div class="sidebar__brand">
+          <span class="sidebar__brand-logo">BROS</span>
+          <span class="sidebar__brand-sub">ONE TEAM, HIGHER TOGETHER</span>
+        </div>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar topbar--solid" id="topbar">
+        <div class="topbar__left">
+          <button class="icon-btn topbar__menu" id="menuToggle" aria-label="메뉴 열기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+          </button>
+          <a href="./index.html" class="logo logo--mobile">
+            <span class="logo__text">Bros</span>
+          </a>
+        </div>
+        <div class="topbar__title" id="topbarTitle">
+          <span class="topbar__title-mark">B</span>
+          <span class="topbar__title-text">내 정보</span>
+        </div>
+        <div class="topbar__right">
+          <button class="icon-btn icon-btn--ghost" id="themeToggle" type="button" aria-label="다크모드 전환"></button>
+          <button class="login-btn" id="loginBtn" type="button">로그인</button>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="page-header">
+          <a href="./mypage.html" class="page-back">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+            마이페이지로
+          </a>
+          <h1 class="page-header__title">내 정보</h1>
+          <p class="page-header__desc">프로필 사진과 계정 정보를 확인하고, 비밀번호를 바꿀 수 있어요.</p>
+        </div>
+
+        <div class="page-card">
+          <div class="profile-card">
+            <!-- 누르면 사진 선택 창이 열림 (js/profile.js) -->
+            <button type="button" class="profile-card__avatar profile-card__avatar--button" id="avatarBtn" aria-label="프로필 사진 변경">
+              <svg class="profile-card__avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5"/></svg>
+              <img class="profile-card__avatar-img" id="avatarImg" alt="" hidden />
+              <span class="profile-card__avatar-badge" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg>
+              </span>
+            </button>
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp,image/gif" hidden />
+            <div class="profile-card__info">
+              <p class="profile-card__name" id="profileName">회원님</p>
+              <p class="profile-card__meta" id="profileMeta">BROS 회원</p>
+            </div>
+            <!-- 관리자 계정에게만 보임 (js/profile.js) -->
+            <a href="./admin.html" class="profile-card__logout profile-card__admin" id="adminLink" hidden>회원 승인 관리</a>
+            <button type="button" class="profile-card__logout" id="logoutBtn">로그아웃</button>
+          </div>
+        </div>
+
+        <div class="page-card">
+          <h2 class="page-card__title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5"/></svg>
+            내 정보
+          </h2>
+          <!-- js/profile.js 가 GET /api/auth/me 응답으로 채움 -->
+          <dl class="info-list" id="accountInfo">
+            <div class="info-list__row">
+              <dt>프로필 사진</dt>
+              <dd class="info-list__actions">
+                <button type="button" class="info-action" id="avatarChangeBtn">사진 변경</button>
+                <button type="button" class="info-action" id="avatarDeleteBtn" hidden>삭제</button>
+              </dd>
+            </div>
+            <div class="info-list__row"><dt>이름</dt><dd data-field="name">-</dd></div>
+            <div class="info-list__row"><dt>아이디</dt><dd data-field="username">-</dd></div>
+            <div class="info-list__row">
+              <dt>비밀번호</dt>
+              <dd class="info-list__actions">
+                <span class="info-list__secret" aria-label="비밀번호는 표시하지 않음">••••••••</span>
+                <a href="./password.html" class="info-action">비밀번호 변경</a>
+              </dd>
+            </div>
+            <div class="info-list__row"><dt>회원 구분</dt><dd data-field="role">-</dd></div>
+            <div class="info-list__row"><dt>가입 상태</dt><dd data-field="status">-</dd></div>
+            <div class="info-list__row"><dt>가입일</dt><dd data-field="createdAt">-</dd></div>
+            <div class="info-list__row"><dt>승인일</dt><dd data-field="reviewedAt">-</dd></div>
+          </dl>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="./js/types.js"></script>
+  <script src="./js/data.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/shell.js"></script>
+  <script src="./js/profile.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (!window.BROS.shell.requireLogin()) return;
+      // 마이페이지의 하위 화면이라 사이드바/상단바에서는 마이페이지를 활성으로 표시
+      window.BROS.shell.init("mypage");
+      window.BROS.profile.init();
+    });
+  </script>
+</body>
+</html>

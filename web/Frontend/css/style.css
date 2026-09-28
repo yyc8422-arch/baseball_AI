@@ -250,9 +250,12 @@ svg {
   gap: 12px;
   padding: 12px 14px;
   border-radius: 12px;
+  border: 1px solid transparent; /* hover 때 테두리가 생겨도 크기가 흔들리지 않게 */
   font-weight: 600;
   font-size: 15px;
   color: var(--navy);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.2s ease, border-color 0.2s ease,
+    box-shadow 0.25s ease;
 }
 
 .nav-item__icon {
@@ -262,8 +265,22 @@ svg {
   color: var(--muted);
 }
 
+/* 모든 페이지 공통: 카드처럼 마우스를 올리면 살짝 떠오름 */
 .nav-item:hover {
   background: var(--bg);
+  transform: translateY(-4px);
+  border-color: var(--neon);
+  box-shadow: 0 10px 20px rgba(var(--shadow-rgb), 0.12);
+}
+
+.nav-item:hover .nav-item__icon {
+  color: var(--navy);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-item:hover {
+    transform: none;
+  }
 }
 
 .nav-item--active {
@@ -988,9 +1005,7 @@ body.page-home {
 .page-home .nav-item {
   color: #ffffff;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), background 0.2s ease, border-color 0.2s ease,
-    box-shadow 0.25s ease;
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .page-home .nav-item__icon {
@@ -998,7 +1013,6 @@ body.page-home {
 }
 
 .page-home .nav-item:hover {
-  transform: translateY(-4px);
   background: rgba(255, 255, 255, 0.12);
   border-color: #cbff3d;
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
@@ -1024,12 +1038,6 @@ body.page-home {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.3);
   color: #ffffff;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-home .nav-item:hover {
-    transform: none;
-  }
 }
 
 /* ===== 스크롤 위치에 연동되는 등장/퇴장 효과 (js/main.js initScrollReveal) =====
@@ -2238,7 +2246,8 @@ body.page-home {
 }
 
 /* 관리자에게만 보이는 "회원 승인 관리" 링크 (버튼 모양은 로그아웃과 동일) */
-.profile-card__admin {
+.profile-card__admin,
+.profile-card__link {
   display: inline-flex;
   align-items: center;
   text-decoration: none;

@@ -80,7 +80,7 @@
 
         <div class="page-card">
           <div class="profile-card">
-            <!-- 누르면 사진 선택 창이 열림. 사진이 있으면 img 가 보이고 기본 아이콘은 숨김 (js/mypage.js) -->
+            <!-- 누르면 사진 선택 창이 열림. 사진이 있으면 img 가 보이고 기본 아이콘은 숨김 (js/profile.js) -->
             <button type="button" class="profile-card__avatar profile-card__avatar--button" id="avatarBtn" aria-label="프로필 사진 변경">
               <svg class="profile-card__avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5"/></svg>
               <img class="profile-card__avatar-img" id="avatarImg" alt="" hidden />
@@ -93,40 +93,11 @@
               <p class="profile-card__name" id="profileName">회원님</p>
               <p class="profile-card__meta" id="profileMeta">BROS 회원</p>
             </div>
-            <!-- 관리자 계정에게만 보임 (js/mypage.js) -->
+            <!-- 관리자 계정에게만 보임 (js/profile.js) -->
             <a href="./admin.html" class="profile-card__logout profile-card__admin" id="adminLink" hidden>회원 승인 관리</a>
+            <a href="./account.html" class="profile-card__logout profile-card__link" id="accountLink">내 정보</a>
             <button type="button" class="profile-card__logout" id="logoutBtn">로그아웃</button>
           </div>
-        </div>
-
-        <div class="page-card">
-          <h2 class="page-card__title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.2"/><path d="M5 20c1.2-3.4 4-5 7-5s5.8 1.6 7 5"/></svg>
-            내 정보
-          </h2>
-          <!-- js/mypage.js 가 GET /api/auth/me 응답으로 채움 -->
-          <dl class="info-list" id="accountInfo">
-            <div class="info-list__row">
-              <dt>프로필 사진</dt>
-              <dd class="info-list__actions">
-                <button type="button" class="info-action" id="avatarChangeBtn">사진 변경</button>
-                <button type="button" class="info-action" id="avatarDeleteBtn" hidden>삭제</button>
-              </dd>
-            </div>
-            <div class="info-list__row"><dt>이름</dt><dd data-field="name">-</dd></div>
-            <div class="info-list__row"><dt>아이디</dt><dd data-field="username">-</dd></div>
-            <div class="info-list__row">
-              <dt>비밀번호</dt>
-              <dd class="info-list__actions">
-                <span class="info-list__secret" aria-label="비밀번호는 표시하지 않음">••••••••</span>
-                <a href="./password.html" class="info-action">비밀번호 변경</a>
-              </dd>
-            </div>
-            <div class="info-list__row"><dt>회원 구분</dt><dd data-field="role">-</dd></div>
-            <div class="info-list__row"><dt>가입 상태</dt><dd data-field="status">-</dd></div>
-            <div class="info-list__row"><dt>가입일</dt><dd data-field="createdAt">-</dd></div>
-            <div class="info-list__row"><dt>승인일</dt><dd data-field="reviewedAt">-</dd></div>
-          </dl>
         </div>
 
         <div class="page-card">
@@ -236,6 +207,7 @@
   <script src="./js/analysis.js"></script>
   <script src="./js/capture.js"></script>
   <script src="./js/shell.js"></script>
+  <script src="./js/profile.js"></script>
   <script src="./js/mypage.js"></script>
 </body>
 </html>
