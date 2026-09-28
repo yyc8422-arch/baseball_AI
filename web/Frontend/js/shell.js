@@ -55,7 +55,7 @@
     const title = document.getElementById("topbarTitle");
     const photoHero = document.querySelector(".home-hero");
     const hero = photoHero || document.querySelector(".hero");
-    if (!topbar || !title || !hero) return;
+    if (!topbar || !hero) return; // 가운데 제목(#topbarTitle)은 없어도 됨 (홈은 제목 없음)
 
     const FADE_RANGE = 60;
     let ticking = false;
@@ -82,9 +82,11 @@
         : `rgba(var(--border-rgb), ${progress.toFixed(3)})`;
       topbar.style.boxShadow = `0 6px 18px rgba(var(--shadow-rgb), ${(0.06 * progress).toFixed(3)})`;
 
-      title.style.opacity = progress.toFixed(3);
-      title.style.transform = `translateY(${(-10 * (1 - progress)).toFixed(2)}px)`;
-      title.style.pointerEvents = progress > 0.5 ? "auto" : "none";
+      if (title) {
+        title.style.opacity = progress.toFixed(3);
+        title.style.transform = `translateY(${(-10 * (1 - progress)).toFixed(2)}px)`;
+        title.style.pointerEvents = progress > 0.5 ? "auto" : "none";
+      }
     }
 
     function onScroll() {

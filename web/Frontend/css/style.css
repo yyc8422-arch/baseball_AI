@@ -611,7 +611,7 @@ svg {
 }
 
 /* ===== 첫 화면 다음 장면들 ===== */
-/* 고정된 배경 위로 올라오는 콘텐츠. 배경이 사진이라 제목/푸터 글씨는 밝은색으로 */
+/* 고정된 배경 위로 올라오는 콘텐츠. 배경이 사진이라 제목 글씨는 밝은색으로 */
 .home-content {
   position: relative;
   z-index: 1;
@@ -716,33 +716,14 @@ svg {
   color: #ffffff;
 }
 
-.home-content .hero__desc,
-.home-content .page-footer {
+.home-content .hero__desc {
   color: rgba(255, 255, 255, 0.72);
-}
-
-.home-content .page-footer {
-  border-top-color: rgba(255, 255, 255, 0.18);
-}
-
-.home-content .page-footer span:first-child,
-.home-content .page-footer a {
-  color: #ffffff;
 }
 
 /* 홈 상단바: 뒤가 항상 사진이라 흰 글씨 (js/shell.js 가 topbar--on-hero 를 붙임) */
 .topbar--on-hero .logo__text,
 .topbar--on-hero .icon-btn--ghost {
   color: #ffffff;
-}
-
-.topbar--on-hero .topbar__title {
-  color: #ffffff;
-}
-
-.topbar--on-hero .topbar__title-mark {
-  background: #cbff3d;
-  color: #17330d;
 }
 
 .topbar--on-hero .topbar__menu {
