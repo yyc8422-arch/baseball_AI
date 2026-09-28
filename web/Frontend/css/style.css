@@ -786,6 +786,16 @@ svg {
   }
 }
 
+/* 다크모드: 홈 장면의 카드 배경만 검은색 (글씨/아이콘 색은 그대로) */
+:root[data-theme="dark"] .home-content .info-box,
+:root[data-theme="dark"] .home-content .comment-box,
+:root[data-theme="dark"] .home-content .feature-card,
+:root[data-theme="dark"] .home-content .how-bar,
+:root[data-theme="dark"] .home-content .report-tabs {
+  background: #050505;
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
 /* 첫 화면 문구와 균형을 맞춰 장면 제목과 투수/타자 탭도 가운데로
    (장면이 세로 flex 라서 탭이 가로로 늘어나지 않게 align-self 로 내용 폭만큼만) */
 .home-scene .hero {
