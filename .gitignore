@@ -16,6 +16,8 @@ runs/
 # 환경변수 / 비밀값
 .env
 .env.*
+# Spring 로컬 설정 (MySQL 비밀번호, 관리자 계정)
+application-local.yml
 
 # OS / 에디터
 .DS_Store

@@ -1,7 +1,7 @@
 /**
  * BROS - 로그인 / 회원가입 페이지 (login.html) 전용 스크립트
- * 아직 실제 백엔드 인증 API가 없어서, fetch 로 가짜 서버에 요청하지 않고
- * 폼 검증 + 로컬 로그인 상태 저장까지만 처리합니다. 실제 연동 지점은 TODO 로 표시합니다.
+ * Spring 백엔드의 /api/auth/* 를 호출합니다 (js/api.js 가 먼저 로드되어 있어야 함).
+ * 로그인 상태의 진짜 기준은 서버 세션이고, localStorage("bros-auth")는 화면 표시용 사본입니다.
  */
 (function () {
   const AUTH_KEY = "bros-auth";
@@ -33,51 +33,64 @@
     });
   }
 
-  /**
-   * 로그인 요청.
-   * @param {string} username
-   * @param {string} password
-   */
-  function handleLogin(username, password) {
-    // TODO: 백엔드 로그인 API 연동 지점
-    // fetch("/api/auth/login", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ username, password }),
-    // }).then(...);
-    try {
-      localStorage.setItem(AUTH_KEY, JSON.stringify({ username }));
-    } catch (e) {}
-    setMessage("로그인되었습니다. 홈으로 이동합니다.");
-    window.location.href = "./index.html";
+  /** 요청 중에는 제출 버튼을 잠가서 두 번 눌러도 한 번만 요청되게 함 */
+  function setBusy(form, busy) {
+    const btn = form && form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = busy;
   }
 
   /**
-   * 회원가입 요청. 실제로는 서버에 저장되고 관리자 승인이 필요하지만,
-   * 지금은 백엔드가 없어 안내 메시지만 보여줍니다.
+   * 로그인 요청. 승인 대기/거절 계정이면 서버가 403 과 안내 문구를 돌려줍니다.
+   * @param {string} username
+   * @param {string} password
+   */
+  async function handleLogin(username, password) {
+    const form = document.getElementById("loginForm");
+    setBusy(form, true);
+    try {
+      const user = await window.BROS.api.request("/api/auth/login", {
+        method: "POST",
+        json: { username, password },
+        fallbackError: "로그인하지 못했어요.",
+      });
+      try {
+        localStorage.setItem(AUTH_KEY, JSON.stringify(user)); // { username, name, role }
+      } catch (e) {}
+      setMessage("로그인되었습니다. 홈으로 이동합니다.");
+      window.location.href = "./index.html";
+    } catch (e) {
+      setMessage(e.message, true);
+      setBusy(form, false);
+    }
+  }
+
+  /**
+   * 회원가입 요청. 서버에 "승인 대기(PENDING)" 상태로 저장되고, 관리자가 승인해야 로그인할 수 있습니다.
    * @param {string} name
    * @param {string} username
    * @param {string} password
    */
-  function handleSignup(name, username, password) {
-    // TODO: 백엔드 회원가입 API 연동 지점 (승인 대기 상태로 저장)
-    // fetch("/api/auth/signup", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ name, username, password }),
-    // }).then(...);
-    setMessage("가입 신청이 완료되었습니다. 관리자 승인 후 로그인하실 수 있습니다.");
-    document.getElementById("signupForm").reset();
-    lastCheckedUsername = null;
-    setUsernameHint("");
+  async function handleSignup(name, username, password) {
+    const form = document.getElementById("signupForm");
+    setBusy(form, true);
+    try {
+      const result = await window.BROS.api.request("/api/auth/signup", {
+        method: "POST",
+        json: { name, username, password },
+        fallbackError: "가입 신청을 처리하지 못했어요.",
+      });
+      setMessage(result.message);
+      form.reset();
+      lastCheckedUsername = null;
+      setUsernameHint("");
+    } catch (e) {
+      setMessage(e.message, true);
+    } finally {
+      setBusy(form, false);
+    }
   }
 
   // ===== 아이디 중복확인 =====
-  // 백엔드가 아직 없어서 데모용으로 이 목록만 "이미 사용 중"으로 처리합니다.
-  // TODO: 실제로는 서버에 조회 요청을 보내고 그 결과로 판단해야 합니다.
-  // fetch(`/api/auth/check-username?username=${encodeURIComponent(username)}`)
-  const TAKEN_USERNAMES_DEMO = ["admin", "test", "bros"];
-
   let lastCheckedUsername = null; // 중복확인을 통과한 아이디 (submit 시 재확인용)
 
   function setUsernameHint(text, status) {
@@ -88,18 +101,23 @@
     hint.classList.toggle("auth-field__hint--error", status === "error");
   }
 
-  function checkUsernameAvailability(username) {
+  async function checkUsernameAvailability(username) {
     if (!username) {
       setUsernameHint("아이디를 먼저 입력해주세요.", "error");
       return;
     }
-    const isTaken = TAKEN_USERNAMES_DEMO.includes(username.toLowerCase());
-    if (isTaken) {
-      lastCheckedUsername = null;
-      setUsernameHint("이미 사용 중인 아이디입니다.", "error");
-    } else {
-      lastCheckedUsername = username;
-      setUsernameHint("사용 가능한 아이디입니다.", "ok");
+    lastCheckedUsername = null;
+    try {
+      const result = await window.BROS.api.request(
+        `/api/auth/check-username?username=${encodeURIComponent(username)}`,
+        { fallbackError: "중복확인을 하지 못했어요." }
+      );
+      // 응답이 오는 사이에 아이디를 다시 고쳤으면 이 결과는 버림
+      if (document.getElementById("signupUsername").value.trim() !== username) return;
+      if (result.available) lastCheckedUsername = username;
+      setUsernameHint(result.message, result.available ? "ok" : "error");
+    } catch (e) {
+      setUsernameHint(e.message, "error");
     }
   }
 

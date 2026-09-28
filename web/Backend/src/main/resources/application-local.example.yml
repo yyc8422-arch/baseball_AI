@@ -1,0 +1,13 @@
+# 이 파일을 복사해서 같은 폴더에 application-local.yml 로 저장한 뒤 값을 본인 환경에 맞게 바꾸세요.
+# application-local.yml 은 .gitignore 에 들어 있어서 git 에 올라가지 않습니다.
+spring:
+  datasource:
+    username: root
+    password: 본인_MySQL_비밀번호
+
+app:
+  admin:
+    # 처음 서버를 켤 때 이 계정이 관리자로 자동 생성됩니다 (이미 있으면 건드리지 않음)
+    username: admin
+    password: 관리자_비밀번호
+    name: 관리자

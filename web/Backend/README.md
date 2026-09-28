@@ -1,0 +1,137 @@
+# BROS 백엔드 (Spring Boot)
+
+프론트(`web/Frontend`)와 AI-Server(FastAPI, YOLO26 Pose) 사이에서 동작하는 Spring 백엔드입니다.
+
+- **회원가입/로그인**: 세션 기반, 비밀번호는 BCrypt 해시, 가입하면 `PENDING`(승인 대기) 상태로 저장
+- **관리자 승인**: 관리자가 `admin.html` 에서 가입 신청을 승인/거절. 승인(`APPROVED`)된 회원만 로그인 가능
+- **영상 분석 업로드/조회**: 프론트 → **Spring(프록시)** → AI-Server 로 전달. 누가 언제 올렸는지는 MySQL 에 저장
+- **마이페이지**: 로그인한 사용자의 분석 기록/업로드 영상 목록 (로그인 필수, 세션 없으면 401)
+- **경기 하이라이트**: 최신 경기 + 하이라이트 클립 목록 조회
+
+## 1. STS(Eclipse)로 가져오기
+
+1. STS 실행 → `File > Import > Maven > Existing Maven Projects`
+2. 이 폴더(`web/Backend`)를 선택 → Finish
+3. 처음 임포트하면 Maven 이 의존성을 자동으로 다운로드합니다 (인터넷 필요)
+
+> STS workspace 폴더(`.metadata` 가 생기는 곳)는 이 저장소 **밖**에 두세요.
+
+## 2. MySQL 준비
+
+```sql
+CREATE DATABASE baseball_ai DEFAULT CHARACTER SET utf8mb4;
+```
+
+테이블은 `ddl-auto: update` 설정 덕분에 서버를 처음 실행하면 자동으로 생성됩니다 (users, analysis_records, games, highlight_clips).
+
+## 3. 내 PC 전용 설정 파일 만들기 (필수)
+
+저장소가 Public 이라서 **MySQL 비밀번호와 관리자 계정은 git 에 올리지 않습니다.**
+`src/main/resources/application-local.example.yml` 을 같은 폴더에 `application-local.yml` 로 복사한 뒤, 값을 **본인 것으로** 바꾸세요.
+
+```yaml
+spring:
+  datasource:
+    username: root               # 본인 MySQL 계정
+    password: 본인_MySQL_비밀번호
+
+app:
+  admin:
+    username: admin              # 처음 켤 때 자동으로 만들어질 관리자 아이디
+    password: 관리자_비밀번호
+    name: 관리자
+```
+
+- `application-local.yml` 은 `.gitignore` 에 들어 있어서 커밋되지 않습니다. 다른 사람이 쓰던 비밀번호를 그대로 두면 당연히 연결이 안 되니 꼭 본인 값으로 바꾸세요.
+- 이 파일이 없으면 `application.yml` 의 기본값(`root` / `changeme`)으로 접속을 시도하다가 실패합니다.
+
+## 4. 포트 확인 (8080 vs 8081)
+
+`application.yml` 의 `server.port` 는 **8081** 로 되어 있습니다. 개발 PC에서 8080 이 이미 사용 중이어서 바꾼 값입니다.
+
+- 본인 PC에서 8080 이 비어 있으면 8080 으로 바꿔도 되고, 8081 그대로 써도 됩니다.
+- 실행했는데 `Port 8081 was already in use` (또는 8080) 가 뜨면 비어 있는 다른 포트로 바꾸세요.
+- **포트를 바꾸면 프론트 `web/Frontend/js/api.js` 의 `API_BASE_URL` 도 실제로 뜬 포트로 똑같이 바꿔야 합니다.**
+
+```js
+const API_BASE_URL = "http://localhost:8081";
+```
+
+## 5. AI-Server 주소 확인
+
+`application.yml` 의 `ai-server.base-url` 이 실제 AI-Server 주소(기본 `http://localhost:8000`)와 맞는지 확인하세요.
+AI-Server 는 그대로 `uvicorn main:app --reload --port 8000` 으로 따로 실행해두면 됩니다.
+
+## 6. 실행
+
+STS 에서 `BrosBackendApplication.java` 우클릭 → `Run As > Spring Boot App`
+(또는 터미널에서 `mvn spring-boot:run`)
+
+콘솔에 `[BROS] 관리자 계정을 생성했습니다: admin` 이 한 번 찍히면 관리자 계정이 만들어진 것입니다 (다음 실행부터는 이미 있으니 안 찍힘).
+`GET http://localhost:8081/api/highlights/latest` 등으로 확인해보세요 (경기 데이터를 아직 안 넣었으면 404 가 정상입니다).
+
+## 7. 프론트 띄우기
+
+프론트를 `file://` 로 직접 열면 브라우저가 origin 을 `null` 로 취급해서 **세션 쿠키(로그인)가 동작하지 않습니다.**
+VSCode Live Server 등으로 `http://localhost:5500` 같은 주소로 띄우세요.
+다른 포트를 쓰면 `application.yml` 의 `app.cors.allowed-origins` 에 그 주소를 추가해야 합니다.
+
+## 8. 회원가입 → 승인 → 로그인 흐름
+
+1. `login.html` 회원가입 탭에서 가입 신청 → `PENDING` 으로 저장
+2. 이 상태로 로그인하면 "관리자 승인 대기 중입니다" 로 막힘 (403)
+3. 관리자 계정으로 로그인 → 마이페이지의 **회원 승인 관리** 버튼 → `admin.html`
+4. 승인하면 `APPROVED` → 그 회원이 로그인 가능 / 거절하면 `REJECTED` → 로그인 불가
+5. 이미 로그인해 있던 회원을 거절로 바꾸면, 다음에 페이지를 열 때 로그아웃 처리됩니다
+
+관리자를 한 명 더 만들고 싶으면 그 사람이 가입한 뒤 MySQL 에서 직접 바꾸면 됩니다.
+
+```sql
+UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디';
+```
+
+## 9. API 목록
+
+| Method | URL | 설명 | 로그인 필요 |
+|---|---|---|---|
+| POST | `/api/auth/signup` | 회원가입 (`{name, username, password}`) → 승인 대기로 저장 | X |
+| GET | `/api/auth/check-username?username=` | 아이디 중복확인 | X |
+| POST | `/api/auth/login` | 로그인 (`{username, password}`), 세션 쿠키 발급. 응답 `{username, name, role}` | X |
+| POST | `/api/auth/logout` | 로그아웃 | X |
+| GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role}` | O |
+| POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`) | X (로그인 시 자동으로 내 기록으로 연결) |
+| GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | X |
+| GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
+| GET | `/api/highlights/latest` | 최신 경기 + 하이라이트 클립 | X |
+| GET | `/api/admin/users?status=PENDING` | 회원 목록 (`PENDING`/`APPROVED`/`REJECTED`, 생략하면 전체) | **관리자** |
+| POST | `/api/admin/users/{id}/approve` | 가입 승인 | **관리자** |
+| POST | `/api/admin/users/{id}/reject` | 가입 거절 | **관리자** |
+
+**에러 응답은 모두 `{"detail": "메시지"}` 형태로 통일되어 있습니다.** 프론트(`js/api.js`, `js/analysis.js`)는 이 `detail` 을 그대로 화면에 보여줍니다.
+
+## 10. 프론트 연동 현황
+
+아래는 모두 반영되어 있습니다. 새로 API 를 호출하는 코드를 짤 때도 같은 규칙을 지키면 됩니다.
+
+- 백엔드 주소는 **`js/api.js` 의 `API_BASE_URL` 한 곳**에서만 관리 (`analysis.js` 도 이 값을 씀)
+- 모든 요청에 `credentials: "include"` 를 붙여서 세션 쿠키가 전달됨 (`api.request()` 를 쓰면 자동)
+- `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
+- `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
+- `mypage.html` + `js/mypage.js`: `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
+- `admin.html` + `js/admin.js`: 회원 승인 관리 화면
+
+## 11. 문제 해결
+
+| 증상 | 원인 / 해결 |
+|---|---|
+| 페이지 주소 자체가 404 (`http://127.0.0.1:5500/web/Frontend/login.html`) | 5500 포트를 Live Server 가 아닌 다른 프로그램이 쓰고 있음. 그 프로그램을 끄고 Live Server 를 다시 켜기 |
+| API 가 404 `"요청한 API 를 찾을 수 없습니다"` | 백엔드가 예전 코드로 떠 있음. STS 에서 `web/Backend` 프로젝트로 다시 실행 |
+| 분석 페이지 결과 카드에 "연결 실패 / AI 서버에 연결할 수 없어요" | AI-Server(8000)가 꺼져 있음. `uvicorn main:app --port 8000` 으로 켜기 (마이페이지 목록은 AI-Server 가 꺼져 있어도 마지막 상태로 보임) |
+| 로그인했는데 새로고침하면 풀림 / 마이페이지가 로그인으로 튕김 | 프론트를 `file://` 로 열었거나, 프론트 주소가 `app.cors.allowed-origins` 에 없음. 또는 세션 30분 만료 |
+| 콘솔에 `401 /api/auth/me` 가 한 번 찍힘 | 로그인 표시는 남아 있는데 서버 세션이 만료된 경우로, 화면을 자동으로 로그아웃 상태로 맞추는 정상 동작 |
+
+## 12. 아직 안 된 것 (다음 단계 후보)
+
+- **경기/하이라이트 데이터**: `games`, `highlight_clips` 테이블이 비어 있고, `highlight.html` 은 아직 목(mock) 데이터를 씁니다. 당장은 MySQL 에 직접 INSERT 하거나 등록 API 를 추가로 만들어야 합니다.
+- 자세 평가(관절 각도 계산, 개선 포인트 산출) — `pose` 데이터(24개 관절)는 이미 받아오고 있어서, 이 위에 로직만 추가하면 됩니다
+- 경기 하이라이트 자동 생성 파이프라인

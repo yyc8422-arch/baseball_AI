@@ -1,5 +1,5 @@
 /**
- * BROS - AI-Server 분석 API 연동
+ * BROS - 영상 분석 API 연동 (Spring 백엔드가 AI-Server 로 그대로 전달해줌)
  *
  * 흐름: capture.js 가 uploadVideo() 로 영상을 올림
  *      → 응답으로 받은 video_id 를 localStorage 에 기억
@@ -9,8 +9,8 @@
  * 새로고침해도 이어서 진행 상황을 보여줄 수 있습니다.
  */
 (function () {
-  /** AI-Server 주소. 프론트를 file:// 이나 다른 포트로 열기 때문에 전체 주소로 호출합니다. */
-  const API_BASE_URL = "http://localhost:8000";
+  /** 백엔드 주소는 js/api.js 한 곳에서만 관리합니다. */
+  const API_BASE_URL = window.BROS.api.API_BASE_URL;
   const POLL_INTERVAL_MS = 2000;
   const STORAGE_KEY_PREFIX = "bros-last-analysis-";
 
@@ -49,14 +49,7 @@
   }
 
   // ===================== API =====================
-  /** 서버가 보낸 에러 메시지(detail)를 꺼내고, 없으면 기본 문구 사용 */
-  async function readErrorMessage(res, fallback) {
-    try {
-      const body = await res.json();
-      if (typeof body.detail === "string") return body.detail;
-    } catch (e) {}
-    return fallback;
-  }
+  const readErrorMessage = window.BROS.api.readErrorMessage;
 
   /**
    * 영상을 AI-Server 에 업로드합니다.
@@ -71,7 +64,8 @@
 
     let res;
     try {
-      res = await fetch(`${API_BASE_URL}/api/analysis`, { method: "POST", body: formData });
+      // 로그인한 상태면 세션 쿠키가 같이 가서, 백엔드가 이 영상을 내 마이페이지 기록으로 연결해줌
+      res = await fetch(`${API_BASE_URL}/api/analysis`, { method: "POST", body: formData, credentials: "include" });
     } catch (e) {
       throw new Error(STATUS_TEXT.offline.desc);
     }
@@ -84,7 +78,7 @@
 
   /** @param {string} videoId */
   async function fetchAnalysis(videoId) {
-    const res = await fetch(`${API_BASE_URL}/api/analysis/${encodeURIComponent(videoId)}`);
+    const res = await fetch(`${API_BASE_URL}/api/analysis/${encodeURIComponent(videoId)}`, { credentials: "include" });
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(await readErrorMessage(res, "분석 결과를 불러오지 못했어요."));
     return res.json();

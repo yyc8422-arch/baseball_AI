@@ -91,8 +91,10 @@
             </span>
             <div class="profile-card__info">
               <p class="profile-card__name" id="profileName">회원님</p>
-              <p class="profile-card__meta">BROS 회원</p>
+              <p class="profile-card__meta" id="profileMeta">BROS 회원</p>
             </div>
+            <!-- 관리자 계정에게만 보임 (js/mypage.js) -->
+            <a href="./admin.html" class="profile-card__logout profile-card__admin" id="adminLink" hidden>회원 승인 관리</a>
             <button type="button" class="profile-card__logout" id="logoutBtn">로그아웃</button>
           </div>
         </div>
@@ -102,12 +104,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9.5 13l2 2 4-4.5"/></svg>
             분석 기록
           </h2>
+          <div id="analysisRecordList">
           <div class="empty-state">
             <span class="empty-state__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></svg>
             </span>
             <p class="empty-state__title">아직 분석 기록이 없어요</p>
             <p class="empty-state__desc">투구폼·타격폼 분석을 진행하면 결과가 이곳에 쌓입니다.</p>
+          </div>
           </div>
         </div>
 
@@ -116,12 +120,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg>
             업로드한 영상
           </h2>
+          <div id="uploadedVideoList">
           <div class="empty-state">
             <span class="empty-state__icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3z"/></svg>
             </span>
             <p class="empty-state__title">아직 업로드한 영상이 없어요</p>
             <p class="empty-state__desc">오른쪽 하단 버튼으로 영상을 업로드하거나 촬영해보세요.</p>
+          </div>
           </div>
         </div>
 
@@ -205,33 +211,10 @@
   <script src="./js/types.js"></script>
   <script src="./js/data.js"></script>
   <script src="./js/render.js"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/analysis.js"></script>
   <script src="./js/capture.js"></script>
   <script src="./js/shell.js"></script>
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      // 로그인하지 않았으면 로그인 페이지로 돌려보냄
-      if (!window.BROS.shell.requireLogin()) return;
-
-      window.BROS.shell.init("mypage");
-
-      // 로그인 시 저장해둔 아이디를 프로필 이름 자리에 표시 (실제 회원 정보 연동 전 임시 표시)
-      try {
-        const auth = JSON.parse(localStorage.getItem("bros-auth") || "null");
-        if (auth && auth.username) {
-          document.getElementById("profileName").textContent = auth.username + "님";
-        }
-      } catch (e) {}
-
-      const logoutBtn = document.getElementById("logoutBtn");
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", () => {
-          try {
-            localStorage.removeItem("bros-auth");
-          } catch (e) {}
-          window.location.href = "./index.html";
-        });
-      }
-    });
-  </script>
+  <script src="./js/mypage.js"></script>
 </body>
 </html>

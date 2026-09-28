@@ -132,16 +132,55 @@
     btn.classList.toggle("login-btn--active", loggedIn);
   }
 
+  function clearLocalAuth() {
+    try {
+      localStorage.removeItem(AUTH_KEY);
+    } catch (e) {}
+  }
+
+  /** 저장해 둔 로그인 사용자 정보 { username, name, role } (없으면 null) */
+  function getAuthUser() {
+    try {
+      return JSON.parse(localStorage.getItem(AUTH_KEY) || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /** 서버 세션까지 끊는 로그아웃. 서버가 꺼져 있어도 화면에서는 로그아웃 처리합니다. */
+  async function logout() {
+    try {
+      await window.BROS.api.request("/api/auth/logout", { method: "POST" });
+    } catch (e) {}
+    clearLocalAuth();
+    updateLoginButton();
+  }
+
+  /**
+   * localStorage 에는 로그인 표시가 남아 있는데 서버 세션이 만료(30분)됐거나 승인이 취소된 경우를 맞춰줌.
+   * 서버에 연결이 안 될 때(status 0)는 판단할 수 없으니 그대로 둡니다.
+   */
+  async function syncSession() {
+    if (!isLoggedIn()) return;
+    try {
+      const user = await window.BROS.api.request("/api/auth/me");
+      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    } catch (e) {
+      if (e.status === 401 || e.status === 403) {
+        clearLocalAuth();
+        updateLoginButton();
+      }
+    }
+  }
+
   function initAuth() {
     updateLoginButton();
+    syncSession();
     const btn = document.getElementById("loginBtn");
     if (!btn) return;
-    btn.addEventListener("click", () => {
+    btn.addEventListener("click", async () => {
       if (isLoggedIn()) {
-        try {
-          localStorage.removeItem(AUTH_KEY);
-        } catch (e) {}
-        updateLoginButton();
+        await logout();
         return;
       }
       window.location.href = "./login.html";
@@ -183,6 +222,6 @@
   }
 
   window.BROS = window.BROS || {};
-  window.BROS.shell = { init, isLoggedIn, requireLogin };
+  window.BROS.shell = { init, isLoggedIn, requireLogin, getAuthUser, clearLocalAuth, logout };
   window.BROS.ui = { showToast };
 })();

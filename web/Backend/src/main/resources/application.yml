@@ -1,0 +1,56 @@
+# BROS 백엔드 설정
+# MySQL 계정/비밀번호와 첫 관리자 계정은 이 파일에 적지 말고 application-local.yml 에 적으세요.
+# (저장소가 Public 이라 application-local.yml 은 git 에 올라가지 않도록 .gitignore 에 들어 있습니다.
+#  만드는 방법은 application-local.example.yml 과 README 참고)
+server:
+  # 8080 이 이미 사용 중이라 8081 로 실행합니다. 포트를 바꾸면 프론트 js/config.js 의 API_BASE_URL 도 같이 바꾸세요.
+  port: 8081
+
+spring:
+  application:
+    name: baseball_ai
+
+  config:
+    # 같은 폴더의 application-local.yml 이 있으면 아래 값들을 덮어씁니다 (없어도 실행은 됨)
+    import: optional:classpath:application-local.yml
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/baseball_ai?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    # 실제 값은 application-local.yml 에서 덮어씁니다
+    username: root
+    password: changeme
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      # 개발 단계: 엔티티 기준으로 테이블을 자동 생성/보정합니다.
+      # 운영 배포 전에는 validate 로 바꾸고 마이그레이션 도구(Flyway 등)로 전환하는 걸 권장합니다.
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  servlet:
+    multipart:
+      # 프론트(js/capture.js)의 최대 업로드 용량(500MB)보다 여유 있게 설정
+      max-file-size: 550MB
+      max-request-size: 550MB
+
+  session:
+    timeout: 30m
+
+# AI-Server (FastAPI, YOLO26 Pose) 주소
+ai-server:
+  base-url: http://localhost:8000
+
+app:
+  cors:
+    # 프론트를 로컬 정적 서버로 띄우는 포트들을 콤마로 나열하세요 (파일 하단 README 참고)
+    allowed-origins: "http://localhost:5500,http://127.0.0.1:5500,http://localhost:3000,http://localhost:5173"
+  admin:
+    # 서버 시작 시 이 아이디의 계정이 없으면 관리자(ADMIN, 승인 완료)로 자동 생성합니다.
+    # 비어 있으면 아무것도 하지 않습니다. 실제 값은 application-local.yml 에 적으세요.
+    username: ""
+    password: ""
+    name: "관리자"
