@@ -4,22 +4,126 @@
  * 여기서는 홈 화면에만 있는 것들(메인 비주얼, 스크롤 등장 효과, 오늘의 AI 리포트 탭, 4대 기능 메뉴, 3단계 안내 바)만 다룹니다.
  */
 (function () {
-  const { DAILY_REPORT, FEATURE_ITEMS, HOW_IT_WORKS_STEPS } = window.BROS.data;
+  const { FEATURE_ITEMS, HOW_IT_WORKS_STEPS } = window.BROS.data;
   const { renderReportOverview, renderFeatureCard, renderHowBarSteps } = window.BROS.render;
 
   const DEFAULT_REPORT_TYPE = "pitching";
 
+  // ===== 오늘의 AI 리포트 (GET /api/mypage/report-summary) =====
+  // 자세 평가(종합 점수, 개선 포인트, 코멘트)는 AI-Server 에 아직 없어서, 실제로 있는 값(분석 수, 최근 영상, 상태)만 보여주고
+  // 평가 칸은 "준비 중" 으로 표시합니다.
+  const REPORT_TYPE_META = {
+    pitching: { icon: "pitching", label: "투구폼 분석", noun: "투구", page: "./pitching.html" },
+    batting: { icon: "batting", label: "타격폼 분석", noun: "타격", page: "./batting.html" },
+  };
+
+  const STATUS_TEXT = {
+    uploading: { label: "업로드 중", sentence: "업로드되고 있어요" },
+    queued: { label: "분석 대기", sentence: "분석을 기다리고 있어요" },
+    processing: { label: "분석 중", sentence: "분석 중이에요" },
+    done: { label: "분석 완료", sentence: "분석이 끝났어요" },
+    failed: { label: "분석 실패", sentence: "분석에 실패했어요" },
+  };
+
+  const EVALUATION_PENDING = { value: "준비 중", description: "관절 각도 기반 자세 평가를 준비하고 있어요" };
+
+  /** 서버 응답을 받기 전/로그인 전/연결 실패 시에 보여줄 안내용 리포트 */
+  function buildNoticeReport(type, notice) {
+    const meta = REPORT_TYPE_META[type];
+    return {
+      analysisType: { icon: meta.icon, label: meta.label },
+      overallStatus: { label: notice.status, description: notice.statusDesc },
+      recentAnalysisDate: "-",
+      improvementPoints: EVALUATION_PENDING,
+      aiSummaryComment: notice.comment,
+      cta: notice.cta,
+    };
+  }
+
+  /** @param {string} type @param {object} summary 서버의 ReportSummaryView */
+  function buildReport(type, summary) {
+    const meta = REPORT_TYPE_META[type];
+    if (!summary || !summary.totalCount) {
+      return buildNoticeReport(type, {
+        status: "기록 없음",
+        statusDesc: `아직 분석한 ${meta.noun} 영상이 없어요`,
+        comment: `아직 ${meta.noun} 영상을 분석하지 않았어요. 첫 영상을 올리면 이곳에 분석 결과가 쌓여요.`,
+        cta: { label: `${meta.label} 시작하기`, href: meta.page },
+      });
+    }
+
+    const status = STATUS_TEXT[summary.latestStatus] || { label: summary.latestStatus, sentence: summary.latestStatus };
+    const frames =
+      summary.detectedFrames != null && summary.analyzedFrames != null
+        ? `선수 검출 ${summary.detectedFrames} / ${summary.analyzedFrames} 프레임`
+        : `지금까지 ${summary.totalCount}개 분석`;
+    return {
+      analysisType: { icon: meta.icon, label: meta.label },
+      overallStatus: { label: status.label, description: frames },
+      recentAnalysisDate: summary.latestDate || "-",
+      improvementPoints: EVALUATION_PENDING,
+      aiSummaryComment:
+        `최근 올린 "${summary.latestFileName}" 영상은 ${status.sentence}. ` +
+        `지금까지 ${meta.noun} 영상 ${summary.totalCount}개를 분석했어요. 관절 각도와 개선 포인트 평가는 곧 추가될 예정이에요.`,
+      cta: { label: "내 분석 기록 보기", href: "./mypage.html" },
+    };
+  }
+
+  let reportsByType = {};
+  let activeReportType = DEFAULT_REPORT_TYPE;
+
   // 오늘의 AI 리포트: 투수/타자 탭에 맞는 데이터로 #reportOverviewSlot 을 다시 그림
   function renderReportSection(type) {
+    activeReportType = type;
     const slot = document.getElementById("reportOverviewSlot");
-    const report = DAILY_REPORT.reportsByType[type];
+    const report = reportsByType[type];
     if (!slot || !report) return;
     slot.innerHTML = "";
     slot.appendChild(renderReportOverview(report));
   }
 
+  function setAllReports(makeReport) {
+    reportsByType = {};
+    Object.keys(REPORT_TYPE_META).forEach((type) => {
+      reportsByType[type] = makeReport(type);
+    });
+    renderReportSection(activeReportType);
+  }
+
+  async function loadReports() {
+    const guest = {
+      status: "로그인 필요",
+      statusDesc: "로그인하면 내 분석 결과가 보여요",
+      comment: "로그인하면 최근에 올린 영상의 분석 결과를 이곳에서 바로 확인할 수 있어요.",
+      cta: { label: "로그인하고 시작하기", href: "./login.html" },
+    };
+    if (!window.BROS.shell.isLoggedIn()) {
+      setAllReports((type) => buildNoticeReport(type, guest));
+      return;
+    }
+
+    setAllReports((type) =>
+      buildNoticeReport(type, { ...guest, status: "불러오는 중", statusDesc: "내 분석 기록을 확인하고 있어요", comment: "잠시만 기다려주세요.", cta: { label: "내 분석 기록 보기", href: "./mypage.html" } })
+    );
+    try {
+      const summary = await window.BROS.api.request("/api/mypage/report-summary", {
+        fallbackError: "분석 기록을 불러오지 못했어요.",
+      });
+      setAllReports((type) => buildReport(type, summary[type]));
+    } catch (e) {
+      if (e.status === 401 || e.status === 403) {
+        // 세션이 만료된 경우: 로그인 전 화면으로 (shell.js 가 로그인 표시도 풀어줌)
+        setAllReports((type) => buildNoticeReport(type, guest));
+        return;
+      }
+      setAllReports((type) =>
+        buildNoticeReport(type, { ...guest, status: "연결 실패", statusDesc: "서버에 연결할 수 없어요", comment: e.message, cta: { label: "내 분석 기록 보기", href: "./mypage.html" } })
+      );
+    }
+  }
+
   function mount() {
-    renderReportSection(DEFAULT_REPORT_TYPE);
+    loadReports();
 
     const featureGrid = document.getElementById("featureGrid");
     if (featureGrid) FEATURE_ITEMS.forEach((item) => featureGrid.appendChild(renderFeatureCard(item)));
@@ -42,23 +146,6 @@
         renderReportSection(tab.dataset.type);
       });
     }
-
-    // "상세 리포트 보기" 버튼 (render.js 가 탭 전환마다 다시 그리므로 위임 방식으로 연결)
-    document.addEventListener("click", (e) => {
-      if (e.target.closest("#viewDetailedReportBtn")) {
-        goToDetailedReport();
-      }
-    });
-  }
-
-  // ===== 마이페이지 / 상세 리포트 연결 =====
-  function goToDetailedReport() {
-    if (!window.BROS.shell.isLoggedIn()) {
-      window.BROS.ui.showToast("로그인이 필요합니다. 로그인 후 다시 시도해주세요.");
-      window.location.href = "./login.html";
-      return;
-    }
-    window.location.href = "./mypage.html";
   }
 
   // 메인 비주얼이 상단바 뒤까지 올라가도록 CSS(.home-hero)에 상단바 높이를 알려줌

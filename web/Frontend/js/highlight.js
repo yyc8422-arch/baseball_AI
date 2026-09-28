@@ -2,8 +2,8 @@
  * BROS - 경기 하이라이트 페이지 (highlight.html) 전용 스크립트
  *
  * 구조:
- *  - GAME_INFO / MOCK_HIGHLIGHTS : 아직 AI 백엔드가 없어서 쓰는 샘플 데이터.
- *    실제 연동 시에는 이 두 값 대신 서버 응답(GameInfo, HighlightClip[])을 그대로 넣어주면 됩니다.
+ *  - loadLatestHighlights() : GET /api/highlights/latest 로 최신 경기(games) + 하이라이트(highlight_clips) 를 받아옴
+ *    (등록된 경기가 없으면 404 → 안내 문구, 서버 연결 실패 → 안내 문구)
  *  - filterHighlightsByPosition(highlights, position) : 포지션 기준 필터링만 담당
  *  - renderAllHighlights(highlights) / renderPositionHighlights(highlights, position) : 화면 렌더링만 담당
  *  - 탭 전환은 페이지 이동 없이 클래스/hidden 토글로만 처리합니다.
@@ -13,30 +13,16 @@
     play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
   };
 
-  // ===================== 샘플 데이터 (백엔드 연동 전) =====================
-  /** @type {GameInfo} */
-  const GAME_INFO = {
-    date: "2026.09.20",
-    opponent: "한빛 타이거즈",
-    score: "BROS 7 : 3",
-  };
+  const escapeHtml = window.BROS.render.escapeHtml;
 
+  // ===================== 서버에서 받아온 데이터 =====================
+  /** @type {GameInfo|null} 최신 경기 정보 (없으면 null) */
+  let gameInfo = null;
   /** @type {HighlightClip[]} */
-  const MOCK_HIGHLIGHTS = [
-    { id: "h1", position: null, category: "batting", action: "double", actionLabel: "2회 결승 2루타", timestamp: "00:13:21", clipUrl: "", thumbnailUrl: "" },
-    { id: "h2", position: null, category: "batting", action: "home_run", actionLabel: "5회 솔로 홈런", timestamp: "00:34:02", clipUrl: "", thumbnailUrl: "" },
-    { id: "h3", position: "SS", category: "defense", action: "ground_ball", actionLabel: "2회 땅볼 처리", timestamp: "00:13:21", clipUrl: "", thumbnailUrl: "" },
-    { id: "h4", position: "SS", category: "defense", action: "throw", actionLabel: "4회 송구", timestamp: "00:24:10", clipUrl: "", thumbnailUrl: "" },
-    { id: "h5", position: "SS", category: "defense", action: "fly_out", actionLabel: "6회 뜬공 처리", timestamp: "00:41:55", clipUrl: "", thumbnailUrl: "" },
-    { id: "h6", position: "3B", category: "defense", action: "diving_catch", actionLabel: "3회 다이빙 캐치", timestamp: "00:18:40", clipUrl: "", thumbnailUrl: "" },
-    { id: "h7", position: "CF", category: "defense", action: "fly_out", actionLabel: "7회 낙구 처리", timestamp: "00:49:12", clipUrl: "", thumbnailUrl: "" },
-    { id: "h8", position: "1B", category: "defense", action: "ground_ball", actionLabel: "8회 포구", timestamp: "00:55:30", clipUrl: "", thumbnailUrl: "" },
-    { id: "h9", position: null, category: "highlight", action: "win", actionLabel: "9회 경기 종료", timestamp: "01:02:33", clipUrl: "", thumbnailUrl: "" },
-    { id: "h10", position: "P", category: "defense", action: "strikeout", actionLabel: "3회 삼진 처리", timestamp: "00:20:15", clipUrl: "", thumbnailUrl: "" },
-    { id: "h11", position: "P", category: "defense", action: "pickoff", actionLabel: "5회 견제 아웃", timestamp: "00:36:47", clipUrl: "", thumbnailUrl: "" },
-    { id: "h12", position: "C", category: "defense", action: "throw_out", actionLabel: "4회 도루 저지", timestamp: "00:27:52", clipUrl: "", thumbnailUrl: "" },
-    { id: "h13", position: "C", category: "defense", action: "block", actionLabel: "7회 블로킹", timestamp: "00:50:08", clipUrl: "", thumbnailUrl: "" },
-  ];
+  let highlights = [];
+  const NO_HIGHLIGHTS = ["아직 하이라이트가 없어요", "경기 영상을 올리면 AI가 주요 장면을 찾아 이곳에 정리해드려요."];
+  /** 목록이 비었을 때 안내 문구 [제목, 설명] (처음엔 불러오는 중) */
+  let emptyMessage = ["하이라이트를 불러오는 중이에요", "잠시만 기다려주세요."];
 
   const POSITIONS = [
     { key: "P", label: "투수" },
@@ -88,8 +74,8 @@
       <span class="empty-state__icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>
       </span>
-      <p class="empty-state__title">${title}</p>
-      <p class="empty-state__desc">${desc}</p>
+      <p class="empty-state__title">${escapeHtml(title)}</p>
+      <p class="empty-state__desc">${escapeHtml(desc)}</p>
     `;
     return el;
   }
@@ -102,8 +88,8 @@
     btn.innerHTML = `
       <span class="clip-card__thumb">${ICONS.play}</span>
       <span class="clip-card__meta">
-        <span class="clip-card__action">${clip.actionLabel}</span>
-        <span class="clip-card__time">${clip.timestamp}</span>
+        <span class="clip-card__action">${escapeHtml(clip.actionLabel)}</span>
+        <span class="clip-card__time">${escapeHtml(clip.timestamp)}</span>
       </span>
     `;
     btn.addEventListener("click", () => playClip(clip));
@@ -120,8 +106,8 @@
     section.className = "clip-group";
     section.innerHTML = `
       <div class="clip-group__head">
-        <span class="clip-group__badge">${meta.badge}</span>
-        <h3 class="clip-group__title">${titleOverride || meta.title}</h3>
+        <span class="clip-group__badge">${escapeHtml(meta.badge)}</span>
+        <h3 class="clip-group__title">${escapeHtml(titleOverride || meta.title)}</h3>
       </div>
       <div class="clip-group__list"></div>
     `;
@@ -138,18 +124,16 @@
     const dateEl = document.getElementById("gameDate");
     const opponentEl = document.getElementById("gameOpponent");
     const scoreEl = document.getElementById("gameScore");
-    if (dateEl) dateEl.textContent = GAME_INFO.date;
-    if (opponentEl) opponentEl.textContent = GAME_INFO.opponent;
-    if (scoreEl) scoreEl.textContent = GAME_INFO.score;
+    if (dateEl) dateEl.textContent = gameInfo ? gameInfo.date : "-";
+    if (opponentEl) opponentEl.textContent = gameInfo ? gameInfo.opponent : "-";
+    if (scoreEl) scoreEl.textContent = gameInfo && gameInfo.score ? gameInfo.score : "-";
 
     const mount = document.getElementById("allHighlightsSlot");
     if (!mount) return;
     mount.innerHTML = "";
 
     if (!highlights.length) {
-      mount.appendChild(
-        renderEmptyState("아직 하이라이트가 없어요", "경기 영상을 올리면 AI가 주요 장면을 찾아 이곳에 정리해드려요.")
-      );
+      mount.appendChild(renderEmptyState(emptyMessage[0], emptyMessage[1]));
       return;
     }
 
@@ -215,10 +199,11 @@
     if (label) label.textContent = clip.actionLabel;
     if (time) time.textContent = clip.timestamp;
 
-    // TODO: 백엔드에서 clip.clipUrl 이 실제로 내려오면, 여기서 <video> 소스로 교체해서 재생하면 됩니다.
-    // 예: mainVideoEl.src = clip.clipUrl; mainVideoEl.play();
-    if (window.BROS.ui && window.BROS.ui.showToast) {
-      window.BROS.ui.showToast("샘플 데이터입니다. 실제 영상이 연동되면 바로 재생됩니다.");
+    // 장면 영상 주소(highlight_clips.clip_url)가 등록돼 있으면 새 탭에서 재생, 없으면 안내만
+    if (clip.clipUrl) {
+      window.open(clip.clipUrl, "_blank", "noopener");
+    } else if (window.BROS.ui && window.BROS.ui.showToast) {
+      window.BROS.ui.showToast("이 장면 영상은 아직 준비 중이에요.");
     }
   }
 
@@ -228,9 +213,9 @@
     const time = document.getElementById("highlightMainTime");
     if (label) label.textContent = "전체 하이라이트";
     if (time) time.textContent = "";
-    // TODO: 백엔드에서 경기 전체 하이라이트 릴 URL이 내려오면 여기서 재생하면 됩니다.
+    // 경기 전체 하이라이트 영상은 아직 DB/AI-Server 에 없어서 안내만 (games 테이블에 영상 주소가 생기면 여기서 재생)
     if (window.BROS.ui && window.BROS.ui.showToast) {
-      window.BROS.ui.showToast("샘플 데이터입니다. 실제 영상이 연동되면 바로 재생됩니다.");
+      window.BROS.ui.showToast(gameInfo ? "경기 전체 하이라이트 영상은 준비 중이에요." : "등록된 경기가 없어요.");
     }
   }
 
@@ -270,17 +255,39 @@
       picker.querySelectorAll(".position-pill").forEach((el) => {
         el.classList.toggle("position-pill--active", el === btn);
       });
-      renderPositionHighlights(MOCK_HIGHLIGHTS, activePosition);
+      renderPositionHighlights(highlights, activePosition);
     });
   }
 
+  // ===================== 서버에서 불러오기 =====================
+  async function loadLatestHighlights() {
+    try {
+      const page = await window.BROS.api.request("/api/highlights/latest", {
+        fallbackError: "하이라이트를 불러오지 못했어요.",
+      });
+      gameInfo = page.game;
+      highlights = page.highlights || [];
+      emptyMessage = NO_HIGHLIGHTS;
+    } catch (e) {
+      gameInfo = null;
+      highlights = [];
+      emptyMessage =
+        e.status === 404
+          ? ["등록된 경기가 없어요", "경기 영상을 올리면 AI가 주요 장면을 찾아 이곳에 정리해드려요."]
+          : ["하이라이트를 불러오지 못했어요", e.message];
+    }
+    renderAllHighlights(highlights);
+    renderPositionHighlights(highlights, activePosition);
+  }
+
   function init() {
-    renderAllHighlights(MOCK_HIGHLIGHTS);
+    renderAllHighlights(highlights); // 불러오는 동안은 빈 상태
     renderPositionPicker();
-    renderPositionHighlights(MOCK_HIGHLIGHTS, activePosition);
+    renderPositionHighlights(highlights, activePosition);
     initTabs();
     initPositionPicker();
     initMainPlayButton();
+    loadLatestHighlights();
   }
 
   window.BROS = window.BROS || {};

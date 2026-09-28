@@ -63,8 +63,22 @@ const ICONS = {
 };
 
 /**
+ * innerHTML 에 넣을 글자를 안전하게 바꿈. 파일 이름처럼 사용자가 정한 값에 < > & " 가 있어도
+ * HTML 로 해석되지 않고 글자 그대로 보이게 함.
+ * @param {unknown} value
+ */
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
  * "오늘의 AI 리포트": 투수/타자 탭에서 고른 분석 종류 1건에 대한
- * 4칸 정보 박스 + AI 코멘트 박스 + 상세 리포트 보기 버튼
+ * 4칸 정보 박스 + AI 코멘트 박스 + 버튼 (실제 데이터라 모든 글자는 escapeHtml 을 거침)
  * @param {TypeReport} report
  */
 function renderReportOverview(report) {
@@ -75,34 +89,34 @@ function renderReportOverview(report) {
       <div class="info-box info-box--type">
         <span class="info-box__icon">${ICONS[report.analysisType.icon] || ICONS.pitching}</span>
         <span class="info-box__label">분석 유형</span>
-        <span class="info-box__value">${report.analysisType.label}</span>
+        <span class="info-box__value">${escapeHtml(report.analysisType.label)}</span>
       </div>
       <div class="info-box info-box--status">
         <span class="info-box__icon info-box__icon--mood">${ICONS.smile}</span>
-        <span class="info-box__label">AI 종합 상태</span>
-        <span class="info-box__value info-box__value--gold">${report.overallStatus.label}</span>
-        <span class="info-box__sub">${report.overallStatus.description}</span>
+        <span class="info-box__label">분석 상태</span>
+        <span class="info-box__value info-box__value--gold">${escapeHtml(report.overallStatus.label)}</span>
+        <span class="info-box__sub">${escapeHtml(report.overallStatus.description)}</span>
       </div>
       <div class="info-box info-box--date">
         <span class="info-box__icon">${ICONS.calendar}</span>
         <span class="info-box__label">최근 분석</span>
-        <span class="info-box__value">${report.recentAnalysisDate}</span>
+        <span class="info-box__value">${escapeHtml(report.recentAnalysisDate)}</span>
       </div>
       <div class="info-box info-box--points">
         <span class="info-box__icon">${ICONS.chart}</span>
         <span class="info-box__label">주요 개선 포인트</span>
-        <span class="info-box__value">${report.improvementPoints.count}개</span>
-        <span class="info-box__sub">${report.improvementPoints.items.join(", ")}</span>
+        <span class="info-box__value">${escapeHtml(report.improvementPoints.value)}</span>
+        <span class="info-box__sub">${escapeHtml(report.improvementPoints.description)}</span>
       </div>
       <div class="comment-box">
         <div class="comment-box__body">
           <span class="comment-box__quote">${ICONS.quote}</span>
           <div>
             <p class="comment-box__title">AI 코멘트</p>
-            <p class="comment-box__text">${report.aiSummaryComment}</p>
+            <p class="comment-box__text">${escapeHtml(report.aiSummaryComment)}</p>
           </div>
         </div>
-        <button type="button" id="viewDetailedReportBtn" class="report-cta">상세 리포트 보기 ${ICONS.arrowRight}</button>
+        <a href="${escapeHtml(report.cta.href)}" id="viewDetailedReportBtn" class="report-cta">${escapeHtml(report.cta.label)} ${ICONS.arrowRight}</a>
       </div>
     </div>
   `;
@@ -167,6 +181,7 @@ function renderNavItem(item, currentKey) {
 window.BROS = window.BROS || {};
 window.BROS.render = {
   ICONS,
+  escapeHtml,
   renderReportOverview,
   renderFeatureCard,
   renderHowBarSteps,

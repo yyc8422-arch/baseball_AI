@@ -11,30 +11,6 @@ const NAV_ITEMS = [
   { key: "mypage", icon: "mypage", label: "마이페이지", href: "./mypage.html" },
 ];
 
-/** @type {DailyReport} */
-const DAILY_REPORT = {
-  id: "report-2024-06-10",
-  // 오늘의 AI 리포트: 투수/타자 탭으로 전환해서 보여줄 분석 종류별 데이터
-  reportsByType: {
-    pitching: {
-      analysisType: { icon: "pitching", label: "투구폼 분석" },
-      overallStatus: { icon: "smile", label: "좋음", description: "전체적으로 안정적인 폼입니다." },
-      recentAnalysisDate: "2024.06.08",
-      improvementPoints: { count: 2, items: ["릴리스 포인트", "팔꿈치 각도"] },
-      aiSummaryComment:
-        "릴리스 포인트가 이전보다 일관적입니다. 팔꿈치 각도를 조금 더 낮추면 구속 향상에 도움이 될 거예요.",
-    },
-    batting: {
-      analysisType: { icon: "batting", label: "타격폼 분석" },
-      overallStatus: { icon: "smile", label: "좋음", description: "전체적으로 안정적인 폼입니다." },
-      recentAnalysisDate: "2024.06.10",
-      improvementPoints: { count: 2, items: ["스윙 타이밍", "하체 밸런스"] },
-      aiSummaryComment:
-        "스윙 타이밍이 이전보다 안정적입니다. 하체 밸런스를 조금 더 유지하면 더 좋은 결과를 기대할 수 있어요.",
-    },
-  },
-};
-
 /** @type {FeatureMenuItem[]} */
 const FEATURE_ITEMS = [
   {
@@ -81,7 +57,6 @@ const HOW_IT_WORKS_STEPS = [
 window.BROS = window.BROS || {};
 window.BROS.data = {
   NAV_ITEMS,
-  DAILY_REPORT,
   FEATURE_ITEMS,
   HOW_IT_WORKS_STEPS,
 };

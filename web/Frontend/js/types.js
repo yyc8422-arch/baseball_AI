@@ -34,35 +34,30 @@
  */
 
 /**
- * 요약 정보 박스 1개 (분석 유형 / AI 종합 상태)
+ * 요약 정보 박스 1개 (분석 유형 / 분석 상태)
  * @typedef {Object} ReportBadgeInfo
- * @property {string} icon
+ * @property {string} [icon]
  * @property {string} label
  * @property {string} [description]
  */
 
 /**
- * 주요 개선 포인트 개수 + 목록
- * @typedef {Object} ImprovementPoints
- * @property {number} count
- * @property {string[]} items
+ * 값 + 보조 설명 한 쌍 (주요 개선 포인트 박스)
+ * @typedef {Object} ReportValue
+ * @property {string} value 크게 보이는 값 (예: "2개", "준비 중")
+ * @property {string} description 아래 작은 설명
  */
 
 /**
- * 투수/타자 탭 1개에 해당하는 "오늘의 AI 리포트" 내용
+ * 투수/타자 탭 1개에 해당하는 "오늘의 AI 리포트" 내용.
+ * js/main.js 가 GET /api/mypage/report-summary 응답(또는 로그인 전 안내 문구)으로 만듭니다.
  * @typedef {Object} TypeReport
  * @property {ReportBadgeInfo} analysisType 분석 유형 박스
- * @property {ReportBadgeInfo} overallStatus AI 종합 상태 박스
- * @property {string} recentAnalysisDate 최근 분석 박스에 쓰일 날짜 문자열 (예: "2024.06.10")
- * @property {ImprovementPoints} improvementPoints 주요 개선 포인트 박스
+ * @property {ReportBadgeInfo} overallStatus 분석 상태 박스
+ * @property {string} recentAnalysisDate 최근 분석 박스에 쓰일 날짜 문자열 (예: "2026.09.28", 없으면 "-")
+ * @property {ReportValue} improvementPoints 주요 개선 포인트 박스
  * @property {string} aiSummaryComment AI 코멘트 박스 문구
- */
-
-/**
- * 오늘의 AI 리포트 (대시보드 전체 데이터)
- * @typedef {Object} DailyReport
- * @property {string} id
- * @property {Object.<string, TypeReport>} reportsByType "pitching"/"batting" 탭별 리포트 데이터
+ * @property {{label: string, href: string}} cta 코멘트 아래 버튼
  */
 
 /**

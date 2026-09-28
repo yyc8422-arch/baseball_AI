@@ -2,6 +2,7 @@ package com.bros.backend.mypage;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
@@ -17,11 +18,12 @@ import org.springframework.web.multipart.MultipartFile;
 import com.bros.backend.auth.dto.AuthMessageResponse;
 import com.bros.backend.common.SessionUtils;
 import com.bros.backend.mypage.dto.AnalysisRecordView;
+import com.bros.backend.mypage.dto.ReportSummaryView;
 
 import jakarta.servlet.http.HttpSession;
 
 /**
- * 마이페이지(js/mypage.js)용 API: 분석 기록 목록, 프로필 사진.
+ * 마이페이지(js/mypage.js)와 홈 리포트(js/main.js)용 API: 분석 기록 목록, 리포트 요약, 프로필 사진.
  * (WebMvcConfig 에서 /api/mypage/** 전체가 로그인 필수로 막혀 있음 - 비로그인 호출 시 401 + {"detail":"로그인이 필요합니다."})
  */
 @RestController
@@ -40,6 +42,13 @@ public class MyPageController {
     public List<AnalysisRecordView> myAnalysisRecords(HttpSession session) {
         Long userId = SessionUtils.requireUserId(session);
         return myPageService.getRecords(userId);
+    }
+
+    /** 홈 "오늘의 AI 리포트" 의 투구/타격별 요약 ({pitching: {...}, batting: {...}}) */
+    @GetMapping("/report-summary")
+    public Map<String, ReportSummaryView> reportSummary(HttpSession session) {
+        Long userId = SessionUtils.requireUserId(session);
+        return myPageService.getReportSummary(userId);
     }
 
     /** 내 프로필 사진 (img src 로 바로 사용). 주소에 붙는 ?v= 는 사진이 바뀔 때마다 달라져서 오래 캐시해도 됨 */

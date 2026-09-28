@@ -105,6 +105,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`) | X (로그인 시 자동으로 내 기록으로 연결) |
 | GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | X |
 | GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
+| GET | `/api/mypage/report-summary` | 홈 "오늘의 AI 리포트" 투구/타격별 요약 (분석 수, 최근 영상·상태·날짜) | **O** |
 | GET | `/api/mypage/profile-image` | 내 프로필 사진 (img src 로 사용) | **O** |
 | POST | `/api/mypage/profile-image` | 프로필 사진 등록/변경 (multipart: `image`, JPG/PNG/WEBP/GIF, 5MB 이하) | **O** |
 | DELETE | `/api/mypage/profile-image` | 프로필 사진 삭제 | **O** |
@@ -124,6 +125,8 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - `js/auth.js`: 로그인/회원가입/아이디 중복확인이 실제 API 호출
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
 - `mypage.html` + `js/mypage.js`: 프로필 사진, 내 정보, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
+- `index.html` + `js/main.js`: 홈 "오늘의 AI 리포트" 를 `/api/mypage/report-summary` 로 표시 (로그인 전에는 안내 문구, 자세 평가 칸은 "준비 중")
+- `highlight.html` + `js/highlight.js`: `/api/highlights/latest` 로 최신 경기와 장면 목록 표시 (영상 주소 `clip_url` 이 있으면 새 탭 재생)
 - `admin.html` + `js/admin.js`: 회원 승인 관리 화면
 - `password.html` + `js/password.js`: 비밀번호 변경 화면 (마이페이지 내 정보의 "비밀번호 변경" 버튼)
 - 프로필 사진 파일은 백엔드 실행 위치 기준 `uploads/profile/` 에 저장됨 (`app.upload-dir`, git 제외). DB 에는 파일 이름만 저장
@@ -141,6 +144,6 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 
 ## 12. 아직 안 된 것 (다음 단계 후보)
 
-- **경기/하이라이트 데이터**: `games`, `highlight_clips` 테이블이 비어 있고, `highlight.html` 은 아직 목(mock) 데이터를 씁니다. 당장은 MySQL 에 직접 INSERT 하거나 등록 API 를 추가로 만들어야 합니다.
-- 자세 평가(관절 각도 계산, 개선 포인트 산출) — `pose` 데이터(24개 관절)는 이미 받아오고 있어서, 이 위에 로직만 추가하면 됩니다
+- **경기/하이라이트 등록**: 화면은 DB(`games`, `highlight_clips`)를 읽지만, 등록은 아직 MySQL 에 직접 INSERT 해야 합니다 (AI-Server 자동 생성 파이프라인 또는 관리자 등록 API 필요).
+- 자세 평가(관절 각도 계산, 개선 포인트 산출, 홈 리포트의 "AI 코멘트") — `pose` 데이터(24개 관절)는 이미 받아오고 있어서, 이 위에 로직만 추가하면 됩니다
 - 경기 하이라이트 자동 생성 파이프라인
