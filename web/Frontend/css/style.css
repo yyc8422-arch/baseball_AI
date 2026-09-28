@@ -796,6 +796,17 @@ svg {
   border-color: rgba(255, 255, 255, 0.12);
 }
 
+/* AI 코멘트 본문은 원래 고정 회색-남색이라 검은 카드에서 안 보여서, 다크모드에서만 밝은 글씨로 */
+:root[data-theme="dark"] .comment-box__text {
+  color: rgba(234, 243, 231, 0.85);
+}
+
+/* 마지막 장면 기능 카드: 마우스를 올리면 조금 더 확실하게 떠오름 (기본 2px → 6px + 진한 그림자) */
+.home-scene .feature-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.28);
+}
+
 /* 첫 화면 문구와 균형을 맞춰 장면 제목과 투수/타자 탭도 가운데로
    (장면이 세로 flex 라서 탭이 가로로 늘어나지 않게 align-self 로 내용 폭만큼만) */
 .home-scene .hero {
@@ -971,7 +982,8 @@ svg {
   scale: calc(0.94 + var(--enter, 1) * 0.06);
   /* 뒤의 border-color/transform 은 카드 hover 효과가 원래처럼 부드럽게 바뀌도록 유지 */
   transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1), translate 0.45s cubic-bezier(0.16, 1, 0.3, 1),
-    scale 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.45s ease-out, border-color 0.15s ease, transform 0.15s ease;
+    scale 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-radius 0.45s ease-out, border-color 0.2s ease,
+    transform 0.25s cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 0.25s ease;
   will-change: opacity, translate, scale;
 }
 
