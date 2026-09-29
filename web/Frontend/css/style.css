@@ -3033,6 +3033,114 @@ a.record-item:hover {
   font-weight: 800;
 }
 
+/* ① 영상 카드 제목 아래 영상 정보 한 줄 */
+.report-video-meta {
+  margin: 0 0 14px;
+}
+
+.report-video-meta .report-info__item {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ② 핵심 지표: 6개를 크게 3칸씩 */
+.metric-grid.metric-grid--key {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.metric-grid--key .metric-card__value {
+  font-size: 28px;
+}
+
+.metric-card__change {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 지표 이름 옆 ⓘ 설명 버튼 */
+.metric-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.metric-help {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin: -3px -4px 0 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+  cursor: pointer;
+}
+
+.metric-help:hover,
+.metric-help[aria-expanded="true"] {
+  background: var(--border);
+  color: var(--navy);
+}
+
+.metric-card__help {
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--navy);
+}
+
+/* ③ 상세 측정: 영역 탭 (폭이 좁으면 가로 스크롤) */
+.report-tabs--detail {
+  display: flex;
+  max-width: 100%;
+  width: fit-content;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.report-tabs--detail::-webkit-scrollbar {
+  display: none;
+}
+
+.report-tabs--detail .report-tab {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  padding: 8px 16px;
+}
+
+.report-tab__count {
+  min-width: 18px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--border);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.report-tab--active .report-tab__count {
+  background: rgba(255, 255, 255, 0.22);
+  color: inherit;
+}
+
+.report-detail__desc {
+  margin-top: 0;
+}
+
 /* ⑤ 동작 타이밍: 동작 시작 시점 (시간순, 세로 점선 타임라인) */
 .timing-events {
   display: grid;
@@ -3240,6 +3348,10 @@ a.record-item:hover {
 
 /* 작은 태블릿: 수치 2열 */
 @media (max-width: 860px) {
+  .metric-grid.metric-grid--key {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
