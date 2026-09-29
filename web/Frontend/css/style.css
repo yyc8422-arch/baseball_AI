@@ -2011,75 +2011,6 @@ body.page-home {
   color: var(--red);
 }
 
-.highlight-main {
-  border-top: 1px solid var(--border);
-  padding-top: 18px;
-}
-
-.highlight-main__frame {
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-md);
-  background: radial-gradient(circle at 30% 20%, var(--navy-light) 0%, var(--navy) 70%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.highlight-main__tag {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--neon);
-  background: rgba(0, 0, 0, 0.35);
-  padding: 4px 10px;
-  border-radius: 999px;
-}
-
-.highlight-main__play {
-  width: 56px;
-  height: 56px;
-  border-radius: 999px;
-  border: none;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--navy);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.highlight-main__play svg {
-  width: 22px;
-  height: 22px;
-  margin-left: 2px;
-}
-
-.highlight-main__meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 12px;
-}
-
-.highlight-main__label {
-  font-size: 14px;
-  font-weight: 800;
-  color: var(--navy);
-  margin: 0;
-}
-
-.highlight-main__time {
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-/* 주요 장면 그룹 (타격 장면 / 수비 플레이 / 주요 플레이) */
 .clip-group {
   margin-bottom: 22px;
 }
@@ -2128,6 +2059,12 @@ body.page-home {
   border-radius: var(--radius-md);
   padding: 8px;
   text-align: left;
+}
+
+/* 영상이 없는 장면: 재생 버튼 없이 이름/시간만, 누를 수 없음 */
+.clip-card--static {
+  cursor: default;
+  align-self: start; /* 영상 있는 카드 높이에 맞춰 늘어나지 않게 */
 }
 
 .clip-card__thumb {

@@ -80,20 +80,28 @@
     return el;
   }
 
-  /** @param {HighlightClip} clip */
+  /**
+   * 장면 카드. 영상 주소(clipUrl)가 있는 장면만 재생 버튼(▶)을 보여주고 누르면 재생,
+   * 영상이 없는 장면은 이름과 시간만 보여줌 (누를 수 없음).
+   * @param {HighlightClip} clip
+   */
   function renderClipCard(clip) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "clip-card";
-    btn.innerHTML = `
-      <span class="clip-card__thumb">${ICONS.play}</span>
+    const playable = !!clip.clipUrl;
+    const card = document.createElement(playable ? "button" : "div");
+    card.className = playable ? "clip-card" : "clip-card clip-card--static";
+    card.innerHTML = `
+      ${playable ? `<span class="clip-card__thumb">${ICONS.play}</span>` : ""}
       <span class="clip-card__meta">
         <span class="clip-card__action">${escapeHtml(clip.actionLabel)}</span>
         <span class="clip-card__time">${escapeHtml(clip.timestamp)}</span>
       </span>
     `;
-    btn.addEventListener("click", () => playClip(clip));
-    return btn;
+    if (playable) {
+      card.type = "button";
+      card.setAttribute("aria-label", `${clip.actionLabel} 영상 재생`);
+      card.addEventListener("click", () => playClip(clip));
+    }
+    return card;
   }
 
   /**
@@ -191,37 +199,10 @@
     });
   }
 
-  // ===================== 재생 (대표 영상 자리에 선택한 장면 정보를 반영) =====================
-  /** @param {HighlightClip} clip */
+  // ===================== 재생 =====================
+  /** 장면 영상을 새 탭에서 재생 (영상 주소가 있는 장면만 재생 버튼이 보임) @param {HighlightClip} clip */
   function playClip(clip) {
-    const label = document.getElementById("highlightMainLabel");
-    const time = document.getElementById("highlightMainTime");
-    if (label) label.textContent = clip.actionLabel;
-    if (time) time.textContent = clip.timestamp;
-
-    // 장면 영상 주소(highlight_clips.clip_url)가 등록돼 있으면 새 탭에서 재생, 없으면 안내만
-    if (clip.clipUrl) {
-      window.open(clip.clipUrl, "_blank", "noopener");
-    } else if (window.BROS.ui && window.BROS.ui.showToast) {
-      window.BROS.ui.showToast("이 장면 영상은 아직 준비 중이에요.");
-    }
-  }
-
-  /** 카드 상단의 "대표 영상" 재생 버튼 (특정 장면이 아니라 경기 전체 하이라이트 릴 재생용) */
-  function playMainHighlight() {
-    const label = document.getElementById("highlightMainLabel");
-    const time = document.getElementById("highlightMainTime");
-    if (label) label.textContent = "전체 하이라이트";
-    if (time) time.textContent = "";
-    // 경기 전체 하이라이트 영상은 아직 DB/AI-Server 에 없어서 안내만 (games 테이블에 영상 주소가 생기면 여기서 재생)
-    if (window.BROS.ui && window.BROS.ui.showToast) {
-      window.BROS.ui.showToast(gameInfo ? "경기 전체 하이라이트 영상은 준비 중이에요." : "등록된 경기가 없어요.");
-    }
-  }
-
-  function initMainPlayButton() {
-    const btn = document.getElementById("highlightPlayBtn");
-    if (btn) btn.addEventListener("click", playMainHighlight);
+    if (clip.clipUrl) window.open(clip.clipUrl, "_blank", "noopener");
   }
 
   // ===================== 탭 전환 (페이지 이동 없이 내용만 교체) =====================
@@ -286,7 +267,6 @@
     renderPositionHighlights(highlights, activePosition);
     initTabs();
     initPositionPicker();
-    initMainPlayButton();
     loadLatestHighlights();
   }
 
