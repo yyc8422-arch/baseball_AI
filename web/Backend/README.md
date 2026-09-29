@@ -102,8 +102,8 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | POST | `/api/auth/logout` | 로그아웃 | X |
 | GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role, status, createdAt, reviewedAt, profileImageUrl}` | O |
 | POST | `/api/auth/password` | 비밀번호 변경 (`{currentPassword, newPassword}`, 새 비밀번호 8자 이상) | O |
-| POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`), 내 기록으로 저장 | **O** |
-| GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | **O** |
+| POST | `/api/analysis` | 영상 업로드 → AI 서버로 전달 (multipart: `video`, `analysisType`, `cameraView`=side/front/rear, 기본 side), 내 기록으로 저장 | **O** |
+| GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 (본인 영상만). 끝나면 결과를 MySQL 에 저장하고 `report.previousAnalysis`(같은 종류·촬영 방향의 직전 분석, DB)를 붙여줌. AI 서버에 결과가 없어도 DB 저장본으로 응답 | **O** |
 | GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
 | GET | `/api/mypage/report-summary` | 홈 "오늘의 AI 리포트" 투구/타격별 요약 (분석 수, 최근 영상·상태·날짜) | **O** |
 | GET | `/api/mypage/profile-image` | 내 프로필 사진 (img src 로 사용) | **O** |
@@ -132,7 +132,9 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 - `js/shell.js`: 로그아웃 시 서버 세션도 끊고, 세션이 만료되면 화면의 로그인 표시도 풀림
 - `mypage.html` + `js/mypage.js`: 프로필 사진, 내 정보, `/api/mypage/analysis-records` 로 "분석 기록"/"업로드한 영상" 목록 표시, 기록을 누르면 해당 분석 페이지에서 결과를 이어서 보여줌
 - `index.html` + `js/main.js`: 홈 "오늘의 AI 리포트" 를 `/api/mypage/report-summary` 로 표시 (로그인 전에는 안내 문구, 측정 지표 칸은 "준비 중")
-- `pitching.html` / `batting.html` + `js/report.js`: 투구/타격 AI 분석 리포트 (분석 영상 + 동작 단계 타임라인, 자세 및 움직임 수치, 이전 분석 비교 — 평가 없이 측정값만). 분석 상태 조회 결과(`/api/analysis/{id}`)의 `summary` 로 영상 정보를, `includePose=true` 의 `pose` 로 영상 위 관절 점을 그림. 관절 각도·동작 단계 등은 AI-Server 가 응답에 `report` 필드(형식: `js/types.js` 의 `AnalysisReport`)를 넣으면 그대로 표시 (Spring 은 `AnalysisStatusResponse.report` 로 전달만 함)
+- `pitching.html` / `batting.html` + `js/report.js`: 투구/타격 AI 분석 리포트 — 분석 영상(+동작 단계 타임라인, 관절 점) · 영상 정보(+측정 요약) · 관절 및 자세 · 움직임 · 동작 타이밍 · 동작 속도(추후 지원) · 이전 분석 비교 · 안내. 촬영 방향(side/front/rear)에 맞는 지표만 표시. 렌더링 함수: `renderPitchAnalysis`, `renderBattingAnalysis`, `generateAnalysisSummary`, `renderPreviousComparison`
+- **분석 흐름**: 프론트 → Spring → Python AI 서버(분석) → Spring(결과를 `analysis_records.report_json` 에 저장, 이전 분석 비교 추가) → 프론트. 프론트는 AI 서버와 직접 통신하지 않음
+- **분석 리포트 형식**(`report`): `videoInfo, phases, angles(°), movement(신장·신체 대비 %), timing(s), speed(°/s), observations, previousAnalysis` — 자세한 필드는 `web/Frontend/js/types.js` 의 `AnalysisReport`. 평가(좋음/나쁨)는 넣지 않고 측정값만
 - `js/video-player.js`: 분석용 영상 플레이어 공통 (재생속도 0.25x~2x `setPlaybackRate`, 관절 점 오버레이 `createPoseOverlay`)
 - `highlight.html` + `js/highlight.js`: `/api/highlights/latest` 로 최신 경기와 장면 목록 표시 (영상 주소 `clip_url` 이 있으면 새 탭 재생)
 - `admin.html` + `js/admin.js` / `js/admin-highlight.js`: 관리자 화면 (회원 승인 / 하이라이트 관리 탭, `admin.html#highlights` 로 바로 열림)

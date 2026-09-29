@@ -3055,6 +3055,153 @@ a.record-item:hover {
   color: var(--cta-ink);
 }
 
+/* ② 영상 정보: 작은 칩 한 줄 */
+.report-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+}
+
+.report-info__item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  font-size: 12.5px;
+}
+
+.report-info__item dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.report-info__item dd {
+  margin: 0;
+  color: var(--navy);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ② 영상 정보 안 측정 요약 (평가 없이 사실만) */
+.report-summary {
+  margin-top: 16px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.report-summary__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.report-summary__item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--navy);
+}
+
+.report-summary__tag {
+  flex-shrink: 0;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--red-soft);
+  font-size: 11.5px;
+  font-weight: 800;
+}
+
+/* ⑤ 동작 타이밍: 동작 시작 시점 (시간순, 세로 점선 타임라인) */
+.timing-events {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.timing-events__item {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0 11px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13.5px;
+}
+
+.timing-events__item::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--neon);
+  border: 2px solid var(--navy);
+}
+
+.timing-events__item--empty::before {
+  background: var(--border);
+  border-color: var(--border);
+}
+
+.timing-events__label {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+.timing-events__time {
+  color: var(--navy);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.timing-events__item--empty .timing-events__label,
+.timing-events__item--empty .timing-events__time {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.metric-group__title--spaced {
+  margin-top: 22px;
+}
+
+/* ⑥ 동작 속도(추후 지원): 다른 카드보다 한 톤 가라앉게 */
+.report-card--muted .report-card__title {
+  color: var(--muted);
+}
+
+.report-card--muted .report-card__step {
+  background: var(--border);
+  color: var(--muted);
+}
+
+/* ⑦ 이전 분석 비교: 카테고리 묶음 머리줄 */
+.compare-table__group th {
+  padding-top: 16px;
+  text-align: left;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--green);
+  background: none;
+}
+
 /* ② 자세 및 움직임 수치: 관절 각도 / 움직임 두 묶음 (평가 태그 없이 값만) */
 .metric-group + .metric-group {
   margin-top: 24px;
@@ -3184,6 +3331,10 @@ a.record-item:hover {
 @media (max-width: 860px) {
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timing-events {
+    grid-template-columns: 1fr;
   }
 }
 

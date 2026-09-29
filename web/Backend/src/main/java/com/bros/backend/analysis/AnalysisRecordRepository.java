@@ -14,4 +14,8 @@ public interface AnalysisRecordRepository extends JpaRepository<AnalysisRecord, 
     Optional<AnalysisRecord> findFirstByUserIdAndAnalysisTypeOrderByCreatedAtDesc(Long userId, String analysisType);
 
     long countByUserIdAndAnalysisType(Long userId, String analysisType);
+
+    /** 이전 분석 비교용: 같은 사용자·같은 종류·같은 촬영 방향에서 이 영상보다 먼저 올린, 결과가 DB 에 저장된 가장 최근 기록 */
+    Optional<AnalysisRecord> findFirstByUserIdAndAnalysisTypeAndCameraViewAndReportJsonIsNotNullAndCreatedAtBeforeOrderByCreatedAtDesc(
+            Long userId, String analysisType, String cameraView, java.time.LocalDateTime createdAt);
 }

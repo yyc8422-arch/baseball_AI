@@ -4,6 +4,7 @@
     const formData = new FormData();
     formData.append("video", file, file.name);
     formData.append("analysisType", analysisType);
+    formData.append("cameraView", "side");   // 촬영 방향 (생략하면 side)
     fetch(`${API_BASE_URL}/api/analysis`, { method: "POST", body: formData });
 
 그 뒤 응답의 video_id 로 GET /api/analysis/{video_id} 를 주기적으로 조회해서
@@ -11,7 +12,7 @@ status 가 done / failed 가 될 때까지 기다립니다.
 """
 from fastapi import APIRouter, BackgroundTasks, File, Form, HTTPException, UploadFile
 
-from app.schemas.video import AnalysisStatusResponse, AnalysisType, VideoUploadResponse
+from app.schemas.video import AnalysisStatusResponse, AnalysisType, CameraView, VideoUploadResponse
 from app.services.analysis_store import load_record, save_record
 from app.services.video_processor import process_video
 from app.services.video_storage import save_upload_safely
@@ -24,13 +25,14 @@ async def upload_video(
     background_tasks: BackgroundTasks,
     video: UploadFile = File(...),
     analysisType: AnalysisType = Form(...),
+    cameraView: CameraView = Form("side"),
 ):
     # 1) 저장부터 안전하게 끝낸다 (용량 초과/형식 오류면 여기서 예외로 즉시 응답)
     video_id, saved_path, size_bytes = await save_upload_safely(video)
     file_name = video.filename or ""
 
     # 2) 조회 API 가 바로 찾을 수 있도록 "대기 중" 레코드를 먼저 만든다
-    save_record(video_id, file_name=file_name, analysis_type=analysisType, status="queued")
+    save_record(video_id, file_name=file_name, analysis_type=analysisType, camera_view=cameraView, status="queued")
 
     # 3) 저장이 "완전히" 끝난 뒤에만 백그라운드 처리를 큐에 올린다
     background_tasks.add_task(process_video, video_id, saved_path, analysisType)

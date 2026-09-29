@@ -5,13 +5,18 @@ import java.util.Map;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
-/** AI-Server 의 AnalysisStatusResponse 와 동일한 필드 구성 (GET /api/analysis/{video_id} 응답) */
+/**
+ * GET /api/analysis/{video_id} 응답. AI 서버의 응답과 같은 필드 구성이고, 프론트는 이 Spring 응답만 받습니다.
+ * (프론트 → Spring → AI 서버 → Spring(결과 DB 저장, 이전 분석 비교 추가) → 프론트)
+ */
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AnalysisStatusResponse {
     private String videoId;
     private String fileName;
     private String analysisType;
     private String status;
+    /** 촬영 방향 side / front / rear (AI-Server 가 안 주면 Spring 이 업로드 때 저장한 값으로 채움) */
+    private String cameraView;
     private String createdAt;
     private String updatedAt;
     private Double elapsedSec;
@@ -19,8 +24,8 @@ public class AnalysisStatusResponse {
     private AnalysisSummary summary;
     private Map<String, Object> pose;
     /**
-     * 향후 FastAPI 가 보낼 분석 리포트 (videoInfo, phases, angles, movement, sequence, previousAnalysis).
-     * 형식은 프론트 js/types.js 의 AnalysisReport. 지금은 AI-Server 가 보내지 않아 null 이고, 오면 그대로 전달만 함.
+     * AI 분석 결과 리포트 (videoInfo, phases, angles, movement, timing, speed, observations). 형식은 프론트 js/types.js 의 AnalysisReport.
+     * Spring 이 DB(analysis_records.report_json)에 저장하고, previousAnalysis(같은 사용자의 직전 분석, DB 에서)를 붙여서 전달.
      */
     private Map<String, Object> report;
 
@@ -49,6 +54,14 @@ public class AnalysisStatusResponse {
 
     public void setAnalysisType(String analysisType) {
         this.analysisType = analysisType;
+    }
+
+    public String getCameraView() {
+        return cameraView;
+    }
+
+    public void setCameraView(String cameraView) {
+        this.cameraView = cameraView;
     }
 
     public String getStatus() {

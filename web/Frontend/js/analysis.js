@@ -55,12 +55,14 @@
    * 영상을 AI-Server 에 업로드합니다.
    * @param {File} file
    * @param {"pitching"|"batting"|"highlight"} analysisType
+   * @param {"side"|"front"|"rear"} [cameraView] 촬영 방향 (지금은 측면 기본, 정면/후면 선택 UI 는 추후)
    * @returns {Promise<{video_id: string, file_name: string, analysis_type: string, status: string}>}
    */
-  async function uploadVideo(file, analysisType) {
+  async function uploadVideo(file, analysisType, cameraView = "side") {
     const formData = new FormData();
     formData.append("video", file, file.name);
     formData.append("analysisType", analysisType);
+    formData.append("cameraView", cameraView);
 
     let res;
     try {

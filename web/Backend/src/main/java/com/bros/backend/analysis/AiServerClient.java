@@ -34,7 +34,7 @@ public class AiServerClient {
     }
 
     /** POST /api/analysis 로 영상을 그대로 전달(멀티파트 프록시)합니다. */
-    public VideoUploadResponse upload(MultipartFile video, String analysisType) {
+    public VideoUploadResponse upload(MultipartFile video, String analysisType, String cameraView) {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         try {
             body.add("video", new NamedByteArrayResource(video.getBytes(), video.getOriginalFilename()));
@@ -42,6 +42,7 @@ public class AiServerClient {
             throw new ApiException(HttpStatus.INTERNAL_SERVER_ERROR, "영상 파일을 읽는 중 오류가 발생했습니다.");
         }
         body.add("analysisType", analysisType);
+        body.add("cameraView", cameraView);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);

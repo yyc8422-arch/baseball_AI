@@ -6,52 +6,67 @@
 
 /**
  * ===== 투구/타격 AI 분석 리포트 (js/report.js 가 그대로 표시, 프론트는 계산하지 않음) =====
- * 향후 Python/FastAPI 가 GET /api/analysis/{id} 응답의 report 필드로 보내줄 형식.
- * 평가(좋음/나쁨, 권장 범위, 개선 포인트)는 넣지 않고 측정값만 보냄.
+ * Spring Boot API(GET /api/analysis/{id}) 응답의 report 필드 형식. 프론트는 Spring 하고만 통신합니다.
+ *   흐름: 프론트 → Spring → Python AI(MediaPipe/YOLO 등 분석) → Spring(MySQL 저장, previousAnalysis 추가) → 프론트
+ * 평가(좋음/나쁨, 권장 범위, 개선 포인트)는 넣지 않고 측정값만 보냄. 측정하지 못한 지표는 빼고 보냄(임의값 금지).
  *
- * 지표 값은 숫자 또는 { value, at } (at = 측정한 동작 단계 key, 예: "RELEASE")
- * @typedef {number | {value: number, at?: string}} MetricValue
+ * 지표 값은 숫자 또는 { value, unit?, at? }
+ *   unit: "deg" | "pct_height"(신장 대비 %) | "pct_body"(신체 기준 %) | "pct_shoulder"(어깨너비 대비 %) | "norm"(정규화 좌표)
+ *         | "cm"(실측 보정 후) | "sec" | "ms" | "deg_per_sec"   — 없으면 지표의 기본 단위 (js/report.js REPORT_CONFIG)
+ *   at: 측정 시점 동작 단계 key (예: "RELEASE")
+ * @typedef {number | {value: number, unit?: string, at?: string}} MetricValue
  *
  * @typedef {Object} ReportVideoInfo
  * @property {"uploading"|"queued"|"processing"|"done"|"failed"} status
- * @property {string} [cameraView] "side" | "front" | "back" | "diagonal" (또는 표시할 글자)
+ * @property {"side"|"front"|"rear"} [cameraView] 촬영 방향 (기본 side). 방향마다 보여줄 지표가 다름
  * @property {number} [fps]
- * @property {number} [durationSec] 영상 길이(초)
- * @property {number} [analyzedFrames] 분석한 프레임 수
- * @property {number} [detectedFrames] 선수가 검출된 프레임 수
- * @property {number} [metricCount] 측정 지표 수 (없으면 받은 지표 개수를 셈)
+ * @property {number} [durationSec]
+ * @property {number} [analyzedFrames]
+ * @property {number} [detectedFrames]
+ * @property {number} [metricCount] 없으면 받은 지표 수를 셈
  * @property {string} [analyzedAt] "2026.09.28"
- * @property {string} [videoUrl] 분석 영상 주소 (있으면 ① 에서 재생)
+ * @property {string} [videoUrl]
  *
- * 동작 단계 1개. key 는 투구 SET/LEG_LIFT/STRIDE/ARM_COCKING/ACCELERATION/RELEASE/FOLLOW_THROUGH,
+ * 동작 단계. key 는 투구 SET/LEG_LIFT/STRIDE/ARM_COCKING/ACCELERATION/RELEASE/FOLLOW_THROUGH,
  * 타격 STANCE/LOAD/STRIDE/ROTATION/SWING/FOLLOW_THROUGH (추후 CONTACT 등 추가 가능)
  * @typedef {Object} ReportPhase
  * @property {string} key
  * @property {number} [startSec]
  * @property {number} [endSec]
- * @property {number} [startFrame]
- * @property {number} [endFrame]
  *
- * @typedef {Object} ReportPreviousAnalysis 같은 사용자의 이전 같은 종류 분석
+ * @typedef {Object} ReportPreviousAnalysis 같은 사용자의 이전 분석 (같은 종류·같은 촬영 방향, Spring 이 붙여줌)
  * @property {string} analyzedAt
  * @property {string} [fileName]
+ * @property {string} [cameraView]
  * @property {Object.<string, MetricValue>} [angles]
  * @property {Object.<string, MetricValue>} [movement]
- * @property {Object.<string, MetricValue>} [sequence]
- * @property {Object.<string, number>} [changes] 지표 key → 변화값 (없으면 화면에서 현재 - 이전)
+ * @property {Object.<string, MetricValue>} [timing]
+ * @property {Object.<string, MetricValue>} [speed]
+ * @property {Object.<string, number>} [changes] 지표 key → 변화값 (없으면 화면에서 같은 단위일 때만 현재 - 이전)
  *
  * @typedef {Object} AnalysisReport
  * @property {"pitching"|"batting"} analysisType
  * @property {ReportVideoInfo} videoInfo
  * @property {ReportPhase[]} phases
- * @property {Object.<string, MetricValue>} angles
- *   투구: elbowAngleAtRelease, shoulderAngleAtRelease, frontKneeAngle, backKneeAngle, trunkTilt, pelvisRotation, shoulderRotation (°), strideLength (신장 대비)
- *   타격: pelvisRotation, shoulderRotation, trunkTilt, frontKneeAngle, backKneeAngle (°), strideLength (신장 대비)
- * @property {Object.<string, MetricValue>} movement headDisplacement, pelvisDisplacement (정규화 좌표), trunkTiltChange (°)
- * @property {Object.<string, MetricValue>} sequence 시점/시간(초). 지금 화면에는 전체 동작 시간(totalMotionSec / totalSwingSec)만 표시, 나머지는 보내도 무시됨
- *   투구: lowerBodyMoveStartSec, pelvisRotationStartSec, shoulderRotationStartSec, armAccelerationStartSec, releaseSec, pelvisToShoulderGapSec, totalMotionSec
- *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec, swingStartSec, followThroughStartSec, pelvisToShoulderGapSec, totalSwingSec
+ * @property {Object.<string, MetricValue>} angles 관절 및 자세 (°)
+ *   투구 side: elbowAngleAtRelease, frontKneeAngle, backKneeAngle, trunkForwardTilt, (shoulderLineTilt)
+ *   타격 side: frontKneeAngle, backKneeAngle, trunkTilt, (elbowAngle)
+ *   front/rear: shoulderLineTilt, pelvisLineTilt, landingFootAngle, (pelvisRotation, shoulderRotation — 검증 후에만)
+ * @property {Object.<string, MetricValue>} movement 움직임 (%, 정규화)
+ *   투구 side: headDisplacement, pelvisDisplacement (pct_body), strideLength, legLiftHeight (pct_height), (releasePointShift)
+ *   타격 side: headDisplacement, pelvisDisplacement, centerOfMassShift (pct_body), strideLength (pct_height)
+ *   front/rear: lateralCenterShift (pct_shoulder)
+ * @property {Object.<string, MetricValue>} timing 동작 타이밍 (초, 영상 시작 기준)
+ *   투구: legLiftPeakSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec,
+ *         armAccelerationStartSec, releaseSec, pelvisToShoulderSec, (landingToReleaseSec), totalMotionSec
+ *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec,
+ *         swingStartSec, followThroughStartSec, pelvisToShoulderSec, (landingToSwingSec), totalSwingSec
+ * @property {Object.<string, MetricValue>} speed 동작 속도 (°/s, 현재 미지원 — 보내면 표시)
+ *   pelvisAngularVelocityMax, trunkAngularVelocityMax, (투구) elbowExtensionVelocityMax
  * @property {ReportPreviousAnalysis|null} previousAnalysis
+ * @property {(string|{category?: "angles"|"movement"|"timing"|"speed", text: string})[]} [observations]
+ *   측정 내용을 사실대로 적은 문장 (평가 금지, 예: "릴리스 시 팔꿈치 각도는 릴리스 시점에 측정되었습니다.").
+ *   Spring 이 전달, 없으면 화면에서 측정 항목 수만 정리 (generateAnalysisSummary)
  * @property {Object|null} [pose] AI-Server 의 프레임별 관절 좌표 (영상 위 관절 점 표시용)
  */
 
