@@ -102,14 +102,14 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | POST | `/api/auth/logout` | 로그아웃 | X |
 | GET | `/api/auth/me` | 현재 로그인 사용자 정보 `{username, name, role, status, createdAt, reviewedAt, profileImageUrl}` | O |
 | POST | `/api/auth/password` | 비밀번호 변경 (`{currentPassword, newPassword}`, 새 비밀번호 8자 이상) | O |
-| POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`) | X (로그인 시 자동으로 내 기록으로 연결) |
-| GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | X |
+| POST | `/api/analysis` | 영상 업로드 → AI-Server 프록시 (multipart: `video`, `analysisType`), 내 기록으로 저장 | **O** |
+| GET | `/api/analysis/{videoId}` | 분석 상태/결과 조회 → AI-Server 프록시 | **O** |
 | GET | `/api/mypage/analysis-records` | 내 분석 기록/업로드 영상 목록 | **O** |
 | GET | `/api/mypage/report-summary` | 홈 "오늘의 AI 리포트" 투구/타격별 요약 (분석 수, 최근 영상·상태·날짜) | **O** |
 | GET | `/api/mypage/profile-image` | 내 프로필 사진 (img src 로 사용) | **O** |
 | POST | `/api/mypage/profile-image` | 프로필 사진 등록/변경 (multipart: `image`, JPG/PNG/WEBP/GIF, 5MB 이하) | **O** |
 | DELETE | `/api/mypage/profile-image` | 프로필 사진 삭제 | **O** |
-| GET | `/api/highlights/latest` | 최신 경기 + 하이라이트 클립 | X |
+| GET | `/api/highlights/latest` | 최신 경기 + 하이라이트 클립 | **O** |
 | GET | `/api/admin/users?status=PENDING` | 회원 목록 (`PENDING`/`APPROVED`/`REJECTED`, 생략하면 전체) | **관리자** |
 | POST | `/api/admin/users/{id}/approve` | 가입 승인 | **관리자** |
 | POST | `/api/admin/users/{id}/reject` | 가입 거절 | **관리자** |

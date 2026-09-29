@@ -40,6 +40,16 @@
   }
 
   /**
+   * 로그인 후 돌아갈 페이지 (login.html?next=pitching.html). 다른 사이트로 보내지지 않도록
+   * 같은 폴더의 "영문이름.html" (뒤에 #탭 가능) 형식만 허용.
+   * @returns {string|null}
+   */
+  function nextPage() {
+    const next = new URLSearchParams(window.location.search).get("next");
+    return next && /^[a-z-]+\.html(#[a-z-]+)?$/.test(next) ? next : null;
+  }
+
+  /**
    * 로그인 요청. 승인 대기/거절 계정이면 서버가 403 과 안내 문구를 돌려줍니다.
    * @param {string} username
    * @param {string} password
@@ -56,8 +66,9 @@
       try {
         localStorage.setItem(AUTH_KEY, JSON.stringify(user)); // { username, name, role }
       } catch (e) {}
-      setMessage("로그인되었습니다. 홈으로 이동합니다.");
-      window.location.href = "./index.html";
+      const next = nextPage();
+      setMessage(next ? "로그인되었습니다. 이용하려던 화면으로 이동합니다." : "로그인되었습니다. 홈으로 이동합니다.");
+      window.location.href = next ? `./${next}` : "./index.html";
     } catch (e) {
       setMessage(e.message, true);
       setBusy(form, false);
@@ -179,5 +190,7 @@
     initTabs();
     initForms();
     initUsernameCheck();
+    // 회원 전용 메뉴에서 넘어온 경우 안내
+    if (nextPage()) setMessage("로그인이 필요한 메뉴예요. 로그인 후 이용해주세요.");
   });
 })();

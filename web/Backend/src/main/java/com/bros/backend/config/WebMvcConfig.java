@@ -20,10 +20,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 마이페이지처럼 "내 것"을 보여주는 API 만 로그인 필수로 막습니다.
-        // 업로드/분석 조회는 비로그인 사용자도 쓸 수 있게(현재 프론트 UX 유지) 열어둡니다.
-        // 관리자 API 는 여기서 로그인 여부만 막고, 관리자인지는 AdminService 가 확인합니다.
-        registry.addInterceptor(sessionAuthInterceptor).addPathPatterns("/api/mypage/**", "/api/admin/**");
+        // 모든 기능은 회원 전용: 영상 분석, 하이라이트, 마이페이지, 관리자 API 는 로그인 필수.
+        // (로그인/회원가입 등 /api/auth/** 만 비로그인 허용. 관리자인지는 AdminService 가 한 번 더 확인)
+        registry.addInterceptor(sessionAuthInterceptor)
+                .addPathPatterns("/api/analysis/**", "/api/highlights/**", "/api/mypage/**", "/api/admin/**");
     }
 
     @Override

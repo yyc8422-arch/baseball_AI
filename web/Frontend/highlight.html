@@ -247,6 +247,8 @@
   <script src="./js/highlight.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
+      // 회원 전용: 로그인하지 않았으면 로그인 창으로 (로그인 후 이 페이지로 돌아옴)
+      if (!window.BROS.shell.requireLogin()) return;
       window.BROS.shell.init("highlight");
       window.BROS.highlight.init();
 

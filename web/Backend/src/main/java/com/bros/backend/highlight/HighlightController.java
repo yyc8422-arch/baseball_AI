@@ -15,7 +15,7 @@ import com.bros.backend.highlight.dto.HighlightClipResponse;
 import com.bros.backend.highlight.dto.HighlightPageResponse;
 
 /**
- * highlight.html/highlight.js 가 보여주는 최신 경기 + 하이라이트 장면 조회 (비로그인도 가능).
+ * highlight.html/highlight.js 가 보여주는 최신 경기 + 하이라이트 장면 조회 (로그인 필수, WebMvcConfig).
  * 경기/장면 등록은 관리자 화면(AdminHighlightController)에서 합니다.
  *
  * 참고: 이 컨트롤러는 "저장된 경기/하이라이트를 조회"만 합니다. 경기 하이라이트 영상을 올리면

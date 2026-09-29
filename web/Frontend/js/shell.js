@@ -171,8 +171,56 @@
       if (e.status === 401 || e.status === 403) {
         clearLocalAuth();
         updateLoginButton();
+        // 로그인이 필요한 페이지에 있는데 세션이 끝났으면 로그인 창으로
+        if (isProtectedPage(window.location.pathname)) goToLogin();
       }
     }
+  }
+
+  // ===== 회원 전용 페이지 =====
+  // 로그인하지 않으면 홈(첫 화면)만 볼 수 있고, 아래 페이지는 로그인 창으로 안내합니다.
+  // (백엔드도 /api/analysis, /api/highlights, /api/mypage, /api/admin 을 로그인 필수로 막고 있음)
+  const PROTECTED_PAGES = [
+    "pitching.html",
+    "batting.html",
+    "highlight.html",
+    "mypage.html",
+    "account.html",
+    "password.html",
+    "admin.html",
+  ];
+
+  /** @param {string} pathOrHref "./mypage.html", "/web/Frontend/admin.html#highlights" 등 */
+  function isProtectedPage(pathOrHref) {
+    const file = String(pathOrHref).split(/[?#]/)[0].split("/").pop();
+    return PROTECTED_PAGES.includes(file);
+  }
+
+  /**
+   * 로그인 창으로 보냄. 로그인하면 next 페이지로 돌아옴 (기본: 지금 페이지)
+   * @param {string} [next] "./pitching.html" 처럼 이동하려던 페이지
+   */
+  function goToLogin(next) {
+    const target = next || window.location.pathname.split("/").pop() + window.location.hash;
+    const file = String(target).replace(/^\.\//, "");
+    const query = isProtectedPage(file) ? `?next=${encodeURIComponent(file)}` : "";
+    window.location.href = `./login.html${query}`;
+  }
+
+  /** 로그인하지 않은 상태에서 회원 전용 페이지로 가는 링크(사이드바, 기능 카드, 마이페이지 버튼 등)를 누르면 로그인 창으로 */
+  function guardProtectedLinks() {
+    document.addEventListener(
+      "click",
+      (e) => {
+        const link = e.target.closest("a[href]");
+        if (!link || isLoggedIn()) return;
+        const href = link.getAttribute("href");
+        if (!isProtectedPage(href)) return;
+        e.preventDefault();
+        goToLogin(href);
+      },
+      true
+    );
   }
 
   function initAuth() {
@@ -183,6 +231,8 @@
     btn.addEventListener("click", async () => {
       if (isLoggedIn()) {
         await logout();
+        // 회원 전용 페이지에서 로그아웃하면 홈으로
+        if (isProtectedPage(window.location.pathname)) window.location.href = "./index.html";
         return;
       }
       window.location.href = "./login.html";
@@ -192,7 +242,7 @@
   /** 로그인하지 않은 사용자가 마이페이지 등 보호된 페이지에 들어오면 로그인 페이지로 돌려보냄 */
   function requireLogin() {
     if (isLoggedIn()) return true;
-    window.location.href = "./login.html";
+    goToLogin();
     return false;
   }
 
@@ -238,11 +288,12 @@
     bindScrollHeader();
     initTheme();
     renderMypageButton(key);
+    guardProtectedLinks();
     initAuth();
     if (window.BROS.capture) window.BROS.capture.initCaptureFeature();
   }
 
   window.BROS = window.BROS || {};
-  window.BROS.shell = { init, isLoggedIn, requireLogin, getAuthUser, clearLocalAuth, logout };
+  window.BROS.shell = { init, isLoggedIn, requireLogin, goToLogin, getAuthUser, clearLocalAuth, logout };
   window.BROS.ui = { showToast };
 })();

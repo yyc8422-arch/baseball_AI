@@ -176,6 +176,7 @@
     const analysisType = document.body.dataset.page;
     if (!slot || !analysisType) return;
 
+    if (window.BROS.shell && !window.BROS.shell.isLoggedIn()) return; // 회원 전용 (페이지가 로그인 창으로 보냄)
     const last = recallAnalysis(analysisType);
     if (last && last.videoId) trackAnalysis(analysisType, last.videoId, last.fileName);
   }

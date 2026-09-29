@@ -80,6 +80,11 @@
     return true;
   }
 
+  /** 영상 업로드/촬영은 회원만 (로그인하지 않았으면 로그인 창으로) */
+  function requireLogin() {
+    return !window.BROS.shell || window.BROS.shell.requireLogin();
+  }
+
   // ===================== FAB =====================
   function initFab() {
     const wrap = document.getElementById("fabWrap");
@@ -121,13 +126,13 @@
     if (uploadItem) {
       uploadItem.addEventListener("click", () => {
         closeFab();
-        openTypeModal("upload");
+        if (requireLogin()) openTypeModal("upload");
       });
     }
     if (recordItem) {
       recordItem.addEventListener("click", () => {
         closeFab();
-        openTypeModal("record");
+        if (requireLogin()) openTypeModal("record");
       });
     }
   }
@@ -448,6 +453,7 @@
    * @param {"pitching"|"batting"|"highlight"} type
    */
   function startUploadFor(type) {
+    if (!requireLogin()) return;
     selectedAnalysisType = type;
     const input = document.getElementById("videoFileInput");
     if (input) input.click();
@@ -458,6 +464,7 @@
    * @param {"pitching"|"batting"|"highlight"} type
    */
   function startRecordFor(type) {
+    if (!requireLogin()) return;
     selectedAnalysisType = type;
     openCameraModal();
   }
