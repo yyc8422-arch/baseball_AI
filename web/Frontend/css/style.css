@@ -846,22 +846,26 @@ svg {
   margin-bottom: 0;
 }
 
-/* 장면 1: 팀 사진. 콘텐츠 여백(.content) 밖에 있어서 좌우 끝까지, 높이는 상단바 아래 한 화면 */
+/* 장면 1: 팀 사진. 상단바 아래 한 화면 가운데에 사진을 두고, 위아래·양옆으로 뒤 배경이 보이게 여백을 둠.
+   원본이 1280x960 이라 그보다 크게 늘리면 흐려지므로 폭은 최대 1120px, 화면 높이에도 맞춰 줄어듦 (사진은 자르지 않고 4:3 그대로) */
 .home-scene--team {
+  /* 위 여백은 떠 있는 상단 버튼(테마/마이페이지/로그인)과 겹치지 않을 만큼 */
+  --team-pad-y: clamp(96px, 13vh, 140px);
   position: relative;
   z-index: 1;
-  display: block;
-  min-height: 0;
-  padding: 0;
+  align-items: center;
+  padding: var(--team-pad-y) 32px;
 }
 
 .home-team-photo {
   margin: 0;
-  width: 100%;
-  height: calc(100vh - var(--topbar-h, 69px));
-  height: calc(100svh - var(--topbar-h, 69px));
+  width: min(100%, 1120px, (100vh - var(--topbar-h, 69px) - 2 * var(--team-pad-y)) * 4 / 3);
+  width: min(100%, 1120px, (100svh - var(--topbar-h, 69px) - 2 * var(--team-pad-y)) * 4 / 3);
+  aspect-ratio: 4 / 3;
   overflow: hidden;
+  border-radius: 24px;
   background: #0b1a12;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.45);
 }
 
 .home-team-photo img {
@@ -869,14 +873,11 @@ svg {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  /* 화면이 사진보다 가로로 길면 위아래가 잘리므로, 선수와 현수막이 가운데 오게 */
-  object-position: center 58%;
 }
 
-/* 팀 사진: 스크롤해서 들어올수록 작은 카드(82%, 둥근 모서리) → 화면 가득(100%, 각진 모서리)으로 커짐 */
+/* 팀 사진: 스크롤해서 들어올수록 살짝 작은 크기(90%) → 원래 크기로 */
 .reveal-ready .home-team-photo[data-reveal] {
-  scale: calc(0.82 + var(--enter, 1) * 0.18);
-  border-radius: calc((1 - var(--enter, 1)) * 32px);
+  scale: calc(0.9 + var(--enter, 1) * 0.1);
 }
 
 .home-content .hero__eyebrow {
@@ -1072,10 +1073,15 @@ body.page-home {
     padding: 32px 0;
   }
 
-  /* 폰: 사진 비율(4:3) 그대로 화면 폭을 꽉 채움 (원본보다 작게 표시되어 선명함) */
+  /* 폰: 사진이 작아서 한 화면을 다 차지하지 않고, 위(상단 버튼 아래)·아래·양옆에 여백만 둠 */
+  .home-scene--team {
+    --team-pad-y: 40px;
+    min-height: 0;
+    padding: 88px 16px var(--team-pad-y);
+  }
+
   .home-team-photo {
-    height: auto;
-    aspect-ratio: 4 / 3;
+    border-radius: 18px;
   }
 }
 
