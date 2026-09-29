@@ -26,7 +26,6 @@ public class AdminHighlightService {
 
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy.MM.dd");
     private static final Set<String> CATEGORIES = Set.of("batting", "defense", "highlight");
-    private static final Set<String> POSITIONS = Set.of("P", "C", "1B", "2B", "3B", "SS", "LF", "CF", "RF");
     private static final Pattern TIMESTAMP = Pattern.compile("^\\d{1,2}:\\d{2}:\\d{2}$");
 
     private final GameRepository gameRepository;
@@ -79,13 +78,6 @@ public class AdminHighlightService {
         if (!CATEGORIES.contains(category)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "분류는 타격/수비/주요 플레이 중 하나여야 합니다.");
         }
-        String position = blankToNull(req.getPosition());
-        if (position != null && !POSITIONS.contains(position)) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "포지션 값이 올바르지 않습니다.");
-        }
-        if ("defense".equals(category) && position == null) {
-            throw new ApiException(HttpStatus.BAD_REQUEST, "수비 장면은 포지션을 선택해주세요.");
-        }
         String label = limit(required(req.getActionLabel(), "장면 이름을 입력해주세요."), 100, "장면 이름");
         String timestamp = required(req.getTimestamp(), "영상 시간을 입력해주세요.");
         if (!TIMESTAMP.matcher(timestamp).matches()) {
@@ -100,8 +92,8 @@ public class AdminHighlightService {
             }
         }
 
-        // action(장면 종류 코드)은 화면에서 쓰지 않아 분류 값으로 채움
-        clipRepository.save(new HighlightClip(game, position, category, category, label, timestamp, clipUrl, null));
+        // action(장면 종류 코드)은 화면에서 쓰지 않아 분류 값으로 채움, position 은 포지션별 하이라이트 개발 전까지 비워둠
+        clipRepository.save(new HighlightClip(game, null, category, category, label, timestamp, clipUrl, null));
     }
 
     @Transactional

@@ -4,9 +4,8 @@
  * 구조:
  *  - loadLatestHighlights() : GET /api/highlights/latest 로 최신 경기(games) + 하이라이트(highlight_clips) 를 받아옴
  *    (등록된 경기가 없으면 404 → 안내 문구, 서버 연결 실패 → 안내 문구)
- *  - filterHighlightsByPosition(highlights, position) : 포지션 기준 필터링만 담당
- *  - renderAllHighlights(highlights) / renderPositionHighlights(highlights, position) : 화면 렌더링만 담당
- *  - 탭 전환은 페이지 이동 없이 클래스/hidden 토글로만 처리합니다.
+ *  - renderAllHighlights(highlights) : 경기 정보 + 카테고리(타격/수비/주요)별 장면 목록 렌더링
+ *  - 포지션별 하이라이트는 추후 개발 예정 (DB 의 highlight_clips.position 컬럼은 그대로 남겨둠)
  */
 (function () {
   const ICONS = {
@@ -24,18 +23,6 @@
   /** 목록이 비었을 때 안내 문구 [제목, 설명] (처음엔 불러오는 중) */
   let emptyMessage = ["하이라이트를 불러오는 중이에요", "잠시만 기다려주세요."];
 
-  const POSITIONS = [
-    { key: "P", label: "투수" },
-    { key: "C", label: "포수" },
-    { key: "1B", label: "1루수" },
-    { key: "2B", label: "2루수" },
-    { key: "3B", label: "3루수" },
-    { key: "SS", label: "유격수" },
-    { key: "LF", label: "좌익수" },
-    { key: "CF", label: "중견수" },
-    { key: "RF", label: "우익수" },
-  ];
-
   const CATEGORY_META = {
     batting: { title: "타격 장면", badge: "NICE PLAY" },
     defense: { title: "수비 플레이", badge: "DEFENSE" },
@@ -43,19 +30,7 @@
   };
   const CATEGORY_ORDER = ["batting", "defense", "highlight"];
 
-  let activePosition = null;
-
-  // ===================== 필터링 =====================
-  /**
-   * 포지션 기준으로 하이라이트를 걸러냅니다. (백엔드에서 position 필드만 내려주면 그대로 재사용 가능)
-   * @param {HighlightClip[]} highlights
-   * @param {string} position 예: "SS"
-   * @returns {HighlightClip[]}
-   */
-  function filterHighlightsByPosition(highlights, position) {
-    return highlights.filter((clip) => clip.position === position);
-  }
-
+  // ===================== 분류 =====================
   /** @param {HighlightClip[]} highlights */
   function groupHighlightsByCategory(highlights) {
     const groups = {};
@@ -108,14 +83,14 @@
    * @param {string} categoryKey
    * @param {HighlightClip[]} clips
    */
-  function renderClipGroup(categoryKey, clips, titleOverride) {
+  function renderClipGroup(categoryKey, clips) {
     const meta = CATEGORY_META[categoryKey] || { title: categoryKey, badge: "" };
     const section = document.createElement("div");
     section.className = "clip-group";
     section.innerHTML = `
       <div class="clip-group__head">
         <span class="clip-group__badge">${escapeHtml(meta.badge)}</span>
-        <h3 class="clip-group__title">${escapeHtml(titleOverride || meta.title)}</h3>
+        <h3 class="clip-group__title">${escapeHtml(meta.title)}</h3>
       </div>
       <div class="clip-group__list"></div>
     `;
@@ -125,7 +100,7 @@
   }
 
   /**
-   * 전체 하이라이트 탭: 상단 경기 정보 + 카테고리별(타격/수비/주요) 장면 목록을 그립니다.
+   * 상단 경기 정보 + 카테고리별(타격/수비/주요) 장면 목록을 그립니다.
    * @param {HighlightClip[]} highlights
    */
   function renderAllHighlights(highlights) {
@@ -153,91 +128,10 @@
     });
   }
 
-  /**
-   * 포지션별 하이라이트 탭: 선택된 포지션의 수비 장면만 필터링해서 그립니다.
-   * @param {HighlightClip[]} highlights
-   * @param {string|null} position
-   */
-  function renderPositionHighlights(highlights, position) {
-    const mount = document.getElementById("positionHighlightsSlot");
-    if (!mount) return;
-    mount.innerHTML = "";
-
-    if (!position) {
-      mount.appendChild(
-        renderEmptyState("포지션을 선택해주세요", "위에서 포지션을 고르면 해당 포지션의 수비 하이라이트를 볼 수 있어요.")
-      );
-      return;
-    }
-
-    const clips = filterHighlightsByPosition(highlights, position);
-    const posInfo = POSITIONS.find((p) => p.key === position);
-    const title = `${position} ${posInfo ? posInfo.label : ""}`;
-
-    if (!clips.length) {
-      mount.appendChild(
-        renderEmptyState(`${title} 하이라이트가 아직 없어요`, "경기 영상을 올리면 AI가 포지션별로 분류해드려요.")
-      );
-      return;
-    }
-
-    mount.appendChild(renderClipGroup("defense", clips, title));
-  }
-
-  function renderPositionPicker() {
-    const picker = document.getElementById("positionPicker");
-    if (!picker) return;
-    picker.innerHTML = "";
-    POSITIONS.forEach((pos) => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "position-pill";
-      btn.dataset.position = pos.key;
-      btn.textContent = pos.key;
-      btn.setAttribute("aria-label", `${pos.key} ${pos.label}`);
-      picker.appendChild(btn);
-    });
-  }
-
   // ===================== 재생 =====================
   /** 장면 영상을 새 탭에서 재생 (영상 주소가 있는 장면만 재생 버튼이 보임) @param {HighlightClip} clip */
   function playClip(clip) {
     if (clip.clipUrl) window.open(clip.clipUrl, "_blank", "noopener");
-  }
-
-  // ===================== 탭 전환 (페이지 이동 없이 내용만 교체) =====================
-  function switchHighlightTab(tab) {
-    document.querySelectorAll("#highlightTabs .report-tab").forEach((el) => {
-      el.classList.toggle("report-tab--active", el.dataset.tab === tab);
-    });
-    const allPanel = document.getElementById("allHighlightsPanel");
-    const positionPanel = document.getElementById("positionHighlightsPanel");
-    if (allPanel) allPanel.hidden = tab !== "all";
-    if (positionPanel) positionPanel.hidden = tab !== "position";
-  }
-
-  function initTabs() {
-    const tabs = document.getElementById("highlightTabs");
-    if (!tabs) return;
-    tabs.addEventListener("click", (e) => {
-      const btn = e.target.closest(".report-tab");
-      if (!btn) return;
-      switchHighlightTab(btn.dataset.tab);
-    });
-  }
-
-  function initPositionPicker() {
-    const picker = document.getElementById("positionPicker");
-    if (!picker) return;
-    picker.addEventListener("click", (e) => {
-      const btn = e.target.closest(".position-pill");
-      if (!btn) return;
-      activePosition = btn.dataset.position;
-      picker.querySelectorAll(".position-pill").forEach((el) => {
-        el.classList.toggle("position-pill--active", el === btn);
-      });
-      renderPositionHighlights(highlights, activePosition);
-    });
   }
 
   // ===================== 서버에서 불러오기 =====================
@@ -258,15 +152,10 @@
           : ["하이라이트를 불러오지 못했어요", e.message];
     }
     renderAllHighlights(highlights);
-    renderPositionHighlights(highlights, activePosition);
   }
 
   function init() {
     renderAllHighlights(highlights); // 불러오는 동안은 빈 상태
-    renderPositionPicker();
-    renderPositionHighlights(highlights, activePosition);
-    initTabs();
-    initPositionPicker();
     loadLatestHighlights();
   }
 
@@ -274,7 +163,5 @@
   window.BROS.highlight = {
     init,
     renderAllHighlights,
-    renderPositionHighlights,
-    filterHighlightsByPosition,
   };
 })();

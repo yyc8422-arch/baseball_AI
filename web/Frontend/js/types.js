@@ -130,7 +130,6 @@
  * 경기 하이라이트 클립 1개. 백엔드 AI 분석 결과가 이 형태로 내려오면 그대로 렌더링에 쓸 수 있습니다.
  * @typedef {Object} HighlightClip
  * @property {string} id
- * @property {"P"|"C"|"1B"|"2B"|"3B"|"SS"|"LF"|"CF"|"RF"|null} position 포지션별 하이라이트 분류 기준. 타격/전체 주요 장면처럼 포지션이 없으면 null
  * @property {"batting"|"defense"|"highlight"} category 전체 하이라이트 화면에서의 그룹 (타격 장면/수비 플레이/주요 플레이)
  * @property {string} action 장면 종류 코드 (예: "ground_ball", "throw", "fly_out", "hit")
  * @property {string} actionLabel 화면에 보여줄 한글 라벨 (예: "2회 땅볼 처리")

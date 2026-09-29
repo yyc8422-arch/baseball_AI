@@ -106,13 +106,7 @@
           <div id="uploadedVideoSlot"></div>
         </div>
 
-        <!-- 전체 하이라이트 / 포지션별 하이라이트 탭 (기존 투수·타자 탭과 같은 .report-tabs 스타일 재사용) -->
-        <div class="report-tabs" id="highlightTabs">
-          <button type="button" class="report-tab report-tab--active" data-tab="all">전체 하이라이트</button>
-          <button type="button" class="report-tab" data-tab="position">포지션별 하이라이트</button>
-        </div>
-
-        <!-- 전체 하이라이트: 경기 정보 + 대표 영상 + 타격/수비/주요 장면 목록 -->
+        <!-- 하이라이트: 경기 정보 + 타격/수비/주요 장면 목록 -->
         <div id="allHighlightsPanel">
           <div class="page-card">
             <div class="game-meta">
@@ -143,15 +137,6 @@
               주요 장면
             </h2>
             <div id="allHighlightsSlot"></div>
-          </div>
-        </div>
-
-        <!-- 포지션별 하이라이트: 포지션 선택 후 해당 포지션 수비 장면만 표시 -->
-        <div id="positionHighlightsPanel" hidden>
-          <div class="page-card">
-            <h2 class="page-card__title">포지션 선택</h2>
-            <div class="position-picker" id="positionPicker"></div>
-            <div id="positionHighlightsSlot"></div>
           </div>
         </div>
 

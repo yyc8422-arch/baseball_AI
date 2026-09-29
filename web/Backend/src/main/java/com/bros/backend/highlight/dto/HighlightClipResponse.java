@@ -2,10 +2,9 @@ package com.bros.backend.highlight.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/** highlight.js 의 HighlightClip 타입과 동일한 필드명(id/position/category/action/actionLabel/timestamp/clipUrl/thumbnailUrl) */
+/** highlight.js 의 HighlightClip 타입과 동일한 필드명(id/category/action/actionLabel/timestamp/clipUrl/thumbnailUrl) */
 public class HighlightClipResponse {
     private String id;
-    private String position;
     private String category;
     private String action;
     private String actionLabel;
@@ -16,10 +15,9 @@ public class HighlightClipResponse {
     private String clipUrl;
     private String thumbnailUrl;
 
-    public HighlightClipResponse(String id, String position, String category, String action,
+    public HighlightClipResponse(String id, String category, String action,
                                   String actionLabel, String timestamp, String clipUrl, String thumbnailUrl) {
         this.id = id;
-        this.position = position;
         this.category = category;
         this.action = action;
         this.actionLabel = actionLabel;
@@ -30,10 +28,6 @@ public class HighlightClipResponse {
 
     public String getId() {
         return id;
-    }
-
-    public String getPosition() {
-        return position;
     }
 
     public String getCategory() {

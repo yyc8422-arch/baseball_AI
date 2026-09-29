@@ -186,7 +186,7 @@
       return;
     }
     clips.forEach((clip) => {
-      const meta = [CATEGORY_LABEL[clip.category] || clip.category, clip.position, clip.timestamp, clip.clipUrl ? "영상 있음" : "영상 없음"]
+      const meta = [CATEGORY_LABEL[clip.category] || clip.category, clip.timestamp, clip.clipUrl ? "영상 있음" : "영상 없음"]
         .filter(Boolean)
         .join(" · ");
       list.appendChild(
@@ -197,10 +197,6 @@
 
   function initClipForm() {
     const form = document.getElementById("clipForm");
-    // 수비 플레이는 포지션이 필수라 선택칸을 강조
-    form.category.addEventListener("change", () => {
-      form.position.required = form.category.value === "defense";
-    });
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (!selectedGame) return;
@@ -211,7 +207,6 @@
           method: "POST",
           json: {
             category: form.category.value,
-            position: form.position.value,
             actionLabel: form.actionLabel.value,
             timestamp: form.timestamp.value,
             clipUrl: form.clipUrl.value,
@@ -219,7 +214,7 @@
           fallbackError: "장면을 추가하지 못했어요.",
         });
         toast(result.message);
-        // 같은 분류/포지션으로 연달아 넣기 쉽도록 이름·시간·주소만 비움
+        // 같은 분류로 연달아 넣기 쉽도록 이름·시간·주소만 비움
         form.actionLabel.value = "";
         form.timestamp.value = "";
         form.clipUrl.value = "";

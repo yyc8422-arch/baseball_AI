@@ -117,7 +117,7 @@ UPDATE users SET role = 'ADMIN', status = 'APPROVED' WHERE username = '아이디
 | POST | `/api/admin/highlights/games` | 경기 등록 (`{gameDate: "2026-09-20", opponent, score}`) | **관리자** |
 | DELETE | `/api/admin/highlights/games/{id}` | 경기 삭제 (장면도 함께) | **관리자** |
 | GET | `/api/admin/highlights/games/{id}/clips` | 장면 목록 | **관리자** |
-| POST | `/api/admin/highlights/games/{id}/clips` | 장면 추가 (`{category, position, actionLabel, timestamp: "00:34:02", clipUrl}`) | **관리자** |
+| POST | `/api/admin/highlights/games/{id}/clips` | 장면 추가 (`{category, actionLabel, timestamp: "00:34:02", clipUrl}`) | **관리자** |
 | DELETE | `/api/admin/highlights/clips/{id}` | 장면 삭제 | **관리자** |
 
 **에러 응답은 모두 `{"detail": "메시지"}` 형태로 통일되어 있습니다.** 프론트(`js/api.js`, `js/analysis.js`)는 이 `detail` 을 그대로 화면에 보여줍니다.

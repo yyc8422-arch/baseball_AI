@@ -23,7 +23,7 @@ public class HighlightClip {
     @JoinColumn(name = "game_id", nullable = false)
     private Game game;
 
-    /** "P","C","1B"... 포지션별 하이라이트 분류 기준. 타격/전체 장면처럼 포지션이 없으면 null */
+    /** "P","C","1B"... 포지션별 하이라이트용 (추후 개발 예정, 지금은 항상 null) */
     @Column(length = 4)
     private String position;
 

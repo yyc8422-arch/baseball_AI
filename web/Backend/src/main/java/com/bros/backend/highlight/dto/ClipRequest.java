@@ -4,8 +4,6 @@ package com.bros.backend.highlight.dto;
 public class ClipRequest {
     /** "batting" | "defense" | "highlight" */
     private String category;
-    /** "P","C","1B"... 수비 장면은 필수, 나머지는 비워도 됨 */
-    private String position;
     /** 장면 이름 (예: "5회 솔로 홈런") */
     private String actionLabel;
     /** 경기 영상 속 시간 "HH:MM:SS" */
@@ -19,14 +17,6 @@ public class ClipRequest {
 
     public void setCategory(String category) {
         this.category = category;
-    }
-
-    public String getPosition() {
-        return position;
-    }
-
-    public void setPosition(String position) {
-        this.position = position;
     }
 
     public String getActionLabel() {

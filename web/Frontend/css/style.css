@@ -2102,32 +2102,6 @@ body.page-home {
   flex-shrink: 0;
 }
 
-/* 포지션별 하이라이트: 포지션 선택 */
-.position-picker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 18px;
-}
-
-.position-pill {
-  min-width: 52px;
-  height: 40px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--white);
-  color: var(--navy);
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.position-pill--active {
-  background: var(--cta-bg);
-  color: var(--cta-ink);
-  border-color: var(--cta-bg);
-}
-
 /* ===== 마이페이지 ===== */
 .profile-card {
   display: flex;

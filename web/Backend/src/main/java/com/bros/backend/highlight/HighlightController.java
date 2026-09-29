@@ -56,7 +56,7 @@ public class HighlightController {
     /** 하이라이트 페이지와 관리자 화면이 같은 모양으로 쓰는 장면 응답 */
     static HighlightClipResponse toResponse(HighlightClip c) {
         return new HighlightClipResponse(
-                String.valueOf(c.getId()), c.getPosition(), c.getCategory(), c.getAction(),
+                String.valueOf(c.getId()), c.getCategory(), c.getAction(),
                 c.getActionLabel(), c.getTimestampLabel(), c.getClipUrl(), c.getThumbnailUrl());
     }
 }
