@@ -43,6 +43,7 @@
  * @property {Object.<string, MetricValue>} [timing]
  * @property {Object.<string, MetricValue>} [speed]
  * @property {Object.<string, number>} [changes] 지표 key → 변화값 (없으면 화면에서 같은 단위일 때만 현재 - 이전)
+ *   → 핵심 지표의 "이전 대비" 와 AI 분석 요약의 "이전 분석에서는 ~로 측정되었습니다" 에 사용 (별도 비교 탭은 없음)
  *
  * @typedef {Object} AnalysisReport
  * @property {"pitching"|"batting"} analysisType
@@ -53,20 +54,22 @@
  *   타격 side: frontKneeAngle, backKneeAngle, trunkTilt, (elbowAngle)
  *   front/rear: shoulderLineTilt, pelvisLineTilt, landingFootAngle, (pelvisRotation, shoulderRotation — 검증 후에만)
  * @property {Object.<string, MetricValue>} movement 움직임 (%, 정규화)
- *   투구 side: headDisplacement, pelvisDisplacement (pct_body), strideLength, legLiftHeight (pct_height), (releasePointShift)
- *   타격 side: headDisplacement, pelvisDisplacement, centerOfMassShift (pct_body), strideLength (pct_height)
+ *   투구 side: strideLength, legLiftHeight (pct_height), headDisplacement, pelvisDisplacement, (releaseWristPosition) (pct_body)
+ *   타격 side: strideLength (pct_height), headDisplacement, pelvisDisplacement, centerOfMassShift, (wristPath) (pct_body)
  *   front/rear: lateralCenterShift (pct_shoulder)
  * @property {Object.<string, MetricValue>} timing 동작 타이밍 (초, 영상 시작 기준)
- *   투구: legLiftPeakSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec,
- *         armAccelerationStartSec, releaseSec, pelvisToShoulderSec, (landingToReleaseSec), totalMotionSec
- *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec, shoulderRotationStartSec,
- *         swingStartSec, followThroughStartSec, pelvisToShoulderSec, (landingToSwingSec), totalSwingSec
- * @property {Object.<string, MetricValue>} speed 동작 속도 (°/s, 현재 미지원 — 보내면 표시)
+ *   투구: legLiftPeakSec, strideStartSec, frontFootLandingSec, releaseSec, pelvisToShoulderSec, totalMotionSec,
+ *         (pelvisRotationStartSec, shoulderRotationStartSec, armAccelerationStartSec, landingToReleaseSec)
+ *   타격: loadStartSec, strideStartSec, frontFootLandingSec, pelvisRotationStartSec(로테이션 시작), swingStartSec,
+ *         followThroughStartSec, pelvisToShoulderSec, totalSwingSec, (shoulderRotationStartSec, landingToSwingSec)
+ *   (괄호) = 값이 올 때만 표시. 공이 없는 영상이라 공 기준의 빠른/늦은 타이밍은 다루지 않음
+ * @property {Object.<string, MetricValue>} speed 동작 속도 (°/s, 현재 미지원 — 보내면 타이밍 탭 아래에 표시)
  *   pelvisAngularVelocityMax, trunkAngularVelocityMax, (투구) elbowExtensionVelocityMax
  * @property {ReportPreviousAnalysis|null} previousAnalysis
- * @property {(string|{category?: "angles"|"movement"|"timing"|"speed", text: string})[]} [observations]
- *   측정 내용을 사실대로 적은 문장 (평가 금지, 예: "릴리스 시 팔꿈치 각도는 릴리스 시점에 측정되었습니다.").
- *   Spring 이 전달, 없으면 화면에서 측정 항목 수만 정리 (generateAnalysisSummary)
+ * @property {(string|{category?: "angles"|"movement"|"timing"|"speed", title?: string, text: string})[]} [observations]
+ *   AI 분석 요약 문장 (최대 3개 표시). 측정 결과 → 기본적인 야구 동작 관점의 의미 → 다음 촬영에서 확인해볼 부분 순서,
+ *   단정 금지 (정상/비정상, 좋은/나쁜 폼, 부상 위험 등). Spring 이 전달하면 그대로, 없으면 화면에서
+ *   generatePitchFeedback / generateBattingFeedback 으로 측정값에서 만듦 (generateAnalysisSummary)
  * @property {Object|null} [pose] AI-Server 의 프레임별 관절 좌표 (영상 위 관절 점 표시용)
  */
 

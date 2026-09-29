@@ -2565,9 +2565,9 @@ a.record-item:hover {
 }
 
 .player__rate-btn {
-  height: 32px;
-  min-width: 48px;
-  padding: 0 10px;
+  height: 28px;
+  min-width: 42px;
+  padding: 0 8px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--bg);
@@ -2658,26 +2658,20 @@ a.record-item:hover {
   font-size: 12px;
 }
 
-/* 카드 머리: 번호 + 제목 (투구/타격 모든 카드 동일) */
+/* 카드 머리: 제목 + 아래 메타정보 한 줄(① 영상 카드) 또는 오른쪽 탭(③ 상세 분석) */
 .report-card__head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  gap: 4px 12px;
 }
 
-.report-card__step {
-  flex-shrink: 0;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: var(--navy);
-  color: var(--neon);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 800;
+/* 제목 아래 작은 메타정보 한 줄: "측면 촬영 · 60FPS · 영상 1.8초 · 2026.09.28" */
+.report-meta {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
   font-variant-numeric: tabular-nums;
 }
 
@@ -2688,18 +2682,19 @@ a.record-item:hover {
   color: var(--navy);
 }
 
-.report-card__desc {
-  margin: 0 0 14px 40px;
-  font-size: 13px;
-  color: var(--muted);
-}
-
 .report-card__body {
   margin-top: 14px;
 }
 
-.report-card__desc + .report-card__body {
-  margin-top: 0;
+/* 리포트 카드는 일반 카드보다 여백을 줄여 세로 길이를 아낌 */
+.analysis-report .report-card {
+  padding: 20px 22px;
+  margin-bottom: 14px;
+}
+
+/* ① 영상은 화면 높이의 55% 까지만 (영상 + 타임라인 + 핵심 지표 + AI 요약이 1~1.5 화면 안에 들어오게) */
+.analysis-report .player__video {
+  max-height: 55vh;
 }
 
 .report-card__meta {
@@ -2972,90 +2967,113 @@ a.record-item:hover {
   color: var(--cta-ink);
 }
 
-/* ② 영상 정보: 작은 칩 한 줄 */
-.report-info {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
+/* ② 핵심 지표 4개: PC 한 줄, 폰 2×2. 일반 지표 카드보다 작고 간결하게, 왼쪽 라임 선으로만 강조 */
+.metric-grid.metric-grid--key {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.report-info__item {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  font-size: 12.5px;
+.metric-card.metric-card--key {
+  gap: 4px;
+  padding: 12px 14px;
+  box-shadow: inset 3px 0 0 var(--neon);
 }
 
-.report-info__item dt {
-  color: var(--muted);
-  font-weight: 600;
+.metric-card--key .metric-card__value {
+  font-size: 22px;
 }
 
-.report-info__item dd {
-  margin: 0;
-  color: var(--navy);
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-
-/* ② 영상 정보 안 측정 요약 (평가 없이 사실만) */
-.report-summary {
+/* ② AI 분석 요약: 피드백 2~3개 */
+.report-ai {
   margin-top: 16px;
-  padding: 14px 16px;
+}
+
+.report-ai__title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.report-ai__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+
+.report-ai__item {
+  padding: 10px 14px;
   border-radius: var(--radius-md);
   background: var(--bg);
   border: 1px solid var(--border);
 }
 
-.report-summary__list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
+.report-ai__head {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
 }
 
-.report-summary__item {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
+.report-ai__name {
   font-size: 13.5px;
-  line-height: 1.6;
+  font-weight: 800;
   color: var(--navy);
 }
 
-.report-summary__tag {
-  flex-shrink: 0;
+.report-ai__tag {
   padding: 1px 8px;
   border-radius: 999px;
-  background: var(--red-soft);
-  font-size: 11.5px;
-  font-weight: 800;
+  border: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
 }
 
-/* ① 영상 카드 제목 아래 영상 정보 한 줄 */
-.report-video-meta {
-  margin: 0 0 14px;
+.report-ai__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--navy);
 }
 
-.report-video-meta .report-info__item {
-  padding: 5px 10px;
-  font-size: 12px;
+/* 분석 결과 안내: 페이지 맨 아래 작은 한 줄, 누르면 펼쳐짐 */
+.report-notice {
+  margin: 2px 0 20px;
+  font-size: 12.5px;
+  color: var(--muted);
 }
 
-/* ② 핵심 지표: 6개를 크게 3칸씩 */
-.metric-grid.metric-grid--key {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+.report-notice__summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
 }
 
-.metric-grid--key .metric-card__value {
-  font-size: 28px;
+.report-notice__summary::-webkit-details-marker {
+  display: none;
+}
+
+.report-notice__summary:hover {
+  color: var(--navy);
+}
+
+.report-notice__icon {
+  font-size: 14px;
+}
+
+.report-notice__text {
+  margin: 8px 0 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  line-height: 1.6;
 }
 
 .metric-card__change {
@@ -3107,6 +3125,7 @@ a.record-item:hover {
 
 /* ③ 상세 측정: 영역 탭 (폭이 좁으면 가로 스크롤) */
 .report-tabs--detail {
+  margin: 0 0 0 auto;
   display: flex;
   max-width: 100%;
   width: fit-content;
@@ -3144,7 +3163,9 @@ a.record-item:hover {
 }
 
 .report-detail__desc {
-  margin-top: 0;
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  color: var(--muted);
 }
 
 /* ⑤ 동작 타이밍: 동작 시작 시점 (시간순, 세로 점선 타임라인) */
@@ -3207,26 +3228,6 @@ a.record-item:hover {
   margin-top: 22px;
 }
 
-/* ⑥ 동작 속도(추후 지원): 다른 카드보다 한 톤 가라앉게 */
-.report-card--muted .report-card__title {
-  color: var(--muted);
-}
-
-.report-card--muted .report-card__step {
-  background: var(--border);
-  color: var(--muted);
-}
-
-/* ⑦ 이전 분석 비교: 카테고리 묶음 머리줄 */
-.compare-table__group th {
-  padding-top: 16px;
-  text-align: left;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--green);
-  background: none;
-}
-
 /* ② 자세 및 움직임 수치: 관절 각도 / 움직임 두 묶음 (평가 태그 없이 값만) */
 .metric-group + .metric-group {
   margin-top: 24px;
@@ -3281,70 +3282,6 @@ a.record-item:hover {
   color: var(--muted);
 }
 
-/* ③ 이전 분석 비교 표 (변화는 부호만, 좋고 나쁨을 뜻하는 색은 쓰지 않음) */
-.compare-table-wrap {
-  overflow-x: auto;
-  margin-top: 12px;
-}
-
-.compare-table {
-  width: 100%;
-  min-width: 420px;
-  border-collapse: collapse;
-  font-size: 13.5px;
-  font-variant-numeric: tabular-nums;
-}
-
-.compare-table th,
-.compare-table td {
-  padding: 11px 12px;
-  border-bottom: 1px solid var(--border);
-  text-align: right;
-  color: var(--navy);
-}
-
-.compare-table thead th {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--muted);
-  background: var(--bg);
-}
-
-.compare-table th:first-child {
-  text-align: left;
-  font-weight: 700;
-}
-
-.compare-table__change {
-  font-weight: 800;
-}
-
-/* 분석 안내 (경고창이 아닌 차분한 정보 박스) */
-.report-notice {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  margin-bottom: 20px;
-  padding: 16px 18px;
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  border: 1px solid var(--border);
-}
-
-.report-notice__icon {
-  flex-shrink: 0;
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--muted);
-}
-
-.report-notice__text {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted);
-}
-
 /* 태블릿: 수치 3열 */
 @media (max-width: 1100px) {
   .metric-grid {
@@ -3354,10 +3291,6 @@ a.record-item:hover {
 
 /* 작은 태블릿: 수치 2열 */
 @media (max-width: 860px) {
-  .metric-grid.metric-grid--key {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -3367,21 +3300,27 @@ a.record-item:hover {
   }
 }
 
-/* 폰: 수치 2열(아주 좁으면 1열), 카드 설명은 번호 아래로 */
+/* 폰: 수치 2열(아주 좁으면 1열, 핵심 지표는 항상 2×2), 상세 탭은 제목 아래 한 줄 */
 @media (max-width: 640px) {
-
-  .report-card__desc {
-    margin-left: 0;
+  .metric-grid.metric-grid--key {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .metric-card__value {
     font-size: 21px;
   }
 
+  .analysis-report .report-card {
+    padding: 16px;
+  }
+
+  .report-tabs--detail {
+    margin: 6px 0 0;
+  }
 }
 
 @media (max-width: 380px) {
-  .metric-grid {
+  .metric-grid:not(.metric-grid--key) {
     grid-template-columns: 1fr;
   }
 }

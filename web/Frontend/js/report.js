@@ -1,43 +1,45 @@
 /**
  * BROS - 투구/타격 AI 분석 리포트 (pitching.html, batting.html 공통)
  *
- * 이 리포트는 자세를 평가(좋음/나쁨, 권장 범위, 개선 포인트)하지 않고,
- * 영상에서 추출한 신체 좌표·움직임을 "측정 → 기록 → 이전 영상과 비교" 하는 화면입니다.
- * 흐름: 프론트 → Spring Boot → Python AI(분석) → Spring Boot(결과 DB 저장 + 이전 분석 비교 추가) → 프론트.
+ * 목표: 숫자를 많이 보여주는 리포트가 아니라 "영상 확인 → 핵심 수치 → AI 가 쉽게 풀어 설명 → 필요한 사람만 상세 분석".
+ * 자세를 평가(좋음/나쁨, 정상/비정상, 부상 위험)하지 않고, 측정 사실 + 기본적인 야구 동작 관점의 의미 + 다음 촬영에서
+ * 확인해볼 부분만 전합니다. 비교 기준(이전 기록 등)이 없으면 "짧다/길다/크다/작다" 같은 표현도 쓰지 않습니다.
+ *
+ * 흐름: 프론트 → Spring Boot → Python AI(분석) → Spring Boot(결과 DB 저장 + 이전 분석 추가) → 프론트.
  * 프론트는 AI 서버와 직접 통신하지 않고, Spring API(GET /api/analysis/{id}) 결과를 그대로 그리기만 합니다 (Pose 계산 없음).
- * (예외: 이전 분석 비교의 "변화" 칸은 표시용으로 현재 - 이전 을 뺄셈만 함. API 가 changes 를 주면 그 값을 그대로 씀)
  *
  * 수치는 성격에 맞는 단위로만 표시합니다.
- *   관절 굽힘/기울기 → °   신체 이동 → 신장·신체·어깨너비 대비 % 또는 정규화 좌표 (실제 거리 보정 전이라 cm 금지)
- *   동작 시점/시간차 → s·ms   회전/관절 속도 → °/s
+ *   관절 및 자세 → °   움직임 → 신장·신체·어깨너비 대비 % 또는 정규화 값 (실제 거리 보정 전이라 cm 금지)
+ *   동작 타이밍 → s·ms   동작 속도 → °/s (신뢰할 수 있는 값이 올 때만)
  *
- * 화면 순서 (읽기 쉽게 3장으로):
- *   ① 분석 영상 (+ 영상 정보 한 줄, 영상 아래 동작 단계 타임라인)
- *   ② 핵심 지표 (자주 보는 지표 몇 개 + 이전 대비 변화) + 측정 요약
- *   ③ 상세 측정: 관절·자세 / 움직임 / 동작 타이밍 / (동작 속도: 값이 있을 때만) / 이전 비교 를 탭으로 하나씩
- *   + 분석 안내
- * 지표마다 ⓘ 를 누르면 무엇을 잰 값인지 한 줄 설명이 나옵니다 (METRIC_HELP).
+ * 화면 순서 (세로 길이를 줄이기 위해 카드 3장 + 작은 안내):
+ *   ① 제목 + 메타정보 한 줄 → 분석 영상(재생속도) → 동작 단계 타임라인
+ *   ② 핵심 지표 4개 → AI 분석 요약 (피드백 최대 3개)
+ *   ③ 상세 분석: [관절·자세] [움직임] [타이밍] 탭 (한 번에 하나만)
+ *   + 분석 결과 안내 (눌러서 펼침)
  *
  * 촬영 방향(side / front / rear)마다 측정할 수 있는 지표가 달라서, 지표마다 views 를 두고
  * 지금 영상의 촬영 방향에 맞는 지표만 보여줍니다 (기본 side). optional 지표는 값이 올 때만 보여줌.
  *
  * 연결 함수 (Spring API 결과 → 화면):
  *   renderPitchAnalysis(result) / renderBattingAnalysis(result)   result 형식은 js/types.js 의 AnalysisReport
- *   generateAnalysisSummary(result)  측정 요약 문장 목록 (Spring 이 준 observations, 없으면 측정한 항목 수만 사실대로)
- *   renderPreviousComparison(result) 이전 분석 비교 (같은 카테고리·같은 단위끼리)
+ *   generatePitchFeedback(result) / generateBattingFeedback(result)  측정값 → AI 피드백 문장 (최대 3개)
+ *   generateAnalysisSummary(result)  Spring 이 observations 를 주면 그대로(최대 3개), 없으면 위 피드백 함수 사용
+ *   renderDetailMetrics(result, [body])  상세 분석 탭 영역
  *   showFromRecord(type, record)  GET /api/analysis/{id} 응답(record)을 AnalysisReport 로 바꿔서 그림 (js/analysis.js 가 호출)
  *   setSourceVideo(url, fileName) 방금 업로드한 영상을 ① 에 연결 (js/capture.js 가 호출)
+ * 재생속도(0.25x~2.0x, video.playbackRate)는 투구/타격/하이라이트 공통 플레이어 js/video-player.js 에 있음.
  */
 (function () {
   // ===================== 표시 단위 =====================
   // API 는 지표마다 unit 을 보낼 수 있고(없으면 아래 지표 정의의 기본 단위), 나중에 신장/기준 물체로 실제 거리 보정이 되면
-  // unit 만 "cm" 로 보내면 그대로 표시됩니다. basis = 값 아래에 붙는 기준 설명.
+  // unit 만 "cm" 로 보내면 그대로 표시됩니다. basis = 값 앞/아래에 붙는 기준 설명.
   const UNITS = {
     deg: { suffix: "°", digits: 1 },
     pct_height: { suffix: "%", digits: 1, basis: "신장 대비" },
     pct_body: { suffix: "%", digits: 1, basis: "신체 기준" },
     pct_shoulder: { suffix: "%", digits: 1, basis: "어깨너비 대비" },
-    norm: { suffix: "", digits: 3, basis: "정규화 좌표 변화" },
+    norm: { suffix: "", digits: 3, basis: "정규화 값" },
     cm: { suffix: "cm", digits: 1, basis: "실측 보정" },
     sec: { suffix: "s", digits: 2 },
     ms: { suffix: "ms", digits: 0 },
@@ -50,12 +52,12 @@
   const FRONT_REAR = ["front", "rear"];
   const ALL_VIEWS = ["side", "front", "rear"];
 
-  /** 리포트 카테고리 (이전 분석 비교도 이 순서/묶음으로) */
+  /** 측정 카테고리 (observations 의 category 이름 표시용) */
   const CATEGORIES = [
-    { key: "angles", title: "관절 및 자세", en: "Angle" },
-    { key: "movement", title: "움직임", en: "Movement" },
-    { key: "timing", title: "동작 타이밍", en: "Timing" },
-    { key: "speed", title: "동작 속도", en: "Speed" },
+    { key: "angles", title: "관절·자세" },
+    { key: "movement", title: "움직임" },
+    { key: "timing", title: "타이밍" },
+    { key: "speed", title: "동작 속도" },
   ];
 
   // ===================== 용어 설명 (지표 카드의 ⓘ) : 무엇을 잰 값인지만, 좋다/나쁘다는 쓰지 않음 =====================
@@ -75,7 +77,8 @@
     pelvisDisplacement: "동작하는 동안 골반이 움직인 거리예요. 몸 크기 대비 비율(%)로 나타내요.",
     strideLength: "앞발을 내디딘 폭이에요. 키 대비 비율(%)로 나타내요.",
     legLiftHeight: "다리를 들어 올린 가장 높은 높이예요. 키 대비 비율(%)로 나타내요.",
-    releasePointShift: "공을 놓는 위치가 몸을 기준으로 움직인 정도예요.",
+    releaseWristPosition: "공을 놓는 순간 손목이 몸 중심에서 떨어진 위치예요. 몸 크기 대비 비율(%)로 나타내요.",
+    wristPath: "스윙하는 동안 손목이 지나간 경로의 길이예요. 몸 크기 대비 비율(%)로 나타내요.",
     lateralCenterShift: "몸의 중심이 좌우로 움직인 거리예요. 어깨너비 대비 비율(%)로 나타내요.",
     centerOfMassShift: "체중을 옮기면서 몸의 중심이 움직인 거리예요. 몸 크기 대비 비율(%)로 나타내요.",
     pelvisToShoulderSec: "골반이 돌기 시작한 뒤 어깨가 돌기 시작할 때까지 걸린 시간이에요.",
@@ -91,17 +94,17 @@
   // ===================== 투구/타격 설정 (서로 다른 건 이 값들뿐, 화면 코드는 공통) =====================
   // 지표 정의: key(API 필드), label, unit(기본 단위), views(측정 가능한 촬영 방향), optional(값이 올 때만 표시)
   //           timing 은 kind: event(시작 시점) / interval(동작 사이 시간차) / total(전체 동작 시간)
+  // 실제 구속·회전수·관절 힘/토크·부상 위험(투구), 배트 스피드·타구속도·발사각·비거리·컨택 위치·공 기준 타이밍(타격)은
+  // Pose 영상 분석만으로 정확히 잴 수 없어 지표로 두지 않음 (Ball/Bat Detection 등 추가 모델이 생기면 확장)
   const REPORT_CONFIG = {
     pitching: {
       noun: "투구",
-      titles: { phases: "투구 동작 단계", compare: "이전 투구 분석 비교" },
-      // ② 핵심 지표: [카테고리, 지표 key]. 값이 없는 건 빼고, 모자라면 측정된 다른 지표로 채움
+      titles: { report: "투구폼 AI 분석 리포트", phases: "투구 동작 단계" },
+      // ② 핵심 지표 4개: [카테고리, 지표 key]. 값이 없는 건 빼고, 모자라면 측정된 다른 지표로 채움
       keyMetrics: [
         ["angles", "elbowAngleAtRelease"],
-        ["angles", "frontKneeAngle"],
         ["angles", "trunkForwardTilt"],
         ["movement", "strideLength"],
-        ["timing", "pelvisToShoulderSec"],
         ["timing", "totalMotionSec"],
       ],
       // key 는 API 의 phases[].key 와 같은 영어 값(그대로 유지), 화면에는 야구 용어를 한글 발음으로 표기한 label
@@ -127,43 +130,41 @@
         { key: "shoulderRotation", label: "어깨 회전량", unit: "deg", views: FRONT_REAR, optional: true },
       ],
       movement: [
+        { key: "strideLength", label: "스트라이드 길이", unit: "pct_height", views: SIDE },
         { key: "headDisplacement", label: "머리 이동량", unit: "pct_body", views: SIDE },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "pct_body", views: SIDE },
-        { key: "strideLength", label: "스트라이드 길이", unit: "pct_height", views: SIDE },
         { key: "legLiftHeight", label: "레그 리프트 높이", unit: "pct_height", views: SIDE },
-        { key: "releasePointShift", label: "릴리스 위치 변화", unit: "pct_body", views: SIDE, optional: true },
+        { key: "releaseWristPosition", label: "릴리스 시 손목 상대 위치", unit: "pct_body", views: SIDE, optional: true },
         { key: "lateralCenterShift", label: "좌우 중심 이동", unit: "pct_shoulder", views: FRONT_REAR },
       ],
       timing: [
         { key: "legLiftPeakSec", label: "레그 리프트 최고점", kind: "event" },
         { key: "strideStartSec", label: "스트라이드 시작", kind: "event" },
         { key: "frontFootLandingSec", label: "앞발 착지", kind: "event" },
-        { key: "pelvisRotationStartSec", label: "골반 회전 시작", kind: "event" },
-        { key: "shoulderRotationStartSec", label: "어깨 회전 시작", kind: "event" },
-        { key: "armAccelerationStartSec", label: "팔 가속 시작", kind: "event" },
+        { key: "pelvisRotationStartSec", label: "골반 회전 시작", kind: "event", optional: true },
+        { key: "shoulderRotationStartSec", label: "어깨 회전 시작", kind: "event", optional: true },
+        { key: "armAccelerationStartSec", label: "팔 가속 시작", kind: "event", optional: true },
         { key: "releaseSec", label: "릴리스", kind: "event" },
         { key: "pelvisToShoulderSec", label: "골반 회전 → 어깨 회전", kind: "interval" },
         { key: "landingToReleaseSec", label: "앞발 착지 → 릴리스", kind: "interval", optional: true },
         { key: "totalMotionSec", label: "전체 투구 동작 시간", kind: "total" },
       ],
-      // 현재 모델에서 신뢰할 수 있는 값이 없어 "추후 지원" 으로 표시. API 가 값을 보내면 자동으로 카드가 보임
+      // 현재 모델에서 신뢰할 수 있는 값이 없어 기본으로는 숨김. API 가 값을 보내면 타이밍 탭 아래에 표시
       speed: [
         { key: "pelvisAngularVelocityMax", label: "골반 회전 최대 각속도", unit: "deg_per_sec" },
         { key: "trunkAngularVelocityMax", label: "몸통 회전 최대 각속도", unit: "deg_per_sec" },
         { key: "elbowExtensionVelocityMax", label: "팔꿈치 신전 최대 각속도", unit: "deg_per_sec" },
       ],
       notice:
-        "본 리포트는 영상에서 추출한 신체 좌표와 동작 데이터를 수치화한 결과입니다. 특정 수치만으로 투구폼의 우수성이나 부상 위험을 판단하지 않습니다.",
+        "본 리포트는 영상에서 추출한 신체 좌표와 동작 데이터를 수치화하여 기본적인 야구 동작 관점에서 해석한 결과입니다. 특정 수치만으로 투구폼의 우수성이나 부상 위험을 판단하지 않습니다.",
     },
     batting: {
       noun: "타격",
-      titles: { phases: "타격 동작 단계", compare: "이전 타격 분석 비교" },
+      titles: { report: "타격폼 AI 분석 리포트", phases: "타격 동작 단계" },
       keyMetrics: [
         ["angles", "frontKneeAngle"],
         ["angles", "trunkTilt"],
         ["movement", "strideLength"],
-        ["movement", "headDisplacement"],
-        ["timing", "pelvisToShoulderSec"],
         ["timing", "totalSwingSec"],
       ],
       // CONTACT 는 공/배트 인식 모델이 생기면 API 가 phases 에 넣어 보내면 자동으로 표시됨 (EXTRA_PHASE_LABELS)
@@ -187,18 +188,20 @@
         { key: "shoulderRotation", label: "어깨 회전량", unit: "deg", views: FRONT_REAR, optional: true },
       ],
       movement: [
+        { key: "strideLength", label: "스트라이드 길이", unit: "pct_height", views: SIDE },
         { key: "headDisplacement", label: "머리 이동량", unit: "pct_body", views: SIDE },
         { key: "pelvisDisplacement", label: "골반 이동량", unit: "pct_body", views: SIDE },
-        { key: "strideLength", label: "스트라이드 길이", unit: "pct_height", views: SIDE },
-        { key: "centerOfMassShift", label: "체중 이동에 따른 신체 중심 이동", unit: "pct_body", views: SIDE },
+        { key: "wristPath", label: "손목 이동 경로", unit: "pct_body", views: SIDE, optional: true },
+        { key: "centerOfMassShift", label: "신체 중심 이동", unit: "pct_body", views: SIDE },
         { key: "lateralCenterShift", label: "좌우 중심 이동", unit: "pct_shoulder", views: FRONT_REAR },
       ],
+      // 공이 없는 영상 분석이라 "빠른/늦은 스윙" 같은 공 기준 타이밍은 판단하지 않고, 동작 시점만 기록
       timing: [
         { key: "loadStartSec", label: "로드 시작", kind: "event" },
         { key: "strideStartSec", label: "스트라이드 시작", kind: "event" },
         { key: "frontFootLandingSec", label: "앞발 착지", kind: "event" },
-        { key: "pelvisRotationStartSec", label: "골반 회전 시작", kind: "event" },
-        { key: "shoulderRotationStartSec", label: "어깨 회전 시작", kind: "event" },
+        { key: "pelvisRotationStartSec", label: "로테이션 시작", kind: "event" },
+        { key: "shoulderRotationStartSec", label: "어깨 회전 시작", kind: "event", optional: true },
         { key: "swingStartSec", label: "스윙 시작", kind: "event" },
         { key: "followThroughStartSec", label: "팔로 스루 진입", kind: "event" },
         { key: "pelvisToShoulderSec", label: "골반 회전 → 어깨 회전", kind: "interval" },
@@ -210,7 +213,7 @@
         { key: "trunkAngularVelocityMax", label: "몸통 회전 최대 각속도", unit: "deg_per_sec" },
       ],
       notice:
-        "본 리포트는 영상에서 추출한 신체 좌표와 동작 데이터를 수치화한 결과입니다. 특정 수치만으로 타격폼의 우수성이나 경기 수행 능력을 판단하지 않습니다.",
+        "본 리포트는 영상에서 추출한 신체 좌표와 동작 데이터를 수치화하여 기본적인 야구 동작 관점에서 해석한 결과입니다. 특정 수치만으로 타격폼의 우수성이나 경기 수행 능력을 판단하지 않습니다.",
     },
   };
 
@@ -244,14 +247,11 @@
         backKneeAngle: { value: 152.1, at: "STRIDE" },
         trunkForwardTilt: { value: 16.7, at: "RELEASE" },
       },
-      movement: { headDisplacement: 3.8, pelvisDisplacement: 11.2, strideLength: 75, legLiftHeight: 48.5 },
+      movement: { strideLength: 74, headDisplacement: 3.8, pelvisDisplacement: 11.2, legLiftHeight: 48.5 },
       timing: {
         legLiftPeakSec: 0.54,
         strideStartSec: 0.66,
         frontFootLandingSec: 0.91,
-        pelvisRotationStartSec: 0.88,
-        shoulderRotationStartSec: 0.97,
-        armAccelerationStartSec: 1.0,
         releaseSec: 1.08,
         pelvisToShoulderSec: 0.09,
         totalMotionSec: 1.38,
@@ -281,13 +281,12 @@
         backKneeAngle: { value: 126.9, at: "LOAD" },
         trunkTilt: { value: 21.6, at: "SWING" },
       },
-      movement: { headDisplacement: 2.9, pelvisDisplacement: 8.4, strideLength: 46, centerOfMassShift: 12.5 },
+      movement: { strideLength: 46, headDisplacement: 2.9, pelvisDisplacement: 8.4, centerOfMassShift: 12.5 },
       timing: {
         loadStartSec: 0.48,
         strideStartSec: 0.86,
         frontFootLandingSec: 1.1,
         pelvisRotationStartSec: 1.12,
-        shoulderRotationStartSec: 1.2,
         swingStartSec: 1.3,
         followThroughStartSec: 1.56,
         pelvisToShoulderSec: 0.08,
@@ -318,7 +317,7 @@
    * @returns {{value: number, unit: string, at: string|null}|null}
    */
   function metricOf(group, def) {
-    const raw = group ? group[def.key] : undefined;
+    const raw = group && def ? group[def.key] : undefined;
     if (raw === null || raw === undefined) return null;
     if (typeof raw === "number") return { value: raw, unit: def.unit, at: null };
     if (typeof raw === "object" && typeof raw.value === "number") {
@@ -330,6 +329,13 @@
   function formatNumber(value, unit) {
     const u = UNITS[unit] || UNITS.deg;
     return `${value.toFixed(u.digits)}${u.suffix}`;
+  }
+
+  /** 문장 안에 넣을 값: 비율이면 기준까지 ("신장 대비 74.0%"), 아니면 값만 ("96.4°") */
+  function formatWithBasis(metric) {
+    const u = UNITS[metric.unit];
+    const value = formatNumber(metric.value, metric.unit);
+    return u && u.basis ? `${u.basis} ${value}` : value;
   }
 
   function formatChange(change, unit) {
@@ -351,6 +357,10 @@
     return CAMERA_VIEW_LABEL[view] ? view : DEFAULT_VIEW;
   }
 
+  function configOf(result) {
+    return REPORT_CONFIG[result && result.analysisType] || REPORT_CONFIG[state.type];
+  }
+
   /** 이 촬영 방향에서 보여줄 지표 (optional 은 값이 있을 때만, 다른 방향 지표도 API 가 값을 보내면 표시) */
   function visibleDefs(defs, values, view) {
     return defs.filter((def) => {
@@ -358,6 +368,13 @@
       if (def.optional) return hasValue;
       return def.views.includes(view) || hasValue;
     });
+  }
+
+  /** 이전 분석과 같은 촬영 방향이면 previousAnalysis, 아니면 null (방향이 다르면 수치를 비교하지 않음) */
+  function comparablePrevious(result) {
+    const prev = result && result.previousAnalysis;
+    if (!prev || (prev.cameraView && prev.cameraView !== cameraViewOf(result))) return null;
+    return prev;
   }
 
   // ===================== 상태 =====================
@@ -375,19 +392,18 @@
     videoSection: null, // ① 카드. 다시 그릴 때도 이 카드는 그대로 둬서 재생이 끊기지 않게 함
     videoSectionUrl: null,
     lastRecordKey: null, // 같은 영상/같은 상태면 다시 그리지 않음
-    detailTab: "angles", // ③ 상세 측정에서 보고 있던 탭 (다시 그려도 유지)
+    detailTab: "angles", // ③ 상세 분석에서 보고 있던 탭 (다시 그려도 유지)
   };
 
   // ===================== 카드 틀 =====================
-  function card(step, title, description) {
-    const section = el("section", "page-card report-card");
+  function card(title, className) {
+    const section = el("section", `page-card report-card${className ? ` ${className}` : ""}`);
     const head = el("div", "report-card__head");
-    head.append(el("span", "report-card__step", String(step).padStart(2, "0")), el("h2", "report-card__title", title));
+    head.appendChild(el("h2", "report-card__title", title));
     section.appendChild(head);
-    if (description) section.appendChild(el("p", "report-card__desc", description));
     const body = el("div", "report-card__body");
     section.appendChild(body);
-    return { section, body };
+    return { section, head, body };
   }
 
   function pendingNote(text) {
@@ -425,7 +441,7 @@
     }
     const player = ensurePlayer();
     if (!player) return;
-    player.setSource(url); // 새 영상이면 재생속도는 1.0x 로 다시 시작
+    player.setSource(url); // 새 영상이면 재생속도는 1.0x 로 다시 시작 (js/video-player.js)
     body.appendChild(player.element);
 
     // 관절 점 표시 켜기/끄기 + 색 안내
@@ -450,6 +466,25 @@
     body.appendChild(joints);
     state.overlay.setVisible(state.showJoints);
     state.overlay.setPose(state.result && state.result.pose ? state.result.pose : null);
+  }
+
+  // ===================== ① 제목 아래 메타정보 한 줄 =====================
+  const STATUS_LABEL = { uploading: "업로드 중", queued: "분석 대기", processing: "분석 중", done: "분석 완료", failed: "분석 실패" };
+
+  /** "측면 촬영 · 60FPS · 영상 1.8초 · 2026.09.28" (분석이 끝나기 전에는 앞에 상태). 다시 그릴 때마다 교체 */
+  function renderVideoMeta(section, result) {
+    section.querySelectorAll(".report-meta").forEach((node) => node.remove());
+    const info = result.videoInfo || {};
+    const parts = [
+      info.status !== "done" ? STATUS_LABEL[info.status] || info.status : null,
+      `${CAMERA_VIEW_LABEL[cameraViewOf(result)]} 촬영`,
+      info.fps != null ? `${Number(info.fps).toFixed(0)}FPS` : null,
+      info.durationSec != null ? `영상 ${Number(info.durationSec).toFixed(1)}초` : null,
+      info.analyzedAt || null,
+    ].filter(Boolean);
+    const meta = el("p", "report-meta", parts.join(" · "));
+    if (info.fileName) meta.title = info.fileName;
+    section.querySelector(".report-card__head").appendChild(meta);
   }
 
   // ===================== ① 안의 동작 단계 구간 바 (영상 타임라인과 연결) =====================
@@ -610,133 +645,7 @@
     }
   }
 
-  // ===================== ① 안의 영상 정보 한 줄 =====================
-  const STATUS_LABEL = { uploading: "업로드 중", queued: "분석 대기", processing: "분석 중", done: "분석 완료", failed: "분석 실패" };
-
-  /** 영상 카드 제목 아래 작은 칩 한 줄: 분석 상태(끝나기 전만)·촬영 방향·길이·FPS·분석일. 다시 그릴 때마다 교체 */
-  function renderVideoMeta(section, result) {
-    section.querySelectorAll(".report-video-meta").forEach((node) => node.remove());
-    const info = result.videoInfo || {};
-    const items = [
-      info.status !== "done" ? ["분석 상태", STATUS_LABEL[info.status] || info.status] : null,
-      ["촬영 방향", CAMERA_VIEW_LABEL[cameraViewOf(result)]],
-      ["영상 길이", info.durationSec != null ? `${Number(info.durationSec).toFixed(1)}s` : null],
-      ["FPS", info.fps != null ? `${Number(info.fps).toFixed(0)}` : null],
-      ["분석일", info.analyzedAt || null],
-    ].filter((item) => item && item[1]);
-    const list = el("dl", "report-info report-video-meta");
-    items.forEach(([label, value]) => {
-      const item = el("div", "report-info__item");
-      item.append(el("dt", null, label), el("dd", null, value));
-      list.appendChild(item);
-    });
-    if (info.fileName) list.title = info.fileName;
-    section.insertBefore(list, section.querySelector(".report-card__body"));
-  }
-
-  // ===================== ② 핵심 지표 + 측정 요약 =====================
-  /** 핵심 지표로 보여줄 [카테고리, 지표 정의] 목록 (값이 있는 것만, 6개가 안 되면 측정된 다른 지표로 채움) */
-  function keyMetricDefs(config, result, view) {
-    const picked = [];
-    const add = (cat, def) => {
-      if (picked.length >= 6 || picked.some((p) => p.def === def)) return;
-      if (metricOf(result[cat], def)) picked.push({ cat, def });
-    };
-    config.keyMetrics.forEach(([cat, key]) => add(cat, config[cat].find((d) => d.key === key)));
-    ["angles", "movement", "timing"].forEach((cat) => {
-      visibleDefs(config[cat], result[cat], view)
-        .filter((def) => def.kind !== "event") // 시작 시점(몇 초에 시작했는지)은 핵심 지표로 보기 어려워 제외
-        .forEach((def) => add(cat, def));
-    });
-    return picked;
-  }
-
-  /** 이전 분석과 같은 촬영 방향이면 previousAnalysis, 아니면 null */
-  function comparablePrevious(result) {
-    const prev = result.previousAnalysis;
-    if (!prev || (prev.cameraView && prev.cameraView !== cameraViewOf(result))) return null;
-    return prev;
-  }
-
-  /** 변화 표시 문구: API 가 changes[key] 를 주면 그대로, 없으면 같은 단위일 때만 표시용 뺄셈 */
-  function changeText(prev, def, before, now) {
-    const apiChange = prev.changes && typeof prev.changes[def.key] === "number" ? prev.changes[def.key] : null;
-    if (apiChange != null && now) return formatChange(apiChange, now.unit);
-    if (before && now && before.unit === now.unit) return formatChange(now.value - before.value, now.unit);
-    if (before && now) return "단위 다름";
-    return null;
-  }
-
-  function renderKeyCard(body, config, result, view) {
-    const picked = keyMetricDefs(config, result, view);
-    const prev = comparablePrevious(result);
-    if (picked.length) {
-      const grid = el("div", "metric-grid metric-grid--key");
-      picked.forEach(({ cat, def }) => {
-        const now = metricOf(result[cat], def);
-        const card = metricCard(config, def, now);
-        const change = prev ? changeText(prev, def, metricOf(prev[cat], def), now) : null;
-        if (change && change !== "단위 다름") card.appendChild(el("span", "metric-card__change", `이전 대비 ${change}`));
-        grid.appendChild(card);
-      });
-      body.appendChild(grid);
-    } else {
-      body.appendChild(pendingNote());
-    }
-
-    // 측정 요약: 평가 없이 사실만
-    const summary = generateAnalysisSummary(result);
-    const box = el("div", "report-summary");
-    box.appendChild(el("h3", "metric-group__title", "측정 요약"));
-    const ul = el("ul", "report-summary__list");
-    summary.forEach((item) => {
-      const li = el("li", "report-summary__item");
-      if (item.category) li.appendChild(el("span", "report-summary__tag", item.category));
-      li.appendChild(el("span", null, item.text));
-      ul.appendChild(li);
-    });
-    box.appendChild(ul);
-    body.appendChild(box);
-  }
-
-  /**
-   * 측정 요약 문장 목록. Spring API 가 observations 배열을 주면 그대로 쓰고,
-   * 없으면 "무엇을 몇 개 측정했는지" 만 사실대로 만듦 (좋다/나쁘다 같은 평가 문장은 만들지 않음).
-   * observations 항목: 문자열 또는 { category?: "angles"|"movement"|"timing"|"speed", text }
-   * @param {AnalysisReport} result
-   * @returns {{category: string|null, text: string}[]}
-   */
-  function generateAnalysisSummary(result) {
-    const categoryTitle = (key) => (CATEGORIES.find((c) => c.key === key) || {}).title || null;
-    const observations = Array.isArray(result.observations) ? result.observations : [];
-    const given = observations
-      .map((o) => (typeof o === "string" ? { category: null, text: o } : o && typeof o.text === "string" ? { category: categoryTitle(o.category), text: o.text } : null))
-      .filter(Boolean);
-    if (given.length) return given;
-
-    const config = REPORT_CONFIG[result.analysisType] || REPORT_CONFIG[state.type];
-    const view = CAMERA_VIEW_LABEL[cameraViewOf(result)];
-    const counts = CATEGORIES.slice(0, 3)
-      .map((cat) => ({ cat, n: config[cat.key].filter((def) => metricOf(result[cat.key], def)).length }))
-      .filter((x) => x.n > 0);
-    if (!counts.length) {
-      return [{ category: null, text: "아직 측정된 지표가 없어요. AI 측정 기능이 연결되면 이곳에 측정 내용이 정리됩니다." }];
-    }
-    const lines = [
-      { category: null, text: `${view} 촬영 영상에서 ${counts.map((x) => `${x.cat.title} ${x.n}개`).join(" · ")} 지표를 측정했어요.` },
-    ];
-    const prev = result.previousAnalysis;
-    if (prev && (!prev.cameraView || prev.cameraView === cameraViewOf(result))) {
-      const shared = CATEGORIES.reduce(
-        (sum, cat) => sum + config[cat.key].filter((def) => metricOf(prev[cat.key], def) && metricOf(result[cat.key], def)).length,
-        0
-      );
-      if (shared) lines.push({ category: null, text: `${prev.analyzedAt || "이전"} 분석과 같은 지표 ${shared}개를 아래 상세 측정의 이전 비교 탭에서 나란히 볼 수 있어요.` });
-    }
-    return lines;
-  }
-
-  // ===================== 지표 카드 (핵심 지표 / 관절·자세 / 움직임 / 동작 속도 공통) =====================
+  // ===================== 지표 카드 (핵심 지표 / 상세 분석 공통) =====================
   let helpSeq = 0;
   function metricCard(config, def, metric) {
     const item = el("div", "metric-card");
@@ -780,8 +689,243 @@
     if (!filled) body.appendChild(pendingNote());
   }
 
-  // ===================== 상세 측정 · 동작 타이밍: 시작 시점 순서 + 시간차/전체 시간 =====================
-  function renderTimingCard(body, config, result, view) {
+  // ===================== ② 핵심 지표 4개 =====================
+  /** 핵심 지표로 보여줄 [카테고리, 지표 정의] 목록 (값이 있는 것만, 4개가 안 되면 측정된 다른 지표로 채움) */
+  function keyMetricDefs(config, result, view) {
+    const picked = [];
+    const add = (cat, def) => {
+      if (!def || picked.length >= 4 || picked.some((p) => p.def === def)) return;
+      if (metricOf(result[cat], def)) picked.push({ cat, def });
+    };
+    config.keyMetrics.forEach(([cat, key]) => add(cat, config[cat].find((d) => d.key === key)));
+    ["angles", "movement", "timing"].forEach((cat) => {
+      visibleDefs(config[cat], result[cat], view)
+        .filter((def) => def.kind !== "event") // 시작 시점(몇 초에 시작했는지)은 핵심 지표로 보기 어려워 제외
+        .forEach((def) => add(cat, def));
+    });
+    return picked;
+  }
+
+  /** 변화 표시 문구: API 가 changes[key] 를 주면 그대로, 없으면 같은 단위일 때만 표시용 뺄셈 */
+  function changeText(prev, def, before, now) {
+    const apiChange = prev.changes && typeof prev.changes[def.key] === "number" ? prev.changes[def.key] : null;
+    if (apiChange != null && now) return formatChange(apiChange, now.unit);
+    if (before && now && before.unit === now.unit) return formatChange(now.value - before.value, now.unit);
+    return null;
+  }
+
+  function renderKeyMetrics(body, config, result, view) {
+    const picked = keyMetricDefs(config, result, view);
+    if (!picked.length) {
+      body.appendChild(pendingNote());
+      return;
+    }
+    const prev = comparablePrevious(result);
+    const grid = el("div", "metric-grid metric-grid--key");
+    picked.forEach(({ cat, def }) => {
+      const now = metricOf(result[cat], def);
+      const item = metricCard(config, def, now);
+      item.classList.add("metric-card--key");
+      // 이전 분석(같은 촬영 방향)에 같은 지표가 있을 때만 "이전 대비" 를 사실대로 (좋고 나쁨 색은 쓰지 않음)
+      const change = prev ? changeText(prev, def, metricOf(prev[cat], def), now) : null;
+      if (change) item.appendChild(el("span", "metric-card__change", `이전 대비 ${change}`));
+      grid.appendChild(item);
+    });
+    body.appendChild(grid);
+  }
+
+  // ===================== ② AI 분석 요약 (피드백 최대 3개) =====================
+  // 피드백 한 개 = 측정 결과 → 기본적인 야구 동작 관점의 의미 → 다음 촬영에서 확인해볼 부분.
+  // 단정하지 않는 표현만 사용 ("~로 측정되었습니다", "~에 영향을 줄 수 있습니다", "~를 확인해볼 수 있습니다").
+  // 비교 기준이 없으면 짧다/길다/크다/작다를 쓰지 않고, 이전 분석(같은 촬영 방향)이 있을 때만 이전 값을 함께 적음.
+  const MAX_FEEDBACK = 3;
+
+  /** 피드백 문장 재료: 지표 값/이전 값/측정 시점 */
+  function feedbackContext(result) {
+    const config = configOf(result);
+    const prev = comparablePrevious(result);
+    const find = (cat, key) => config[cat].find((d) => d.key === key);
+    return {
+      /** 지금 값 ("신장 대비 74.0%" / "96.4°"), 없으면 null */
+      value(cat, key) {
+        const m = metricOf(result[cat], find(cat, key));
+        return m ? formatWithBasis(m) : null;
+      },
+      /** "릴리스 시점의 " 처럼 측정 시점 머리말 (없으면 "") */
+      at(cat, key) {
+        const m = metricOf(result[cat], find(cat, key));
+        return m && m.at ? `${phaseLabel(config, m.at)} 시점의 ` : "";
+      },
+      /** 이전 분석에 같은 지표가 있으면 " 이전 분석(2026.09.20)에서는 72.0%로 측정되었습니다." */
+      previous(cat, key) {
+        const before = prev ? metricOf(prev[cat], find(cat, key)) : null;
+        if (!before) return "";
+        return ` 이전 분석(${prev.analyzedAt || "직전 기록"})에서는 ${formatWithBasis(before)}로 측정되었습니다.`;
+      },
+    };
+  }
+
+  /** 우선순위대로 만들어 보고 값이 있는 것만 최대 3개 */
+  function buildFeedback(result, builders) {
+    const ctx = feedbackContext(result);
+    return builders
+      .map((build) => build(ctx))
+      .filter(Boolean)
+      .slice(0, MAX_FEEDBACK);
+  }
+
+  const PITCH_FEEDBACK = [
+    (c) => {
+      const v = c.value("movement", "strideLength");
+      return v && {
+        category: "movement",
+        title: "스트라이드",
+        text: `이번 투구의 스트라이드 길이는 ${v}로 측정되었습니다.${c.previous("movement", "strideLength")} 스트라이드 크기는 하체 이동과 이후 몸통 회전 동작에 영향을 줄 수 있습니다. 다음 투구에서 보폭을 조금 다르게 했을 때 상체 움직임과 릴리스 위치가 어떻게 달라지는지 확인해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("angles", "elbowAngleAtRelease");
+      return v && {
+        category: "angles",
+        title: "릴리스 팔꿈치",
+        text: `릴리스 시 팔꿈치 각도는 ${v}로 측정되었습니다.${c.previous("angles", "elbowAngleAtRelease")} 이 각도는 투구 팔의 위치와 상체 자세에 따라 함께 달라질 수 있습니다. 다음 촬영에서 상체 전방 기울기와 함께 비교하면 팔 위치가 어떻게 바뀌는지 확인해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("timing", "pelvisToShoulderSec");
+      return v && {
+        category: "timing",
+        title: "회전 순서",
+        text: `골반 회전이 시작된 뒤 ${v} 후에 어깨 회전이 시작되는 움직임이 확인되었습니다.${c.previous("timing", "pelvisToShoulderSec")} 하체와 상체 회전 사이의 시간차는 몸통 동작이 이어지는 흐름을 확인할 때 참고할 수 있는 지표입니다. 다음 투구에서 앞발 착지 시점과 함께 이 시간차가 어떻게 달라지는지 비교해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("angles", "trunkForwardTilt");
+      return v && {
+        category: "angles",
+        title: "상체 기울기",
+        text: `${c.at("angles", "trunkForwardTilt")}상체 전방 기울기는 ${v}로 측정되었습니다.${c.previous("angles", "trunkForwardTilt")} 상체 기울기는 릴리스 위치와 팔 높이에 영향을 줄 수 있습니다. 다음 촬영에서 스트라이드 길이를 달리했을 때 상체 기울기가 함께 달라지는지 확인해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("movement", "headDisplacement");
+      return v && {
+        category: "movement",
+        title: "머리 움직임",
+        text: `투구 동작 동안 머리 이동량은 ${v}로 측정되었습니다.${c.previous("movement", "headDisplacement")} 머리 위치 변화는 시선과 신체 중심의 이동과 함께 확인할 수 있는 지표입니다. 다음 투구에서 머리 위치를 조금 더 유지했을 때 릴리스 위치가 어떻게 달라지는지 확인해볼 수 있습니다.`,
+      };
+    },
+  ];
+
+  const BATTING_FEEDBACK = [
+    (c) => {
+      const v = c.value("movement", "headDisplacement");
+      return v && {
+        category: "movement",
+        title: "머리 움직임",
+        text: `이번 스윙에서 머리 이동량은 ${v}로 측정되었습니다.${c.previous("movement", "headDisplacement")} 머리 이동은 스윙 중 시선과 신체 중심의 변화와 함께 확인할 수 있는 지표입니다. 다음 스윙에서 머리 위치를 조금 더 유지했을 때 전체 움직임이 어떻게 달라지는지 확인해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("movement", "strideLength");
+      return v && {
+        category: "movement",
+        title: "스트라이드",
+        text: `이번 스윙의 스트라이드 길이는 ${v}로 측정되었습니다.${c.previous("movement", "strideLength")} 스트라이드 크기는 체중 이동과 이후 몸통 회전에 영향을 줄 수 있습니다. 다음 스윙에서 보폭을 조금 다르게 했을 때 앞무릎 각도와 상체 기울기가 어떻게 달라지는지 비교해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const landing = c.value("timing", "frontFootLandingSec");
+      const swing = c.value("timing", "swingStartSec");
+      return landing && swing && {
+        category: "timing",
+        title: "착지와 스윙 시작",
+        text: `앞발 착지는 ${landing}, 스윙 시작은 ${swing} 시점으로 측정되었습니다. 앞발 착지 시점은 이후 몸통 회전과 스윙 동작의 연결을 확인할 때 참고할 수 있습니다. 다음 스윙에서 두 시점 사이의 간격이 어떻게 달라지는지 확인해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("angles", "frontKneeAngle");
+      return v && {
+        category: "angles",
+        title: "앞무릎",
+        text: `${c.at("angles", "frontKneeAngle")}앞무릎 각도는 ${v}로 측정되었습니다.${c.previous("angles", "frontKneeAngle")} 앞다리 무릎 각도는 체중 이동과 몸통 회전 과정에서 함께 달라질 수 있습니다. 다음 스윙에서 스트라이드 길이와 함께 비교해볼 수 있습니다.`,
+      };
+    },
+    (c) => {
+      const v = c.value("timing", "pelvisToShoulderSec");
+      return v && {
+        category: "timing",
+        title: "회전 순서",
+        text: `골반 회전이 시작된 뒤 ${v} 후에 어깨 회전이 시작되는 움직임이 확인되었습니다.${c.previous("timing", "pelvisToShoulderSec")} 하체와 상체 회전 사이의 시간차는 스윙 동작이 이어지는 흐름을 확인할 때 참고할 수 있는 지표입니다. 다음 스윙에서 이 시간차가 어떻게 달라지는지 비교해볼 수 있습니다.`,
+      };
+    },
+  ];
+
+  /**
+   * 투구 피드백 (측정값이 있는 항목만, 최대 3개)
+   * @param {AnalysisReport} result
+   * @returns {{category: string, title: string, text: string}[]}
+   */
+  function generatePitchFeedback(result) {
+    return buildFeedback({ ...result, analysisType: "pitching" }, PITCH_FEEDBACK);
+  }
+
+  /** 타격 피드백 (측정값이 있는 항목만, 최대 3개) @param {AnalysisReport} result */
+  function generateBattingFeedback(result) {
+    return buildFeedback({ ...result, analysisType: "batting" }, BATTING_FEEDBACK);
+  }
+
+  /**
+   * AI 분석 요약 목록. Spring API 가 observations 배열을 주면 그대로 쓰고(최대 3개),
+   * 없으면 투구/타격 피드백 함수로 측정값에서 만듦.
+   * observations 항목: 문자열 또는 { category?, title?, text }
+   * @param {AnalysisReport} result
+   * @returns {{category: string|null, title: string|null, text: string}[]}
+   */
+  function generateAnalysisSummary(result) {
+    const observations = Array.isArray(result.observations) ? result.observations : [];
+    const given = observations
+      .map((o) =>
+        typeof o === "string"
+          ? { category: null, title: null, text: o }
+          : o && typeof o.text === "string"
+            ? { category: o.category || null, title: o.title || null, text: o.text }
+            : null
+      )
+      .filter(Boolean)
+      .slice(0, MAX_FEEDBACK);
+    if (given.length) return given;
+    const type = result.analysisType || state.type;
+    return type === "batting" ? generateBattingFeedback(result) : generatePitchFeedback(result);
+  }
+
+  function renderAiSummary(body, result) {
+    const box = el("div", "report-ai");
+    box.appendChild(el("h3", "report-ai__title", "AI 분석 요약"));
+    const items = generateAnalysisSummary(result);
+    if (!items.length) {
+      box.appendChild(pendingNote("측정값이 들어오면 AI가 주요 관찰 포인트를 정리해드려요."));
+      body.appendChild(box);
+      return;
+    }
+    const categoryTitle = (key) => (CATEGORIES.find((c) => c.key === key) || {}).title || null;
+    const list = el("ul", "report-ai__list");
+    items.forEach((item) => {
+      const li = el("li", "report-ai__item");
+      const head = el("div", "report-ai__head");
+      if (item.title) head.appendChild(el("strong", "report-ai__name", item.title));
+      const tag = categoryTitle(item.category);
+      if (tag) head.appendChild(el("span", "report-ai__tag", tag));
+      if (head.childNodes.length) li.appendChild(head);
+      li.appendChild(el("p", "report-ai__text", item.text));
+      list.appendChild(li);
+    });
+    box.appendChild(list);
+    body.appendChild(box);
+  }
+
+  // ===================== ③ 상세 분석: [관절·자세] [움직임] [타이밍] =====================
+  function renderTimingPanel(body, config, result, view) {
     const values = result.timing || {};
     const defs = visibleDefs(config.timing, values, view);
     const events = defs
@@ -808,62 +952,56 @@
       spans.forEach((def) => grid.appendChild(metricCard(config, def, metricOf(values, def))));
       body.appendChild(grid);
     }
+
+    // 동작 속도: 신뢰할 수 있는 값이 올 때만 (현재 모델은 보내지 않음)
+    const speedValues = result.speed || {};
+    const speedDefs = visibleDefs(config.speed, speedValues, view).filter((def) => metricOf(speedValues, def));
+    if (speedDefs.length) {
+      body.appendChild(el("h3", "metric-group__title metric-group__title--spaced", "동작 속도"));
+      renderMetricGrid(body, config, speedDefs, speedValues);
+    }
+
     if (!measured.length && !spans.some((d) => metricOf(values, d))) body.appendChild(pendingNote());
-    else body.appendChild(el("p", "report-card__meta", "시점은 영상 시작 기준입니다."));
+    else body.appendChild(el("p", "report-card__meta", "시점은 영상 시작 기준이며, 공이 없는 영상이라 공 기준의 빠르고 늦음은 판단하지 않아요."));
   }
 
   const toSec = (metric) => (metric.unit === "ms" ? metric.value / 1000 : metric.value);
 
-  // ===================== 상세 측정 탭 =====================
-  /** ③ 상세 측정: 탭 하나를 누르면 그 영역만 보임. 동작 속도는 값이 올 때만 탭이 생김 */
-  function renderDetailCard(body, config, result, view) {
-    const viewNote = `${CAMERA_VIEW_LABEL[view]} 촬영 기준으로 측정할 수 있는 항목만 표시합니다.`;
+  /**
+   * 상세 분석 탭 영역. 탭 하나를 누르면 그 영역만 보임 (보던 탭은 다시 그려도 유지)
+   * @param {AnalysisReport} result
+   * @param {HTMLElement} [body] 넣을 곳 (없으면 새 요소를 만들어 돌려줌)
+   * @param {HTMLElement} [tabsTarget] 탭 버튼을 넣을 곳 (카드 제목 줄). 없으면 body 맨 위
+   */
+  function renderDetailMetrics(result, body = el("div"), tabsTarget = null) {
+    const config = configOf(result);
+    const view = cameraViewOf(result);
     const count = (cat) => visibleDefs(config[cat], result[cat], view).filter((def) => metricOf(result[cat], def)).length;
-    const hasSpeed = count("speed") > 0;
     const tabs = [
       {
         key: "angles",
         label: "관절·자세",
-        count: count("angles"),
-        desc: `관절 굽힘과 신체 기울기를 각도(°)로 표시합니다. ${viewNote}`,
+        desc: "관절 굽힘과 신체 기울기 (°)",
         render: (panel) => renderMetricGrid(panel, config, visibleDefs(config.angles, result.angles, view), result.angles),
       },
       {
         key: "movement",
         label: "움직임",
-        count: count("movement"),
-        desc: "영상 속 신체 이동을 신장·신체 기준 비율(%)로 표시합니다. 실제 거리 보정 전이라 cm 로 표시하지 않아요.",
+        desc: "신장·신체 기준 비율 (실제 거리 보정 전이라 cm 로 표시하지 않아요)",
         render: (panel) => renderMetricGrid(panel, config, visibleDefs(config.movement, result.movement, view), result.movement),
       },
       {
         key: "timing",
         label: "타이밍",
-        count: count("timing"),
-        desc: "각 동작이 시작된 시점과 동작 사이의 시간차를 초(s)로 표시합니다.",
-        render: (panel) => renderTimingCard(panel, config, result, view),
+        desc: "동작 시작 시점과 동작 사이 시간차 (s)",
+        render: (panel) => renderTimingPanel(panel, config, result, view),
       },
-      hasSpeed
-        ? {
-            key: "speed",
-            label: "속도",
-            count: count("speed"),
-            desc: "회전·관절 움직임의 속도(°/s)를 표시합니다.",
-            render: (panel) => renderSpeedCard(panel, config, result, view),
-          }
-        : null,
-      {
-        key: "compare",
-        label: "이전 비교",
-        count: null,
-        desc: "같은 사용자의 이전 영상과 같은 지표·같은 단위끼리 나란히 보여줍니다.",
-        render: (panel) => renderCompareCard(panel, config, result, view),
-      },
-    ].filter(Boolean);
+    ];
     if (!tabs.some((t) => t.key === state.detailTab)) state.detailTab = tabs[0].key;
 
     const bar = el("div", "report-tabs report-tabs--detail");
     bar.setAttribute("role", "tablist");
-    bar.setAttribute("aria-label", "상세 측정 영역");
+    bar.setAttribute("aria-label", "상세 분석 영역");
     const panels = {};
     const buttons = tabs.map((tab) => {
       const btn = el("button", "report-tab");
@@ -871,13 +1009,14 @@
       btn.dataset.detailTab = tab.key;
       btn.setAttribute("role", "tab");
       btn.appendChild(el("span", null, tab.label));
-      if (tab.count) btn.appendChild(el("span", "report-tab__count", String(tab.count)));
+      const n = count(tab.key);
+      if (n) btn.appendChild(el("span", "report-tab__count", String(n)));
       bar.appendChild(btn);
 
       const panel = el("div", "report-detail__panel");
       panel.dataset.detailPanel = tab.key;
       panel.setAttribute("role", "tabpanel");
-      panel.appendChild(el("p", "report-card__desc report-detail__desc", tab.desc));
+      panel.appendChild(el("p", "report-detail__desc", `${tab.desc} · ${CAMERA_VIEW_LABEL[view]} 촬영 기준`));
       tab.render(panel);
       panels[tab.key] = panel;
       return btn;
@@ -898,89 +1037,18 @@
       const btn = e.target.closest(".report-tab");
       if (btn) select(btn.dataset.detailTab);
     });
-    body.append(bar, ...Object.values(panels));
+    (tabsTarget || body).appendChild(bar);
+    body.append(...Object.values(panels));
     select(state.detailTab);
-  }
-
-  // ===================== 상세 측정 · 동작 속도 (값이 올 때만 탭이 생김) =====================
-  function renderSpeedCard(body, config, result, view) {
-    const values = result.speed || {};
-    renderMetricGrid(body, config, visibleDefs(config.speed, values, view).filter((def) => metricOf(values, def)), values);
-  }
-
-  // ===================== 상세 측정 · 이전 분석 비교 (같은 카테고리·같은 단위끼리) =====================
-  function renderCompareCard(body, config, result, view) {
-    const prev = result.previousAnalysis;
-    if (!prev) {
-      body.appendChild(pendingNote(`비교할 이전 ${config.noun} 분석이 없어요. 같은 촬영 방향으로 다시 분석하면 이전 결과와 나란히 볼 수 있어요.`));
-      return;
-    }
-    if (prev.cameraView && prev.cameraView !== view) {
-      body.appendChild(pendingNote("이전 분석과 촬영 방향이 달라 수치를 비교하지 않아요."));
-      return;
-    }
-    const info = result.videoInfo || {};
-    body.appendChild(
-      el("p", "report-card__meta", `이전 ${prev.analyzedAt || "-"}${prev.fileName ? ` (${prev.fileName})` : ""} → 현재 ${info.analyzedAt || "-"}`)
-    );
-
-    const wrap = el("div", "compare-table-wrap");
-    const table = el("table", "compare-table");
-    const thead = el("thead");
-    const headRow = el("tr");
-    ["지표", "이전", "현재", "변화"].forEach((h) => headRow.appendChild(el("th", null, h)));
-    thead.appendChild(headRow);
-    table.appendChild(thead);
-
-    let rows = 0;
-    CATEGORIES.forEach((cat) => {
-      const pairs = config[cat.key]
-        .map((def) => ({ def, before: metricOf(prev[cat.key], def), now: metricOf(result[cat.key], def) }))
-        .filter((p) => p.before || p.now);
-      if (!pairs.length) return;
-      const tbody = el("tbody");
-      const groupRow = el("tr", "compare-table__group");
-      const groupCell = el("th", null, cat.title);
-      groupCell.colSpan = 4;
-      groupRow.appendChild(groupCell);
-      tbody.appendChild(groupRow);
-      pairs.forEach(({ def, before, now }) => {
-        const tr = el("tr");
-        tr.append(
-          el("th", null, def.label),
-          el("td", null, before ? formatNumber(before.value, before.unit) : "—"),
-          el("td", null, now ? formatNumber(now.value, now.unit) : "—"),
-          el("td", "compare-table__change", changeText(prev, def, before, now) || "—")
-        );
-        tbody.appendChild(tr);
-        rows += 1;
-      });
-      table.appendChild(tbody);
-    });
-    if (!rows) {
-      body.appendChild(pendingNote("이전 분석과 같이 측정된 지표가 없어요."));
-      return;
-    }
-    wrap.appendChild(table);
-    body.appendChild(wrap);
-    body.appendChild(el("p", "report-card__meta", "변화는 현재 값에서 이전 값을 뺀 수치이며, 지표마다 원래 단위로 표시합니다."));
-  }
-
-  /**
-   * 이전 분석 비교 (공개 함수). body 를 주면 그 안에, 없으면 새 요소에 그려서 돌려줌.
-   * @param {AnalysisReport} result  result.previousAnalysis 가 있어야 비교표가 그려짐
-   * @param {HTMLElement} [body]
-   */
-  function renderPreviousComparison(result, body = el("div")) {
-    const config = REPORT_CONFIG[result.analysisType] || REPORT_CONFIG[state.type];
-    renderCompareCard(body, config, result, cameraViewOf(result));
     return body;
   }
 
-  // ===================== 분석 안내 =====================
+  // ===================== 분석 결과 안내 (작게, 눌러서 펼침) =====================
   function renderNotice(config) {
-    const box = el("aside", "report-notice");
-    box.append(el("span", "report-notice__icon", "ⓘ"), el("p", "report-notice__text", config.notice));
+    const box = el("details", "report-notice");
+    const summary = el("summary", "report-notice__summary");
+    summary.append(el("span", "report-notice__icon", "ⓘ"), el("span", null, "분석 결과 안내"));
+    box.append(summary, el("p", "report-notice__text", config.notice));
     return box;
   }
 
@@ -989,7 +1057,7 @@
    * 투구/타격 공통 리포트 렌더링.
    * @param {"pitching"|"batting"} type
    * @param {AnalysisReport|null} result
-   * @param {{partial?: boolean}} [options] partial: 분석 중이라 ① 영상 (+ 영상 정보 한 줄) 만
+   * @param {{partial?: boolean}} [options] partial: 분석 중이라 ① 제목·메타·영상만
    */
   function renderAnalysisReport(type, result, options = {}) {
     const container = state.container;
@@ -1008,7 +1076,7 @@
     if (container.hidden) return;
 
     if (!keepVideo) {
-      const video = card(1, "분석 영상", "영상 아래 동작 구간을 누르면 그 시점으로 이동하고, 재생속도를 바꿔 느리게 볼 수 있어요.");
+      const video = card(config.titles.report, "report-card--main");
       renderVideoCard(video.body);
       state.videoSection = video.section;
       state.videoSectionUrl = videoUrl;
@@ -1023,6 +1091,9 @@
       container.insertBefore(badge, container.firstChild);
     }
 
+    const r = result || { analysisType: type, videoInfo: { status: "uploading", fileName: state.sourceName } };
+    renderVideoMeta(state.videoSection, r);
+
     const full = result && !options.partial;
     // 동작 단계 타임라인은 ① 영상 바로 아래 (플레이어 안, 재생속도 줄 위)에 다시 그림
     state.videoSection.querySelectorAll(".phase-chapters").forEach((node) => node.remove());
@@ -1033,17 +1104,13 @@
       } else {
         renderPhaseChapters(state.videoSection.querySelector(".report-card__body"), null, config, result);
       }
-    }
 
-    const r = result || { videoInfo: { status: "uploading", fileName: state.sourceName } };
-    renderVideoMeta(state.videoSection, r);
-
-    if (full) {
       const view = cameraViewOf(r);
-      const key = card(2, "핵심 지표", "자주 보는 지표만 모았어요. 전체 수치는 아래 상세 측정에서 볼 수 있어요. ⓘ 를 누르면 어떤 값인지 설명이 나와요.");
-      renderKeyCard(key.body, config, r, view);
-      const detail = card(3, "상세 측정");
-      renderDetailCard(detail.body, config, r, view);
+      const key = card("핵심 지표", "report-card--key");
+      renderKeyMetrics(key.body, config, r, view);
+      renderAiSummary(key.body, r);
+      const detail = card("상세 분석", "report-card--detail");
+      renderDetailMetrics(r, detail.body, detail.head);
       container.append(key.section, detail.section);
     }
     container.appendChild(renderNotice(config));
@@ -1153,8 +1220,10 @@
     renderAnalysisReport,
     renderPitchAnalysis,
     renderBattingAnalysis,
+    generatePitchFeedback,
+    generateBattingFeedback,
     generateAnalysisSummary,
-    renderPreviousComparison,
+    renderDetailMetrics,
     showFromRecord,
     setSourceVideo,
     showSample,
